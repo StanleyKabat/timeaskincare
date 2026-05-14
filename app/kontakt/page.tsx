@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Kontakt a rezervácia",
   description:
     "Objednajte sa do kozmetického salónu Timea Skincare v Novej Bani. Kontakt, mapa, sociálne siete a rezervačný formulár.",
+  alternates: {
+    canonical: "/kontakt",
+  },
 };
 
 export default function ContactPage() {

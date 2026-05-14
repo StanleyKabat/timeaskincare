@@ -1,10 +1,26 @@
-import { ArrowRight, CheckCircle2, MapPin, MessageCircle, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
+import {
+  ArrowRight,
+  CalendarCheck,
+  CheckCircle2,
+  HandHeart,
+  MapPin,
+  MessageCircle,
+  Sparkles,
+  Star,
+} from "lucide-react";
 
 import { ButtonLink } from "@/components/button-link";
 import { ReviewCard } from "@/components/review-card";
 import { SectionHeading } from "@/components/section-heading";
 import { reviews } from "@/data/reviews";
 import { serviceGroups, siteConfig } from "@/data/site";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function Home() {
   return (
@@ -32,6 +48,26 @@ export default function Home() {
                 Pozrieť služby
               </ButtonLink>
             </div>
+            <ul
+              aria-label="Prečo Timea Skincare"
+              className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-sm"
+            >
+              {[
+                { icon: MapPin, label: "Nová Baňa" },
+                { icon: HandHeart, label: "Individuálny prístup" },
+                { icon: Star, label: "Reálne recenzie" },
+                { icon: CalendarCheck, label: "Online rezervácia" },
+              ].map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-2">
+                  <Icon
+                    size={14}
+                    aria-hidden="true"
+                    className="shrink-0 text-[var(--color-powder)]"
+                  />
+                  <span className="leading-snug">{label}</span>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="sparkle-field relative hidden min-h-[420px] overflow-hidden rounded-[2rem] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_24px_70px_rgba(0,0,0,0.38)] sm:block">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(226,138,180,0.24),transparent_18rem),linear-gradient(140deg,#121111,#27221f_48%,rgba(226,138,180,0.18))]" />

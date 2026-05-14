@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { siteConfig } from "@/data/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,15 +27,15 @@ export const metadata: Metadata = {
   description:
     "Profesionálna a jemná starostlivosť o pleť v Novej Bani. Kozmetické ošetrenia, úprava obočia, laminácia mihalníc a individuálny prístup.",
   keywords: [
+    "timeaskincare",
+    "timea skincare",
     "kozmetický salón Nová Baňa",
     "Timea Skincare",
+    "Timea Polcová",
     "ošetrenie pleti",
     "laminácia obočia",
     "laminácia mihalníc",
   ],
-  alternates: {
-    canonical: "/",
-  },
   robots: {
     index: true,
     follow: true,
@@ -49,9 +50,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/timea-logo.png",
-        width: 1200,
-        height: 630,
+        url: "/images/timea-skincare-logo.jpg",
+        width: 723,
+        height: 723,
         alt: "Timea Skincare",
       },
     ],
@@ -60,8 +61,52 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Timea Skincare - kozmetický salón Nová Baňa",
     description: "Jemná a profesionálna starostlivosť o pleť v Novej Bani.",
-    images: ["/images/timea-logo.png"],
+    images: ["/images/timea-skincare-logo.jpg"],
   },
+};
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  "@id": "https://timeaskincare.sk/#salon",
+  name: siteConfig.name,
+  alternateName: ["timeaskincare", "Timea Polcová"],
+  url: "https://timeaskincare.sk",
+  image: "https://timeaskincare.sk/images/timea-skincare-logo.jpg",
+  description:
+    "Kozmetický salón Timea Skincare v Novej Bani ponúka ošetrenia pleti, úpravu obočia, lamináciu obočia a mihalníc.",
+  telephone: siteConfig.phone,
+  email: siteConfig.email,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Štúrova 801/36",
+    postalCode: "968 01",
+    addressLocality: "Nová Baňa",
+    addressCountry: "SK",
+  },
+  areaServed: ["Nová Baňa", "Žarnovica", "Žiar nad Hronom"],
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "08:00",
+      closes: "18:00",
+    },
+  ],
+  sameAs: [siteConfig.instagram, siteConfig.facebook, siteConfig.googleBusiness],
+  makesOffer: [
+    "Kozmetické ošetrenie pleti",
+    "Úprava obočia",
+    "Laminácia obočia",
+    "Laminácia mihalníc",
+    "Farbenie mihalníc",
+  ].map((name) => ({
+    "@type": "Offer",
+    itemOffered: {
+      "@type": "Service",
+      name,
+    },
+  })),
 };
 
 export default function RootLayout({
@@ -72,8 +117,14 @@ export default function RootLayout({
   return (
     <html lang="sk" className={`${inter.variable} ${cormorant.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(localBusinessJsonLd),
+          }}
+        />
         <Header />
-        <main className="pt-[65px] md:pt-0">{children}</main>
+        <main className="pt-[65px] md:pt-[73px]">{children}</main>
         <Footer />
       </body>
     </html>

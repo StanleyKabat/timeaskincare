@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Galéria salónu a výsledkov",
   description:
     "Galéria salónu Timea Skincare, detailov práce a výsledkov. Použité budú iba reálne fotografie so súhlasom zákazníčok.",
+  alternates: {
+    canonical: "/galeria",
+  },
 };
 
 const galleryItems = [
@@ -18,7 +21,7 @@ const galleryItems = [
   },
   {
     title: "Brand salónu",
-    src: "/images/timea-logo.png",
+    src: "/images/timea-skincare-logo.jpg",
     alt: "Logo Timea Skincare",
   },
   {

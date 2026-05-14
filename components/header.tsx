@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -8,6 +9,7 @@ import { navigation } from "@/data/site";
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -21,16 +23,55 @@ export function Header() {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const delta = currentY - lastY;
+
+        if (currentY < 80) {
+          setIsHidden(false);
+        } else if (Math.abs(delta) > 6) {
+          setIsHidden(delta > 0);
+        }
+
+        lastY = currentY;
+        ticking = false;
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const headerHidden = isHidden && !isOpen;
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--color-line)] bg-[rgba(16,16,15,0.9)] backdrop-blur md:sticky">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 border-b border-[var(--color-line)] bg-[rgba(16,16,15,0.9)] backdrop-blur transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        headerHidden ? "-translate-y-full" : "translate-y-0"
+      }`}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-5 sm:px-6 sm:py-4 lg:px-8">
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-2.5 sm:gap-3"
           onClick={() => setIsOpen(false)}
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-full border border-[rgba(226,138,180,0.28)] bg-[rgba(226,138,180,0.1)] text-sm font-semibold text-[var(--color-powder)] transition group-hover:bg-[var(--color-surface)] sm:size-10">
-            TS
+          <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border border-[rgba(226,138,180,0.34)] bg-[#d979a8] shadow-[0_8px_24px_rgba(217,121,168,0.16)] transition group-hover:border-[rgba(246,220,231,0.52)] group-hover:shadow-[0_10px_30px_rgba(217,121,168,0.24)] sm:size-10">
+            <Image
+              src="/images/timea-skincare-logo.jpg"
+              alt="Timea Skincare logo"
+              fill
+              sizes="40px"
+              className="object-contain p-1"
+              priority
+            />
           </span>
           <span className="min-w-0">
             <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-charcoal)] sm:text-sm sm:tracking-[0.18em]">
@@ -92,8 +133,15 @@ export function Header() {
           <div className="mobile-menu-panel mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.14)] bg-[linear-gradient(152deg,rgba(250,248,246,0.1)_0%,rgba(250,248,246,0.04)_100%)] px-3.5 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.36)] backdrop-blur-xl">
             <div className="mb-2.5 flex items-center justify-between gap-3">
               <div className="inline-flex min-w-0 items-center gap-2.5">
-                <span className="grid size-8 place-items-center rounded-full border border-[rgba(217,121,168,0.45)] bg-[rgba(217,121,168,0.14)] text-[11px] font-semibold tracking-wide text-[var(--color-charcoal)]">
-                  TS
+                <span className="relative grid size-8 place-items-center overflow-hidden rounded-full border border-[rgba(217,121,168,0.5)] bg-[#d979a8] shadow-[0_8px_22px_rgba(217,121,168,0.18)]">
+                  <Image
+                    src="/images/timea-skincare-logo.jpg"
+                    alt="Timea Skincare logo"
+                    fill
+                    sizes="32px"
+                    className="object-contain p-1"
+                    priority
+                  />
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-charcoal)]">

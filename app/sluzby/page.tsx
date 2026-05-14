@@ -19,13 +19,20 @@ function getServiceDuration(serviceName: string) {
     );
   });
 
-  return service?.durationMinutes;
+  if (!service || service.durationMinutes == null) {
+    return null;
+  }
+
+  return service.durationLabel ?? formatDuration(service.durationMinutes);
 }
 
 export const metadata: Metadata = {
   title: "Kozmetické služby, obočie a mihalnice",
   description:
     "Pozrite si kozmetické služby Timea Skincare v Novej Bani - ošetrenia pleti, obočie, mihalnice, laminácia a depilácia tváre.",
+  alternates: {
+    canonical: "/sluzby",
+  },
 };
 
 export default function ServicesPage() {
@@ -56,7 +63,7 @@ export default function ServicesPage() {
             </p>
             <ul className="mt-5 grid gap-3">
               {group.services.map((service) => {
-                const durationMinutes = getServiceDuration(service);
+                const duration = getServiceDuration(service);
                 const details = serviceDetails[service];
                 const isGiftVoucherService = service
                   .toLocaleLowerCase("sk-SK")
@@ -78,10 +85,10 @@ export default function ServicesPage() {
                       ) : (
                         <span className="font-medium">{service}</span>
                       )}
-                      {!isGiftVoucherService && durationMinutes != null ? (
+                      {!isGiftVoucherService && duration ? (
                         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-line)] px-3 py-1 text-xs font-semibold text-[var(--color-stone)]">
                           <Clock size={14} aria-hidden="true" />
-                          {formatDuration(durationMinutes)}
+                          {duration}
                         </span>
                       ) : null}
                     </div>

@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Zásady ochrany osobných údajov",
   description:
     "Informácie o spracovaní osobných údajov pri rezervácii termínu v salóne Timea Skincare.",
+  alternates: {
+    canonical: "/ochrana-osobnych-udajov",
+  },
 };
 
 export default function PrivacyPolicyPage() {
@@ -31,15 +34,26 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-base font-semibold text-[var(--color-charcoal)]">Aké údaje spracúvame</h2>
           <p className="mt-2">
             Meno a priezvisko, e-mail, telefónne číslo, vybraná služba, preferovaný dátum a čas
-            rezervácie.
+            rezervácie a voliteľnú poznámku k termínu.
           </p>
         </div>
 
         <div>
           <h2 className="text-base font-semibold text-[var(--color-charcoal)]">Účel spracovania</h2>
           <p className="mt-2">
-            Údaje spracúvame výhradne na vybavenie tvojej žiadosti o rezerváciu termínu a následnú
-            komunikáciu k termínu.
+            Údaje spracúvame výhradne na vybavenie tvojej žiadosti o rezerváciu termínu, zapísanie
+            termínu do kalendára, odoslanie potvrdenia a pripomienky termínu e-mailom alebo SMS.
+          </p>
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-[var(--color-charcoal)]">
+            Používané externé služby
+          </h2>
+          <p className="mt-2">
+            Pri vybavení rezervácie môžeme použiť Google Calendar na evidenciu obsadených termínov,
+            e-mailovú službu na potvrdenie rezervácie, SMS službu na upozornenia k termínu a Google
+            Maps na zobrazenie polohy salónu.
           </p>
         </div>
 

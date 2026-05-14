@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
@@ -61,8 +61,12 @@ export function BookingForm() {
   const [voucherFor, setVoucherFor] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [slotInfo, setSlotInfo] = useState("");
   const [submitInfo, setSubmitInfo] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedServices = useMemo(
     () =>
@@ -96,10 +100,63 @@ export function BookingForm() {
     [],
   );
 
-  const availableSlots = useMemo(
-    () => getSlotsForDate(selectedDate, totalDurationMinutes),
-    [selectedDate, totalDurationMinutes],
-  );
+  useEffect(() => {
+    if (isGiftVoucherFlow || !selectedDate || totalDurationMinutes <= 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadSlots() {
+      setIsLoadingSlots(true);
+      setAvailableSlots([]);
+      setSlotInfo("");
+      try {
+        const params = new URLSearchParams({
+          date: selectedDate,
+          duration: String(totalDurationMinutes),
+        });
+        const response = await fetch(`/api/booking/slots?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = (await response.json()) as {
+          slots?: string[];
+          calendarConfigured?: boolean;
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(data.error || "Nepodarilo sa načítať dostupné časy.");
+        }
+
+        setAvailableSlots(data.slots ?? []);
+        setSlotInfo(
+          data.calendarConfigured === false
+            ? "Kalendár ešte nie je napojený, preto sú časy zatiaľ orientačné."
+            : "",
+        );
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setAvailableSlots(getSlotsForDate(selectedDate, totalDurationMinutes));
+        setSlotInfo(
+          error instanceof Error
+            ? error.message
+            : "Dostupné časy sa nepodarilo načítať.",
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoadingSlots(false);
+        }
+      }
+    }
+
+    void loadSlots();
+
+    return () => controller.abort();
+  }, [isGiftVoucherFlow, selectedDate, totalDurationMinutes]);
 
   function toggleService(serviceName: string) {
     setSelectedTime("");
@@ -125,15 +182,17 @@ export function BookingForm() {
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitInfo("");
     setSubmitError("");
+    setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") || "");
     const email = String(formData.get("email") || "");
     const phone = String(formData.get("phone") || "");
+    const note = String(formData.get("note") || "");
     const voucherTreatment = String(formData.get("voucherTreatment") || "");
     const voucherFromName = String(formData.get("voucherFrom") || "").trim();
     const voucherForName = String(formData.get("voucherFor") || "").trim();
@@ -142,27 +201,32 @@ export function BookingForm() {
 
     if (!selectedServices.length) {
       setSubmitError("Najprv vyber jednu alebo viac služieb.");
+      setIsSubmitting(false);
       return;
     }
 
     if (!/^[+0-9 ()-]{7,20}$/.test(phone)) {
       setSubmitError("Zadaj prosím telefón v správnom formáte.");
+      setIsSubmitting(false);
       return;
     }
 
     if (isGiftVoucherFlow) {
       if (!voucherTreatment) {
         setSubmitError("Vyber typ ošetrenia pre darčekový poukaz.");
+        setIsSubmitting(false);
         return;
       }
 
       if (!voucherFromName) {
         setSubmitError("Doplň, od koho je darčeková poukážka.");
+        setIsSubmitting(false);
         return;
       }
 
       if (!voucherForName) {
         setSubmitError("Doplň, pre koho je darčeková poukážka.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -172,11 +236,13 @@ export function BookingForm() {
 
       if (!selectedTreatment) {
         setSubmitError("Vybraný typ ošetrenia nie je dostupný pre poukážku.");
+        setIsSubmitting(false);
         return;
       }
 
       if (giftVoucherPaymentConfig.iban.includes("[DOPLNIŤ_IBAN]")) {
         setSubmitError("Najprv doplň IBAN pre QR platbu darčekovej poukážky.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -208,11 +274,13 @@ export function BookingForm() {
 
     if (totalDurationMinutes <= 0) {
       setSubmitError("Najprv vyber jednu alebo viac služieb.");
+      setIsSubmitting(false);
       return;
     }
 
     if (!availableSlots.includes(time)) {
       setSubmitError("Vybraný čas už nie je dostupný. Prosím, zvoľ iný čas.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -234,19 +302,76 @@ export function BookingForm() {
       `Celkové orientačné trvanie: ${formatDuration(totalDurationMinutes)}`,
       `Preferovaný dátum: ${date}`,
       `Preferovaný čas: ${time}`,
+      note ? `Poznámka: ${note}` : "",
       "",
       "Ďakujem.",
-    ].join("\n");
+    ]
+      .filter((line) => line !== "")
+      .join("\n");
 
     const mailtoUrl = `mailto:${siteConfig.email}?subject=${encodeURIComponent(
       subject,
     )}&body=${encodeURIComponent(body)}`;
 
-    void navigator.clipboard?.writeText(body).catch(() => undefined);
-    window.location.href = mailtoUrl;
-    setSubmitInfo(
-      "Otvoril sa e-mail s predvyplnenou žiadosťou. Text rezervácie sme zároveň skopírovali do schránky.",
-    );
+    try {
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          services: normalServiceNames,
+          date,
+          time,
+          durationMinutes: totalDurationMinutes,
+          note,
+        }),
+      });
+      const data = (await response.json()) as {
+        ok?: boolean;
+        code?: string;
+        error?: string;
+        smsConfigured?: boolean;
+        emailConfigured?: boolean;
+      };
+
+      if (!response.ok || !data.ok) {
+        if (data.code === "CALENDAR_NOT_CONFIGURED") {
+          void navigator.clipboard?.writeText(body).catch(() => undefined);
+          window.location.href = mailtoUrl;
+          setSubmitInfo(
+            "Kalendár ešte nie je napojený, preto sa otvoril e-mail s predvyplnenou žiadosťou. Text sme skopírovali aj do schránky.",
+          );
+          return;
+        }
+
+        throw new Error(data.error || "Rezerváciu sa nepodarilo odoslať.");
+      }
+
+      const missingNotifications = [
+        data.emailConfigured === false ? "e-mailové potvrdenie" : "",
+        data.smsConfigured === false ? "SMS upozornenie" : "",
+      ].filter(Boolean);
+
+      setSubmitInfo(
+        missingNotifications.length
+          ? `Termín je predbežne rezervovaný v kalendári. Ešte treba doplniť: ${missingNotifications.join(
+              ", ",
+            )}.`
+          : "Termín je predbežne rezervovaný v kalendári. Potvrdenie príde e-mailom a Timea dostane SMS upozornenie.",
+      );
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Rezerváciu sa nepodarilo odoslať.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -266,7 +391,7 @@ export function BookingForm() {
           <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:mt-3 sm:leading-6">
             {isGiftVoucherFlow
               ? "Vyber typ ošetrenia na poukážku a doplň údaje o darcovi a obdarovanom."
-              : "Vyber jednu alebo viac služieb, dátum a dostupný čas. Termín platí až po potvrdení zo salónu."}
+              : "Vyber jednu alebo viac služieb, dátum a dostupný čas. Termín sa zapíše ako predbežne rezervovaný a platí po potvrdení salónom."}
           </p>
         </div>
 
@@ -318,7 +443,9 @@ export function BookingForm() {
                     <span className="min-w-0">
                       <span className="block text-[13px] font-medium leading-5">{service.name}</span>
                       <span className="block text-[11px] text-[var(--color-stone)]">
-                        {service.durationMinutes != null ? formatDuration(service.durationMinutes) : ""}
+                        {service.durationMinutes != null
+                          ? service.durationLabel ?? formatDuration(service.durationMinutes)
+                          : ""}
                       </span>
                     </span>
                     {isSelected ? (
@@ -458,15 +585,15 @@ export function BookingForm() {
                 className="min-h-11 w-full rounded-lg border border-[var(--color-line)] px-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
                 name="date"
                 value={selectedDate}
-                  onClick={(event) => {
-                    if ("showPicker" in event.currentTarget) {
-                      try {
-                        event.currentTarget.showPicker();
-                      } catch {
-                        // Some browsers may block programmatic picker opening.
-                      }
+                onClick={(event) => {
+                  if ("showPicker" in event.currentTarget) {
+                    try {
+                      event.currentTarget.showPicker();
+                    } catch {
+                      // Some browsers may block programmatic picker opening.
                     }
-                  }}
+                  }
+                }}
                 onChange={(event) => {
                   setSelectedDate(event.target.value);
                   setSelectedTime("");
@@ -479,9 +606,17 @@ export function BookingForm() {
               <legend className="text-sm font-medium text-[var(--color-charcoal)]">
                 Dostupné časy
               </legend>
+              <p className="text-xs leading-5 text-[var(--color-stone)]">
+                Online rezervácia je dostupná minimálne 12 hodín dopredu. Termín na nasledujúci deň
+                je možné odoslať najneskôr do 20:00.
+              </p>
               {selectedDate ? (
                 selectedServices.length > 0 ? (
-                  availableSlots.length > 0 ? (
+                  isLoadingSlots ? (
+                    <p className="rounded-lg border border-[var(--color-line)] px-4 py-3 text-sm leading-6 text-[var(--color-stone)]">
+                      Načítavam dostupné časy z kalendára...
+                    </p>
+                  ) : availableSlots.length > 0 ? (
                     <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
                       {availableSlots.map((slot) => (
                         <label key={slot}>
@@ -522,6 +657,9 @@ export function BookingForm() {
                   Najprv vyber jednu alebo viac služieb a dátum, následne sa zobrazia možné časy.
                 </p>
               )}
+              {slotInfo ? (
+                <p className="text-xs leading-5 text-[var(--color-stone)]">{slotInfo}</p>
+              ) : null}
             </fieldset>
           </>
         ) : (
@@ -531,6 +669,17 @@ export function BookingForm() {
           </p>
         )}
 
+        {!isGiftVoucherFlow ? (
+          <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--color-charcoal)]">
+            Poznámka
+            <textarea
+              className="min-h-24 w-full min-w-0 rounded-lg border border-[var(--color-line)] px-3 py-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
+              name="note"
+              placeholder="Voliteľné: alergie, preferencia, otázka k termínu..."
+            />
+          </label>
+        ) : null}
+
         <label className="flex gap-3 text-sm leading-6 text-[var(--color-stone)]">
           <input
             className="mt-1 size-4 rounded border-[var(--color-line)]"
@@ -539,7 +688,7 @@ export function BookingForm() {
           />
           <span>
             Súhlasím so spracovaním osobných údajov za účelom vybavenia
-            rezervácie.{" "}
+            rezervácie, odoslania potvrdenia a pripomienky termínu e-mailom alebo SMS.{" "}
             <a className="underline hover:text-[var(--color-powder)]" href="/ochrana-osobnych-udajov">
               Zásady ochrany osobných údajov
             </a>
@@ -549,15 +698,20 @@ export function BookingForm() {
 
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-powder)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-[0_12px_34px_rgba(226,138,180,0.24)] transition hover:bg-[var(--color-charcoal)]"
+          disabled={isSubmitting || isLoadingSlots}
+          className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-powder)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-[0_12px_34px_rgba(226,138,180,0.24)] transition hover:bg-[var(--color-charcoal)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isGiftVoucherFlow ? "Pokračovať na QR platbu" : "Odoslať žiadosť o termín"}
+          {isSubmitting
+            ? "Odosielam..."
+            : isGiftVoucherFlow
+              ? "Pokračovať na QR platbu"
+              : "Predbežne rezervovať termín"}
         </button>
 
         <p className="text-xs leading-5 text-[var(--color-stone)]">
           {isGiftVoucherFlow
             ? "Po odoslaní ťa presmerujeme na QR kód pre bankový prevod darčekovej poukážky."
-            : "Po odoslaní sa otvorí e-mail s predvyplnenou rezerváciou. Automatické pridanie do Google alebo Outlook kalendára doplníme po napojení kalendárovej integrácie."}
+            : "Po odoslaní sa termín zapíše do kalendára ako obsadený. Zákazníčke príde potvrdenie e-mailom a salón dostane priame upozornenie."}
         </p>
         {submitInfo ? <p className="text-xs leading-5 text-[var(--color-stone)]">{submitInfo}</p> : null}
         {submitError ? <p className="text-xs leading-5 text-red-300">{submitError}</p> : null}

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Recenzie zákazníčok",
   description:
     "Reálne recenzie zákazníčok Timea Skincare v Novej Bani na starostlivosť o pleť, obočie, lamináciu a prístup v salóne.",
+  alternates: {
+    canonical: "/recenzie",
+  },
 };
 
 export default function ReviewsPage() {

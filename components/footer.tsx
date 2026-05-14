@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { navigation, siteConfig } from "@/data/site";
 
@@ -7,9 +8,20 @@ export function Footer() {
     <footer className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
         <div>
-          <p className="text-lg font-semibold text-[var(--color-charcoal)]">
-            {siteConfig.name}
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full border border-[rgba(226,138,180,0.32)] bg-[#d979a8] shadow-[0_10px_28px_rgba(217,121,168,0.14)]">
+              <Image
+                src="/images/timea-skincare-logo.jpg"
+                alt="Timea Skincare logo"
+                fill
+                sizes="44px"
+                className="object-contain p-1.5"
+              />
+            </span>
+            <p className="text-lg font-semibold text-[var(--color-charcoal)]">
+              {siteConfig.name}
+            </p>
+          </div>
           <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--color-stone)]">
             Jemná a profesionálna starostlivosť o pleť v Novej Bani.
           </p>

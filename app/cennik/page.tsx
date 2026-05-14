@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Cenník kozmetických ošetrení",
   description:
     "Prehľadný cenník kozmetických ošetrení, úpravy obočia, laminácie mihalníc a depilácie v salóne Timea Skincare.",
+  alternates: {
+    canonical: "/cennik",
+  },
 };
 
 export default function PricingPage() {

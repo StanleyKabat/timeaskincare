@@ -42,19 +42,16 @@ body::before {
   z-index: -1;
   pointer-events: none;
   content: "";
-  opacity: 0.34;
+  opacity: 0.26;
   background-image:
     radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(226, 138, 180, 0.85) 0 1px, transparent 1.8px),
-    linear-gradient(115deg, transparent 0 47%, rgba(255, 255, 255, 0.06) 48% 52%, transparent 53% 100%);
+    radial-gradient(circle, rgba(226, 138, 180, 0.85) 0 1px, transparent 1.8px);
   background-position:
     18px 34px,
-    96px 140px,
-    0 0;
+    96px 140px;
   background-size:
     142px 142px,
-    220px 220px,
-    100% 100%;
+    220px 220px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 72%);
 }
 
@@ -148,16 +145,56 @@ main {
 }
 
 .soft-grid {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.soft-grid > * {
+  position: relative;
+  z-index: 1;
+}
+
+.soft-grid::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
   background-image:
     radial-gradient(circle at 25% 18%, rgba(226, 138, 180, 0.2), transparent 24rem),
-    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.11), transparent 20rem),
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.11), transparent 20rem);
   background-size:
     auto,
-    auto,
-    38px 38px,
-    38px 38px;
+    auto;
+  transform-origin: center;
+  will-change: transform;
+  animation: heroBreathe 16s ease-in-out infinite alternate;
+}
+
+@keyframes heroBreathe {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes heroBreatheMobile {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.018);
+  }
+}
+
+@media (max-width: 640px) {
+  .soft-grid::before {
+    animation-name: heroBreatheMobile;
+    animation-duration: 22s;
+  }
 }
 
 .sparkle-field {
@@ -292,6 +329,11 @@ main {
   .mobile-menu-item {
     animation: none !important;
     opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .soft-grid::before {
+    animation: none !important;
     transform: none !important;
   }
 }

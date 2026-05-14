@@ -9,10 +9,12 @@ export const siteConfig = {
   emailHref: "mailto:polcova.timea@gmail.com",
   instagram: "https://www.instagram.com/timea.skincare/",
   facebook: "https://www.facebook.com/timeapolcova",
+  googleBusiness:
+    "https://www.google.com/maps/place/Timea+SkinCare/@48.4250459,18.6392719,533m/data=!3m2!1e3!4b1!4m6!3m5!1s0x476ad5b1532d38f1:0x7442c9dd157c4ec1!8m2!3d48.4250424!4d18.6418468!16s%2Fg%2F11zbc5lsmq!5m1!1e1?entry=ttu",
   mapsUrl:
-    "https://www.google.com/maps/search/?api=1&query=%C5%A0t%C3%BArova%20801%2F36%2C%20968%2001%20Nov%C3%A1%20Ba%C5%88a%2C%20Slovensko",
+    "https://www.google.com/maps/place/Timea+SkinCare/@48.4250459,18.6392719,533m/data=!3m2!1e3!4b1!4m6!3m5!1s0x476ad5b1532d38f1:0x7442c9dd157c4ec1!8m2!3d48.4250424!4d18.6418468!16s%2Fg%2F11zbc5lsmq!5m1!1e1?entry=ttu",
   mapsEmbedUrl:
-    "https://www.google.com/maps?q=%C5%A0t%C3%BArova%20801%2F36%2C%20968%2001%20Nov%C3%A1%20Ba%C5%88a%2C%20Slovensko&output=embed",
+    "https://www.google.com/maps?q=Timea%20SkinCare%2C%20%C5%A0t%C3%BArova%20801%2F36%2C%20968%2001%20Nov%C3%A1%20Ba%C5%88a%2C%20Slovakia&output=embed",
 };
 
 export const navigation = [
@@ -41,7 +43,7 @@ export const serviceGroups = [
       "Služby zamerané na prirodzené zvýraznenie obočia a mihalníc, aby tvár pôsobila upravene, jemne a harmonicky.",
     services: [
       "Úprava obočia",
-      "Farbenie obočia",
+      "Úprava a farbenie obočia",
       "Laminácia obočia",
       "Farbenie mihalníc",
       "Laminácia mihalníc",
@@ -90,18 +92,15 @@ export const serviceDetails: Record<string, string[]> = {
 };
 
 export const bookableServices = [
-  { name: "Základné ošetrenie", durationMinutes: 60 },
-  { name: "Kompletné ošetrenie", durationMinutes: 90 },
+  { name: "Základné ošetrenie", durationMinutes: 75, durationLabel: "70 - 75 min" },
+  { name: "Kompletné ošetrenie", durationMinutes: 95, durationLabel: "85 - 95 min" },
   { name: "Luxusné ošetrenie", durationMinutes: 120 },
-  { name: "Úprava obočia / trhanie", durationMinutes: 30 },
-  { name: "Úprava a farbenie obočia", durationMinutes: 45 },
-  { name: "Laminácia obočia aj s farbením", durationMinutes: 60 },
-  { name: "Farbenie mihalníc", durationMinutes: 30 },
-  { name: "Laminácia mihalníc aj s farbením", durationMinutes: 75 },
+  { name: "Úprava obočia", durationMinutes: 20, durationLabel: "15 - 20 min" },
+  { name: "Úprava a farbenie obočia", durationMinutes: 50, durationLabel: "35 - 50 min" },
+  { name: "Laminácia obočia", durationMinutes: 60 },
+  { name: "Farbenie mihalníc", durationMinutes: 20, durationLabel: "15 - 20 min" },
+  { name: "Laminácia mihalníc", durationMinutes: 80, durationLabel: "60 - 80 min" },
   { name: "Laminácia obočia + laminácia mihalníc", durationMinutes: 120 },
-  { name: "Depilácia hornej pery", durationMinutes: 15 },
-  { name: "Depilácia brady", durationMinutes: 15 },
-  { name: "Depilácia hornej pery + brady", durationMinutes: 20 },
   {
     name: "Masáž tváre a dekoltu k základnému alebo kompletnému ošetreniu",
     durationMinutes: 20,
@@ -113,11 +112,11 @@ export const giftVoucherTreatments = [
   { name: "Základné ošetrenie", amount: 40 },
   { name: "Kompletné ošetrenie", amount: 50 },
   { name: "Luxusné ošetrenie", amount: 70 },
-  { name: "Úprava obočia / trhanie", amount: 8 },
+  { name: "Úprava obočia", amount: 8 },
   { name: "Úprava a farbenie obočia", amount: 13 },
-  { name: "Laminácia obočia aj s farbením", amount: 28 },
+  { name: "Laminácia obočia", amount: 28 },
   { name: "Farbenie mihalníc", amount: 8 },
-  { name: "Laminácia mihalníc aj s farbením", amount: 33 },
+  { name: "Laminácia mihalníc", amount: 33 },
   { name: "Laminácia obočia + laminácia mihalníc", amount: 55 },
   { name: "Depilácia hornej pery", amount: 3 },
   { name: "Depilácia brady", amount: 3 },
