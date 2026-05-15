@@ -29,25 +29,15 @@ export function ScrollReveal({ children, className = "", staggerIndex = 0 }: Scr
     const isAlreadyInView = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
 
     setCanAnimate(true);
-
-    if (isAlreadyInView) {
-      setVisible(true);
-      return;
-    }
-
-    setVisible(false);
+    setVisible(isAlreadyInView);
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true);
-          } else if (entry.boundingClientRect.top > window.innerHeight) {
-            setVisible(false);
-          }
+          setVisible(entry.isIntersecting);
         }
       },
-      { root: null, rootMargin: "0px 0px -10% 0px", threshold: 0.06 }
+      { root: null, rootMargin: "0px 0px -12% 0px", threshold: 0.04 }
     );
 
     observer.observe(el);
