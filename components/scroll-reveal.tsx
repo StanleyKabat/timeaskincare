@@ -42,8 +42,8 @@ export function ScrollReveal({ children, className = "", staggerIndex = 0 }: Scr
         for (const entry of entries) {
           if (entry.isIntersecting) {
             setVisible(true);
-            observer.disconnect();
-            return;
+          } else if (entry.boundingClientRect.top > window.innerHeight) {
+            setVisible(false);
           }
         }
       },
