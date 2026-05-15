@@ -16,13 +16,26 @@ function prefersReducedMotion(): boolean {
 
 export function ScrollReveal({ children, className = "", staggerIndex = 0 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [canAnimate, setCanAnimate] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
 
     const el = ref.current;
     if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const isAlreadyInView = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+
+    setCanAnimate(true);
+
+    if (isAlreadyInView) {
+      setVisible(true);
+      return;
+    }
+
+    setVisible(false);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -46,7 +59,9 @@ export function ScrollReveal({ children, className = "", staggerIndex = 0 }: Scr
   return (
     <div
       ref={ref}
-      className={`scroll-reveal${visible ? " scroll-reveal-visible" : ""}${className ? ` ${className}` : ""}`.trim()}
+      className={`scroll-reveal${canAnimate && !visible ? " scroll-reveal-pending" : ""}${
+        canAnimate && visible ? " scroll-reveal-visible" : ""
+      }${className ? ` ${className}` : ""}`.trim()}
       style={delayMs > 0 ? { transitionDelay: `${delayMs}ms` } : undefined}
     >
       {children}
