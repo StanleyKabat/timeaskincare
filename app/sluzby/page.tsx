@@ -3,6 +3,7 @@ import { ArrowRight, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { ButtonLink } from "@/components/button-link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { bookableServices, serviceDetails, serviceGroups } from "@/data/site";
 import { formatDuration } from "@/lib/booking";
@@ -38,20 +39,20 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <>
-      <section className="reveal-soft mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-        <SectionHeading
-          eyebrow="Služby"
-          title="Kozmetické služby v Novej Bani"
-          text="Prehľad služieb Timea Skincare. Detailné trvanie, vhodnosť a odporúčania po procedúre budú doplnené podľa finálnych podkladov."
-        />
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+        <ScrollReveal>
+          <SectionHeading
+            eyebrow="Služby"
+            title="Kozmetické služby v Novej Bani"
+            text="Prehľad služieb Timea Skincare. Detailné trvanie, vhodnosť a odporúčania po procedúre budú doplnené podľa finálnych podkladov."
+          />
+        </ScrollReveal>
       </section>
 
-      <section className="reveal-soft mx-auto grid max-w-6xl gap-4 px-4 pb-14 sm:gap-5 sm:px-6 sm:pb-20 md:grid-cols-2 lg:px-8">
-        {serviceGroups.map((group) => (
-          <article
-            key={group.title}
-            className="interactive-card rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6"
-          >
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-14 sm:gap-5 sm:px-6 sm:pb-20 md:grid-cols-2 lg:px-8">
+        {serviceGroups.map((group, index) => (
+          <ScrollReveal key={group.title} staggerIndex={index} className="min-w-0">
+            <article className="interactive-card h-full rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
             <div className="mb-4 grid size-10 place-items-center rounded-full bg-[var(--color-blush)] text-[var(--color-powder)] sm:mb-5 sm:size-11">
               <Sparkles size={20} aria-hidden="true" />
             </div>
@@ -101,12 +102,14 @@ export default function ServicesPage() {
                 );
               })}
             </ul>
-          </article>
+            </article>
+          </ScrollReveal>
         ))}
       </section>
 
-      <section className="reveal-soft border-t border-[var(--color-line)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
+      <section className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
+        <ScrollReveal>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
           <div>
             <p className="text-sm font-semibold text-[var(--color-powder)]">
               Rezervácia
@@ -123,6 +126,7 @@ export default function ServicesPage() {
             <ArrowRight size={17} aria-hidden="true" />
           </ButtonLink>
         </div>
+        </ScrollReveal>
       </section>
     </>
   );

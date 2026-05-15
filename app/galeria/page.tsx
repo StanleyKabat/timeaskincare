@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { ButtonLink } from "@/components/button-link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 
 export const metadata: Metadata = {
@@ -49,20 +50,20 @@ const galleryItems = [
 export default function GalleryPage() {
   return (
     <>
-      <section className="reveal-soft mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-        <SectionHeading
-          eyebrow="Galéria"
-          title="Reálne fotky salónu a výsledkov"
-          text="Galéria je pripravená na doplnenie skutočných fotografií. Pri fotkách pred a po je potrebný súhlas zákazníčky."
-        />
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+        <ScrollReveal>
+          <SectionHeading
+            eyebrow="Galéria"
+            title="Reálne fotky salónu a výsledkov"
+            text="Galéria je pripravená na doplnenie skutočných fotografií. Pri fotkách pred a po je potrebný súhlas zákazníčky."
+          />
+        </ScrollReveal>
       </section>
 
-      <section className="reveal-soft mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:grid-cols-2 sm:gap-5 sm:px-6 sm:pb-12 lg:grid-cols-3 lg:px-8">
-        {galleryItems.map((item) => (
-          <div
-            key={`${item.title}-${item.src}`}
-            className="interactive-card overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]"
-          >
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:grid-cols-2 sm:gap-5 sm:px-6 sm:pb-12 lg:grid-cols-3 lg:px-8">
+        {galleryItems.map((item, index) => (
+          <ScrollReveal key={`${item.title}-${item.src}`} staggerIndex={index} className="min-w-0">
+            <div className="interactive-card h-full overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
             <div className="relative aspect-[4/5]">
               <Image
                 src={item.src}
@@ -76,11 +77,13 @@ export default function GalleryPage() {
               </div>
             </div>
           </div>
+          </ScrollReveal>
         ))}
       </section>
 
-      <section className="reveal-soft border-t border-[var(--color-line)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
+      <section className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
+        <ScrollReveal>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
           <div>
             <h2 className="text-xl font-semibold text-[var(--color-charcoal)] sm:text-2xl">
               Chceš vidieť aktuálnu prácu a skúsenosti zákazníčok?
@@ -96,6 +99,7 @@ export default function GalleryPage() {
             <ButtonLink href="/kontakt#rezervacia">Rezervovať termín</ButtonLink>
           </div>
         </div>
+        </ScrollReveal>
       </section>
     </>
   );

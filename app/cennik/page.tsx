@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/button-link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { priceGroups } from "@/data/site";
 
@@ -17,20 +18,20 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <>
-      <section className="reveal-soft mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-        <SectionHeading
-          eyebrow="Cenník"
-          title="Cenník služieb Timea Skincare"
-          text="Ceny sú rozdelené podľa kategórií. Každé ošetrenie je prispôsobené typu a potrebám pleti."
-        />
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+        <ScrollReveal>
+          <SectionHeading
+            eyebrow="Cenník"
+            title="Cenník služieb Timea Skincare"
+            text="Ceny sú rozdelené podľa kategórií. Každé ošetrenie je prispôsobené typu a potrebám pleti."
+          />
+        </ScrollReveal>
       </section>
 
-      <section className="reveal-soft mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:gap-6 sm:px-6 lg:grid-cols-2 lg:px-8">
-        {priceGroups.map((group) => (
-          <article
-            key={group.title}
-            className="interactive-card rounded-lg border border-[var(--color-line)] bg-[linear-gradient(145deg,var(--color-surface),var(--color-surface-elevated))] p-4 shadow-[0_22px_55px_rgba(0,0,0,0.16)] sm:p-6"
-          >
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:gap-6 sm:px-6 lg:grid-cols-2 lg:px-8">
+        {priceGroups.map((group, index) => (
+          <ScrollReveal key={group.title} staggerIndex={index} className="min-w-0">
+            <article className="interactive-card h-full rounded-lg border border-[var(--color-line)] bg-[linear-gradient(145deg,var(--color-surface),var(--color-surface-elevated))] p-4 shadow-[0_22px_55px_rgba(0,0,0,0.16)] sm:p-6">
             <div className="border-b border-[var(--color-line)] pb-4 sm:pb-5">
               <h2 className="text-lg font-semibold text-[var(--color-charcoal)] sm:text-xl">
                 {group.title}
@@ -61,11 +62,13 @@ export default function PricingPage() {
               ))}
             </div>
           </article>
+          </ScrollReveal>
         ))}
       </section>
 
-      <section className="reveal-soft mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="grid gap-5 rounded-lg border border-[rgba(226,138,180,0.32)] bg-[rgba(226,138,180,0.08)] p-4 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
+      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
+        <ScrollReveal>
+          <div className="grid gap-5 rounded-lg border border-[rgba(226,138,180,0.32)] bg-[rgba(226,138,180,0.08)] p-4 sm:p-6 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-powder)]">
               Poznámka k cenníku
@@ -81,6 +84,7 @@ export default function PricingPage() {
             <ArrowRight size={17} aria-hidden="true" />
           </ButtonLink>
         </div>
+        </ScrollReveal>
       </section>
     </>
   );

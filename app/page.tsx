@@ -12,6 +12,7 @@ import {
 
 import { ButtonLink } from "@/components/button-link";
 import { ReviewCard } from "@/components/review-card";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { reviews } from "@/data/reviews";
 import { serviceGroups, siteConfig } from "@/data/site";
@@ -90,120 +91,129 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="reveal-soft border-y border-[var(--color-line)] bg-[var(--color-surface)]">
+      <section className="border-y border-[var(--color-line)] bg-[var(--color-surface)]">
         <div className="mx-auto grid max-w-6xl gap-4 px-4 py-8 sm:gap-8 sm:px-6 sm:py-16 md:grid-cols-3 lg:px-8">
           {[
             "Individuálny prístup podľa potrieb pleti",
             "Jemný, čistý a profesionálny štýl ošetrenia",
             "Služby pre pleť, obočie, mihalnice aj depiláciu tváre",
-          ].map((item) => (
-            <div key={item} className="flex gap-3">
-              <CheckCircle2 className="mt-1 shrink-0 text-[var(--color-leaf)]" size={20} />
-              <p className="text-sm leading-6 text-[var(--color-charcoal)]">{item}</p>
-            </div>
+          ].map((item, index) => (
+            <ScrollReveal key={item} staggerIndex={index} className="min-w-0">
+              <div className="flex gap-3">
+                <CheckCircle2 className="mt-1 shrink-0 text-[var(--color-leaf)]" size={20} />
+                <p className="text-sm leading-6 text-[var(--color-charcoal)]">{item}</p>
+              </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
-      <section className="reveal-soft mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid gap-7 sm:gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-          <SectionHeading
-            eyebrow="Služby"
-            title="Starostlivosť, ktorá rešpektuje tvoju pleť"
-            text="Vybrané služby sú postavené na prirodzenom výsledku, pokojnom priebehu a jasnej komunikácii pred ošetrením."
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {serviceGroups.slice(0, 4).map((group) => (
-              <article
-                key={group.title}
-                className="interactive-card rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6"
-              >
-                <h2 className="text-lg font-semibold text-[var(--color-charcoal)]">
-                  {group.title}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--color-stone)]">
-                  {group.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="reveal-soft border-y border-[var(--color-line)] bg-[var(--color-ink)] text-[var(--color-charcoal)]">
-        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16 md:grid-cols-[1fr_0.9fr] lg:px-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-blush)] sm:text-sm sm:tracking-[0.18em]">
-              O salóne
-            </p>
-            <h2 className="mt-3 max-w-xl font-serif text-2xl font-semibold leading-tight sm:mt-4 sm:text-4xl">
-              Pokojné miesto pre jemnú a profesionálnu starostlivosť
-            </h2>
-          </div>
-          <div className="text-sm leading-7 text-[var(--color-stone)] sm:text-base sm:leading-8">
-            <p>
-              V Timea Skincare veríme, že kozmetické ošetrenie nemá byť len
-              procedúra, ale chvíľa pokoja, starostlivosti a dôvery. Každé
-              ošetrenie je prispôsobené typu a potrebám pleti, aby bol výsledok
-              prirodzený, jemný a viditeľný.
-            </p>
-            <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-7">
-              Kontaktovať salón
-            </ButtonLink>
-          </div>
-        </div>
-      </section>
-
-      <section className="reveal-soft mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
-          <div>
+          <ScrollReveal className="min-w-0">
             <SectionHeading
-              eyebrow="Recenzie"
-              title="Skúsenosti zákazníčok"
-              text="Reálne spätné väzby od zákazníčok, ktoré ocenili precíznu prácu, príjemný prístup a pokojné prostredie salónu."
+              eyebrow="Služby"
+              title="Starostlivosť, ktorá rešpektuje tvoju pleť"
+              text="Vybrané služby sú postavené na prirodzenom výsledku, pokojnom priebehu a jasnej komunikácii pred ošetrením."
             />
-            <ButtonLink href="/recenzie" variant="secondary" className="mt-6">
-              Pozrieť všetky recenzie
-            </ButtonLink>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {reviews.slice(0, 2).map((review) => (
-              <ReviewCard
-                key={`${review.service}-${review.text}`}
-                service={review.service}
-                text={review.text}
-              />
+          </ScrollReveal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {serviceGroups.slice(0, 4).map((group, index) => (
+              <ScrollReveal key={group.title} staggerIndex={index} className="min-w-0">
+                <article className="interactive-card h-full rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
+                  <h2 className="text-lg font-semibold text-[var(--color-charcoal)]">
+                    {group.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-[var(--color-stone)]">
+                    {group.description}
+                  </p>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="reveal-soft border-t border-[var(--color-line)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
-          <div>
-            <p className="text-sm font-semibold text-[var(--color-powder)]">
-              {siteConfig.location}
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-[var(--color-charcoal)]">
-              Dohodnime si termín, ktorý ti bude vyhovovať.
-            </h2>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/kontakt#rezervacia" className="gap-2">
-              <MapPin size={17} aria-hidden="true" />
-              Rezervovať
-            </ButtonLink>
-            <a
-              href={siteConfig.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)]"
-            >
-              <MessageCircle size={17} aria-hidden="true" />
-              Instagram
-            </a>
+      <section className="border-y border-[var(--color-line)] bg-[var(--color-ink)] text-[var(--color-charcoal)]">
+        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16 md:grid-cols-[1fr_0.9fr] lg:px-8">
+          <ScrollReveal className="min-w-0">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-blush)] sm:text-sm sm:tracking-[0.18em]">
+                O salóne
+              </p>
+              <h2 className="mt-3 max-w-xl font-serif text-2xl font-semibold leading-tight sm:mt-4 sm:text-4xl">
+                Pokojné miesto pre jemnú a profesionálnu starostlivosť
+              </h2>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal staggerIndex={1} className="min-w-0">
+            <div className="text-sm leading-7 text-[var(--color-stone)] sm:text-base sm:leading-8">
+              <p>
+                V Timea Skincare veríme, že kozmetické ošetrenie nemá byť len
+                procedúra, ale chvíľa pokoja, starostlivosti a dôvery. Každé
+                ošetrenie je prispôsobené typu a potrebám pleti, aby bol výsledok
+                prirodzený, jemný a viditeľný.
+              </p>
+              <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-7">
+                Kontaktovať salón
+              </ButtonLink>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+          <ScrollReveal className="min-w-0">
+            <div>
+              <SectionHeading
+                eyebrow="Recenzie"
+                title="Skúsenosti zákazníčok"
+                text="Reálne spätné väzby od zákazníčok, ktoré ocenili precíznu prácu, príjemný prístup a pokojné prostredie salónu."
+              />
+              <ButtonLink href="/recenzie" variant="secondary" className="mt-6">
+                Pozrieť všetky recenzie
+              </ButtonLink>
+            </div>
+          </ScrollReveal>
+          <div className="grid gap-4 md:grid-cols-2">
+            {reviews.slice(0, 2).map((review, index) => (
+              <ScrollReveal key={`${review.service}-${review.text}`} staggerIndex={index} className="min-w-0">
+                <ReviewCard service={review.service} text={review.text} />
+              </ScrollReveal>
+            ))}
           </div>
         </div>
+      </section>
+
+      <section className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
+        <ScrollReveal>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-10 sm:px-6 sm:py-12 md:flex-row md:items-center md:justify-between lg:px-8">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-powder)]">
+                {siteConfig.location}
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--color-charcoal)]">
+                Dohodnime si termín, ktorý ti bude vyhovovať.
+              </h2>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <ButtonLink href="/kontakt#rezervacia" className="gap-2">
+                <MapPin size={17} aria-hidden="true" />
+                Rezervovať
+              </ButtonLink>
+              <a
+                href={siteConfig.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)]"
+              >
+                <MessageCircle size={17} aria-hidden="true" />
+                Instagram
+              </a>
+            </div>
+          </div>
+        </ScrollReveal>
       </section>
     </>
   );

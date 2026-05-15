@@ -247,6 +247,19 @@ main {
   background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 6C36 20 44 28 58 32C44 36 36 44 32 58C28 44 20 36 6 32C20 28 28 20 32 6Z' fill='%23f6dce7' fill-opacity='0.9'/%3E%3C/svg%3E");
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 620ms cubic-bezier(0.22, 0.74, 0.22, 1),
+    transform 620ms cubic-bezier(0.22, 0.74, 0.22, 1);
+}
+
+.scroll-reveal-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
 @keyframes revealSoft {
   from {
     opacity: 0;
@@ -328,6 +341,13 @@ main {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .scroll-reveal,
+  .scroll-reveal.scroll-reveal-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 
   .interactive-card {

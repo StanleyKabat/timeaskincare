@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { SectionHeading } from "@/components/section-heading";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { siteConfig } from "@/data/site";
 
 export const metadata: Metadata = {
@@ -15,13 +16,16 @@ export const metadata: Metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <section className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
-      <SectionHeading
-        eyebrow="GDPR"
-        title="Zásady ochrany osobných údajov"
-        text="Tieto informácie vysvetľujú, ako spracúvame údaje odoslané cez rezervačný formulár."
-      />
+      <ScrollReveal>
+        <SectionHeading
+          eyebrow="GDPR"
+          title="Zásady ochrany osobných údajov"
+          text="Tieto informácie vysvetľujú, ako spracúvame údaje odoslané cez rezervačný formulár."
+        />
+      </ScrollReveal>
 
-      <div className="mt-8 space-y-6 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-sm leading-6 text-[var(--color-stone)] sm:p-8">
+      <ScrollReveal className="mt-8 block">
+        <div className="space-y-6 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-sm leading-6 text-[var(--color-stone)] sm:p-8">
         <div>
           <h2 className="text-base font-semibold text-[var(--color-charcoal)]">Prevádzkovateľ</h2>
           <p className="mt-2">
@@ -75,6 +79,7 @@ export default function PrivacyPolicyPage() {
           </p>
         </div>
       </div>
+      </ScrollReveal>
     </section>
   );
 }

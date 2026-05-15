@@ -12,6 +12,7 @@ import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 
 import { BookingForm } from "@/components/booking-form";
 import { ButtonLink } from "@/components/button-link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { siteConfig } from "@/data/site";
 
@@ -27,16 +28,19 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
-      <section className="reveal-soft mx-auto w-full max-w-6xl px-4 pb-5 pt-7 sm:px-6 sm:pb-10 sm:pt-14 lg:px-8">
-        <SectionHeading
-          eyebrow="Kontakt"
-          title="Rezervácia termínu"
-          text="Termín si môžeš dohodnúť telefonicky, cez sociálne siete alebo priamo cez krátky formulár na stránke."
-        />
+      <section className="mx-auto w-full max-w-6xl px-4 pb-5 pt-7 sm:px-6 sm:pb-10 sm:pt-14 lg:px-8">
+        <ScrollReveal>
+          <SectionHeading
+            eyebrow="Kontakt"
+            title="Rezervácia termínu"
+            text="Termín si môžeš dohodnúť telefonicky, cez sociálne siete alebo priamo cez krátky formulár na stránke."
+          />
+        </ScrollReveal>
       </section>
 
-      <section className="reveal-soft mx-auto grid w-full max-w-6xl gap-2.5 px-4 pb-5 sm:gap-4 sm:px-6 sm:pb-10 md:grid-cols-3 lg:px-8">
-        <a
+      <section className="mx-auto grid w-full max-w-6xl gap-2.5 px-4 pb-5 sm:gap-4 sm:px-6 sm:pb-10 md:grid-cols-3 lg:px-8">
+        <ScrollReveal staggerIndex={0} className="min-w-0">
+          <a
           href={siteConfig.phoneHref}
           className="interactive-card min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
         >
@@ -51,8 +55,10 @@ export default function ContactPage() {
             {siteConfig.phone}
           </p>
         </a>
+        </ScrollReveal>
 
-        <div className="interactive-card min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 sm:p-6">
+        <ScrollReveal staggerIndex={1} className="min-w-0">
+          <div className="interactive-card min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 sm:p-6">
           <MessageCircle className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
           <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
             Cez sociálne siete
@@ -79,8 +85,10 @@ export default function ContactPage() {
             </a>
           </div>
         </div>
+        </ScrollReveal>
 
-        <a
+        <ScrollReveal staggerIndex={2} className="min-w-0">
+          <a
           href="#rezervacia"
           className="interactive-card min-w-0 rounded-lg border border-[rgba(226,138,180,0.42)] bg-[linear-gradient(145deg,rgba(226,138,180,0.12),var(--color-surface))] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
         >
@@ -95,15 +103,17 @@ export default function ContactPage() {
             Rezervovať na stránke
           </p>
         </a>
+        </ScrollReveal>
       </section>
 
-      <section className="reveal-soft mx-auto grid w-full max-w-6xl gap-4 px-4 pb-12 sm:gap-8 sm:px-6 sm:pb-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+      <section className="mx-auto grid w-full max-w-6xl gap-4 px-4 pb-12 sm:gap-8 sm:px-6 sm:pb-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div className="order-1 min-w-0 lg:order-2">
           <div
             aria-hidden="true"
             className="mb-3 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(226,138,180,0.48),transparent)] lg:hidden"
           />
-          <Suspense
+          <ScrollReveal className="min-w-0">
+            <Suspense
             fallback={
               <div className="w-full min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-6 text-sm text-[var(--color-stone)]">
                 Načítavam rezervačný formulár...
@@ -112,10 +122,12 @@ export default function ContactPage() {
           >
             <BookingForm />
           </Suspense>
+          </ScrollReveal>
         </div>
 
         <aside className="order-2 min-w-0 space-y-3 sm:space-y-5 lg:order-1">
-          <div className="min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
+          <ScrollReveal staggerIndex={0} className="min-w-0">
+            <div className="min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
             <h2 className="text-base font-semibold text-[var(--color-charcoal)] sm:text-xl">
               Kontakt na salón
             </h2>
@@ -140,8 +152,10 @@ export default function ContactPage() {
               </a>
             </div>
           </div>
+          </ScrollReveal>
 
-          <div className="min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
+          <ScrollReveal staggerIndex={1} className="min-w-0">
+            <div className="min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 sm:p-6">
             <h2 className="text-base font-semibold text-[var(--color-charcoal)] sm:text-lg">
               Rýchle odkazy
             </h2>
@@ -184,8 +198,10 @@ export default function ContactPage() {
               </a>
             </div>
           </div>
+          </ScrollReveal>
 
-          <div className="min-w-0 overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
+          <ScrollReveal staggerIndex={2} className="min-w-0">
+            <div className="min-w-0 overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)]">
             <div className="p-4 sm:p-6">
               <div className="flex items-start gap-3">
                 <MapPin className="mt-0.5 shrink-0 text-[var(--color-powder)]" size={22} />
@@ -217,11 +233,13 @@ export default function ContactPage() {
               </a>
             </div>
           </div>
+          </ScrollReveal>
         </aside>
       </section>
 
-      <section className="reveal-soft border-t border-[var(--color-line)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+      <section className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
+        <ScrollReveal>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <div>
             <h2 className="text-xl font-semibold text-[var(--color-charcoal)] sm:text-2xl">
               Chceš si najprv pozrieť služby alebo ceny?
@@ -237,6 +255,7 @@ export default function ContactPage() {
             <ButtonLink href="/cennik">Pozrieť cenník</ButtonLink>
           </div>
         </div>
+        </ScrollReveal>
       </section>
     </>
   );
