@@ -41,68 +41,68 @@ export default function ContactPage() {
       <section className="mx-auto grid w-full max-w-6xl gap-2.5 px-4 pb-5 sm:gap-4 sm:px-6 sm:pb-10 md:grid-cols-3 lg:px-8">
         <ScrollReveal staggerIndex={0} className="min-w-0">
           <a
-          href={siteConfig.phoneHref}
-          className="interactive-card min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
-        >
-          <Phone className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
-          <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
-            Telefonicky
-          </h2>
-          <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:leading-6">
-            Zavolaj do salónu a termín dohodneme najrýchlejšie.
-          </p>
-          <p className="mt-3 text-sm font-semibold text-[var(--color-charcoal)] sm:mt-4">
-            {siteConfig.phone}
-          </p>
-        </a>
+            href={siteConfig.phoneHref}
+            className="interactive-card block h-full min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
+          >
+            <Phone className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
+            <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
+              Telefonicky
+            </h2>
+            <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:leading-6">
+              Zavolaj do salónu a termín dohodneme najrýchlejšie.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-[var(--color-charcoal)] sm:mt-4">
+              {siteConfig.phone}
+            </p>
+          </a>
         </ScrollReveal>
 
         <ScrollReveal staggerIndex={1} className="min-w-0">
-          <div className="interactive-card min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 sm:p-6">
-          <MessageCircle className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
-          <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
-            Cez sociálne siete
-          </h2>
-          <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:leading-6">
-            Napíš správu cez Instagram alebo Facebook.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
-            <a
-              href={siteConfig.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
-            >
-              Instagram
-            </a>
-            <a
-              href={siteConfig.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
-            >
-              Facebook
-            </a>
+          <div className="interactive-card h-full min-w-0 rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3.5 sm:p-6">
+            <MessageCircle className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
+            <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
+              Cez sociálne siete
+            </h2>
+            <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:leading-6">
+              Napíš správu cez Instagram alebo Facebook.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
+              <a
+                href={siteConfig.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
+              >
+                Instagram
+              </a>
+              <a
+                href={siteConfig.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
+              >
+                Facebook
+              </a>
+            </div>
           </div>
-        </div>
         </ScrollReveal>
 
         <ScrollReveal staggerIndex={2} className="min-w-0">
           <a
-          href="#rezervacia"
-          className="interactive-card min-w-0 rounded-lg border border-[rgba(226,138,180,0.42)] bg-[linear-gradient(145deg,rgba(226,138,180,0.12),var(--color-surface))] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
-        >
-          <CalendarDays className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
-          <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
-            Formulárom
-          </h2>
-          <p className="mt-2 text-sm leading-5 text-[var(--color-charcoal)] sm:leading-6">
-            Vyplň meno, e-mail a telefón. Ozveme sa ti s potvrdením termínu.
-          </p>
-          <p className="mt-3 text-sm font-semibold text-[var(--color-charcoal)] sm:mt-4">
-            Rezervovať na stránke
-          </p>
-        </a>
+            href="#rezervacia"
+            className="interactive-card block h-full min-w-0 rounded-lg border border-[rgba(226,138,180,0.42)] bg-[linear-gradient(145deg,rgba(226,138,180,0.12),var(--color-surface))] p-3.5 transition hover:border-[var(--color-powder)] sm:p-6"
+          >
+            <CalendarDays className="text-[var(--color-powder)]" size={21} aria-hidden="true" />
+            <h2 className="mt-3 text-base font-semibold text-[var(--color-charcoal)] sm:mt-5 sm:text-lg">
+              Formulárom
+            </h2>
+            <p className="mt-2 text-sm leading-5 text-[var(--color-charcoal)] sm:leading-6">
+              Vyplň meno, e-mail a telefón. Ozveme sa ti s potvrdením termínu.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-[var(--color-charcoal)] sm:mt-4">
+              Rezervovať na stránke
+            </p>
+          </a>
         </ScrollReveal>
       </section>
 
