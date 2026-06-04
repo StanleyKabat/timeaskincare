@@ -61,7 +61,7 @@ export function Header() {
         <Link
           href="/"
           aria-label="Timea Skincare - domov"
-          className="group flex min-w-0 items-center"
+          className="flex min-w-0 items-center"
           onClick={() => setIsOpen(false)}
         >
           <Image
@@ -70,7 +70,7 @@ export function Header() {
             width={728}
             height={165}
             sizes="(min-width: 640px) 200px, 165px"
-            className="h-8 w-auto shrink-0 transition-opacity group-hover:opacity-90 sm:h-9"
+            className="h-8 w-auto shrink-0 sm:h-9"
             priority
           />
         </Link>
