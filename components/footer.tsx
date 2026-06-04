@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Mail, MapPin, Phone } from "lucide-react";
+import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 
 import { navigation, siteConfig } from "@/data/site";
 
@@ -52,13 +54,50 @@ export function Footer() {
           <p className="text-sm font-semibold text-[var(--color-charcoal)]">
             Kontakt
           </p>
-          <div className="mt-3 grid gap-2 text-sm text-[var(--color-stone)]">
-            <p>{siteConfig.address}</p>
-            <a href={siteConfig.phoneHref} className="hover:text-[var(--color-powder)]">
-              {siteConfig.phone}
+          <div className="mt-3 grid gap-3 text-sm text-[var(--color-stone)]">
+            <p className="flex gap-2.5">
+              <MapPin className="mt-0.5 shrink-0 text-[var(--color-powder)]" size={16} aria-hidden="true" />
+              <span className="min-w-0 break-words">{siteConfig.address}</span>
+            </p>
+            <a
+              href={siteConfig.phoneHref}
+              className="flex min-h-10 items-center gap-2.5 transition hover:text-[var(--color-powder)]"
+            >
+              <Phone className="shrink-0 text-[var(--color-powder)]" size={16} aria-hidden="true" />
+              <span className="min-w-0 break-words">{siteConfig.phone}</span>
             </a>
-            <a href={siteConfig.emailHref} className="hover:text-[var(--color-powder)]">
-              {siteConfig.email}
+            <a
+              href={siteConfig.emailHref}
+              className="flex min-h-10 items-center gap-2.5 transition hover:text-[var(--color-powder)]"
+            >
+              <Mail className="shrink-0 text-[var(--color-powder)]" size={16} aria-hidden="true" />
+              <span className="min-w-0 break-all">{siteConfig.email}</span>
+            </a>
+          </div>
+
+          <p className="mt-5 text-sm font-semibold text-[var(--color-charcoal)]">
+            Sociálne siete
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2.5">
+            <a
+              href={siteConfig.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)]"
+            >
+              <FaInstagram size={16} aria-hidden="true" className="text-[var(--color-powder)]" />
+              Instagram
+            </a>
+            <a
+              href={siteConfig.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)]"
+            >
+              <FaFacebookF size={14} aria-hidden="true" className="text-[var(--color-powder)]" />
+              Facebook
             </a>
           </div>
         </div>

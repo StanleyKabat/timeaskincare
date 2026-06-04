@@ -66,24 +66,26 @@ export default function ContactPage() {
             <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:leading-6">
               Napíš správu cez Instagram alebo Facebook.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 sm:mt-4">
-              <a
-                href={siteConfig.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
-              >
-                Instagram
-              </a>
-              <a
-                href={siteConfig.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
-              >
-                Facebook
-              </a>
-            </div>
+          <div className="mt-3 flex flex-wrap gap-2.5 sm:mt-4">
+            <a
+              href={siteConfig.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
+            >
+              Instagram
+            </a>
+            <a
+              href={siteConfig.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--color-line)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)] sm:min-h-10 sm:px-4 sm:py-2"
+            >
+              Facebook
+            </a>
+          </div>
           </div>
         </ScrollReveal>
 
@@ -164,6 +166,7 @@ export default function ContactPage() {
                 href={siteConfig.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
                 className="group inline-flex min-h-12 items-center justify-between gap-3 rounded-lg border border-[var(--color-line)] px-4 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[rgba(226,138,180,0.06)]"
               >
                 <span className="inline-flex items-center gap-3">
@@ -182,6 +185,7 @@ export default function ContactPage() {
                 href={siteConfig.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
                 className="group inline-flex min-h-12 items-center justify-between gap-3 rounded-lg border border-[var(--color-line)] px-4 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[rgba(226,138,180,0.06)]"
               >
                 <span className="inline-flex items-center gap-3">

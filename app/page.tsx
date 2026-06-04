@@ -215,6 +215,7 @@ export default function Home() {
                 href={siteConfig.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)]"
               >
                 <MessageCircle size={17} aria-hidden="true" />
