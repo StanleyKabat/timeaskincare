@@ -64,16 +64,15 @@ export function Header() {
           className="group flex min-w-0 items-center"
           onClick={() => setIsOpen(false)}
         >
-          <span className="relative block h-9 w-[148px] shrink-0 overflow-hidden rounded-full border border-[rgba(226,138,180,0.34)] shadow-[0_8px_24px_rgba(217,121,168,0.16)] transition group-hover:border-[rgba(246,220,231,0.52)] group-hover:shadow-[0_10px_30px_rgba(217,121,168,0.24)] sm:h-10 sm:w-[168px]">
-            <Image
-              src="/images/timea-skincare-logo.jpg"
-              alt="Timea Skincare"
-              fill
-              sizes="168px"
-              className="object-cover"
-              priority
-            />
-          </span>
+          <Image
+            src="/images/timea-skincare-logo-white.png"
+            alt="Timea Skincare"
+            width={728}
+            height={165}
+            sizes="(min-width: 640px) 200px, 165px"
+            className="h-8 w-auto shrink-0 transition-opacity group-hover:opacity-90 sm:h-9"
+            priority
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Hlavná navigácia">
@@ -126,17 +125,15 @@ export function Header() {
           <div className="mobile-menu-panel mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.14)] bg-[linear-gradient(152deg,rgba(250,248,246,0.1)_0%,rgba(250,248,246,0.04)_100%)] px-3.5 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.36)] backdrop-blur-xl">
             <div className="mb-2.5 flex items-center justify-between gap-3">
               <div className="inline-flex min-w-0 items-center gap-2.5">
-                <span className="relative block h-9 w-[150px] shrink-0 overflow-hidden rounded-full border border-[rgba(217,121,168,0.5)] shadow-[0_8px_22px_rgba(217,121,168,0.18)]">
-                  <Image
-                    src="/images/timea-skincare-logo.jpg"
-                    alt="Timea Skincare"
-                    fill
-                    sizes="150px"
-                    className="object-cover"
-                    priority
-                  />
-                </span>
-                <p className="truncate text-[11px] text-[rgba(247,241,235,0.72)]">✦ Jemná starostlivosť</p>
+                <Image
+                  src="/images/timea-skincare-logo-white.png"
+                  alt="Timea Skincare"
+                  width={728}
+                  height={165}
+                  sizes="160px"
+                  className="h-8 w-auto shrink-0"
+                  priority
+                />
               </div>
               <button
                 type="button"
