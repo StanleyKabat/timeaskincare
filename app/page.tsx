@@ -29,17 +29,20 @@ export default function Home() {
       <section className="soft-grid reveal-soft">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
           <div>
-            <p className="mb-4 inline-flex rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-stone)] sm:mb-6 sm:px-4 sm:py-2 sm:text-sm">
-              Kozmetický salón v Novej Bani
-            </p>
             <h1 className="max-w-2xl text-balance font-serif text-[1.95rem] font-semibold leading-[1.12] text-[var(--color-charcoal)] sm:text-5xl sm:leading-[1.08] lg:text-6xl">
-              Kozmetika v Novej Bani pre pleť, ktorá potrebuje pokoj
+              Pleť, obočie a mihalnice v prirodzenej rovnováhe
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-6 text-[var(--color-stone)] sm:mt-6 sm:text-lg sm:leading-8">
-              Osobné ošetrenia pleti, úprava obočia a laminácia mihalníc v
-              pokojnom salóne Timea Skincare. Bez zhonu, s dôrazom na čistú
-              pleť, prirodzený výsledok a starostlivosť, ktorá dáva zmysel tvojej
-              pokožke.
+              Pokojné kozmetické ošetrenia, úprava obočia a laminácia mihalníc s
+              dôrazom na čistú pleť, prirodzený výsledok a starostlivosť, ktorá
+              nepôsobí prehnane.
+            </p>
+            <p className="mt-5 flex items-center gap-2 text-xs font-medium tracking-wide text-[var(--color-stone)] sm:text-sm">
+              <span
+                aria-hidden="true"
+                className="inline-block size-1.5 shrink-0 rounded-full bg-[var(--color-powder)]"
+              />
+              Timea Skincare · kozmetický salón v Novej Bani
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               <ButtonLink href="/kontakt#rezervacia" className="gap-2">
