@@ -60,26 +60,19 @@ export function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-5 sm:px-6 sm:py-4 lg:px-8">
         <Link
           href="/"
-          className="group flex min-w-0 items-center gap-2.5 sm:gap-3"
+          aria-label="Timea Skincare - domov"
+          className="group flex min-w-0 items-center"
           onClick={() => setIsOpen(false)}
         >
-          <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full border border-[rgba(226,138,180,0.34)] bg-[#d979a8] shadow-[0_8px_24px_rgba(217,121,168,0.16)] transition group-hover:border-[rgba(246,220,231,0.52)] group-hover:shadow-[0_10px_30px_rgba(217,121,168,0.24)] sm:size-10">
+          <span className="relative block h-9 w-[148px] shrink-0 overflow-hidden rounded-full border border-[rgba(226,138,180,0.34)] shadow-[0_8px_24px_rgba(217,121,168,0.16)] transition group-hover:border-[rgba(246,220,231,0.52)] group-hover:shadow-[0_10px_30px_rgba(217,121,168,0.24)] sm:h-10 sm:w-[168px]">
             <Image
               src="/images/timea-skincare-logo.jpg"
-              alt="Timea Skincare logo"
+              alt="Timea Skincare"
               fill
-              sizes="40px"
-              className="object-contain p-1"
+              sizes="168px"
+              className="object-cover"
               priority
             />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-charcoal)] sm:text-sm sm:tracking-[0.18em]">
-              Timea
-            </span>
-            <span className="block text-xs text-[var(--color-stone)]">
-              Skincare
-            </span>
           </span>
         </Link>
 
@@ -133,22 +126,17 @@ export function Header() {
           <div className="mobile-menu-panel mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.14)] bg-[linear-gradient(152deg,rgba(250,248,246,0.1)_0%,rgba(250,248,246,0.04)_100%)] px-3.5 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.36)] backdrop-blur-xl">
             <div className="mb-2.5 flex items-center justify-between gap-3">
               <div className="inline-flex min-w-0 items-center gap-2.5">
-                <span className="relative grid size-8 place-items-center overflow-hidden rounded-full border border-[rgba(217,121,168,0.5)] bg-[#d979a8] shadow-[0_8px_22px_rgba(217,121,168,0.18)]">
+                <span className="relative block h-9 w-[150px] shrink-0 overflow-hidden rounded-full border border-[rgba(217,121,168,0.5)] shadow-[0_8px_22px_rgba(217,121,168,0.18)]">
                   <Image
                     src="/images/timea-skincare-logo.jpg"
-                    alt="Timea Skincare logo"
+                    alt="Timea Skincare"
                     fill
-                    sizes="32px"
-                    className="object-contain p-1"
+                    sizes="150px"
+                    className="object-cover"
                     priority
                   />
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-charcoal)]">
-                    Timea Skincare
-                  </p>
-                  <p className="text-[11px] text-[rgba(247,241,235,0.72)]">✦ Jemná starostlivosť</p>
-                </div>
+                <p className="truncate text-[11px] text-[rgba(247,241,235,0.72)]">✦ Jemná starostlivosť</p>
               </div>
               <button
                 type="button"
