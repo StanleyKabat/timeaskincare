@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import {
   ArrowRight,
   CalendarCheck,
@@ -71,7 +72,15 @@ export default function Home() {
             </ul>
           </div>
           <div className="sparkle-field relative hidden min-h-[420px] overflow-hidden rounded-[2rem] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_24px_70px_rgba(0,0,0,0.38)] sm:block">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_26%_18%,rgba(226,138,180,0.24),transparent_18rem),linear-gradient(140deg,#121111,#27221f_48%,rgba(226,138,180,0.18))]" />
+            <Image
+              src="/images/salon/salon-lehatko-detail.jpg"
+              alt="Kozmetické lôžko v salóne Timea Skincare"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 42vw"
+              className="object-cover opacity-70"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,17,17,0.08),rgba(18,17,17,0.82)),radial-gradient(circle_at_26%_18%,rgba(226,138,180,0.2),transparent_18rem)]" />
             <div className="absolute right-4 top-4 rounded-full border border-[var(--color-line)] bg-[rgba(25,24,23,0.78)] px-3 py-1.5 text-xs font-medium text-[var(--color-stone)] sm:right-6 sm:top-6 sm:px-4 sm:py-2 sm:text-sm">
               Timea Skincare
             </div>
