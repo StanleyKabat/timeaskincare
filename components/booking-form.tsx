@@ -188,7 +188,8 @@ export function BookingForm() {
     setSubmitError("");
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const name = String(formData.get("name") || "");
     const email = String(formData.get("email") || "");
     const phone = String(formData.get("phone") || "");
@@ -335,40 +336,39 @@ export function BookingForm() {
         code?: string;
         error?: string;
         smsConfigured?: boolean;
-        emailConfigured?: boolean;
+        customerSms?: "sent" | "failed" | "skipped";
       };
 
       if (!response.ok || !data.ok) {
-        if (data.code === "CALENDAR_NOT_CONFIGURED") {
-          void navigator.clipboard?.writeText(body).catch(() => undefined);
-          window.location.href = mailtoUrl;
-          setSubmitInfo(
-            "Kalendár ešte nie je napojený, preto sa otvoril e-mail s predvyplnenou žiadosťou. Text sme skopírovali aj do schránky.",
-          );
-          return;
-        }
-
-        throw new Error(data.error || "Rezerváciu sa nepodarilo odoslať.");
+        throw new Error(data.error || "Požiadavku sa nepodarilo odoslať.");
       }
 
-      const missingNotifications = [
-        data.emailConfigured === false ? "e-mailové potvrdenie" : "",
-        data.smsConfigured === false ? "SMS upozornenie" : "",
-      ].filter(Boolean);
+      form.reset();
+      setSelectedServiceNames([]);
+      setSelectedDate("");
+      setSelectedTime("");
+      setAvailableSlots([]);
 
       setSubmitInfo(
-        missingNotifications.length
-          ? `Termín je predbežne rezervovaný v kalendári. Ešte treba doplniť: ${missingNotifications.join(
-              ", ",
-            )}.`
-          : "Termín je predbežne rezervovaný v kalendári. Potvrdenie príde e-mailom a Timea dostane SMS upozornenie.",
+        data.customerSms === "sent"
+          ? "Ďakujeme, vašu požiadavku o rezerváciu sme prijali. Potvrdenie o prijatí sme vám poslali SMS-kou a čoskoro vás budeme kontaktovať s potvrdením termínu."
+          : "Ďakujeme, vašu požiadavku o rezerváciu sme prijali. Čoskoro vás budeme kontaktovať s potvrdením termínu.",
       );
     } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Rezerváciu sa nepodarilo odoslať.",
-      );
+      // Network-level failure: offer the e-mail fallback so the request is not lost.
+      if (error instanceof TypeError) {
+        void navigator.clipboard?.writeText(body).catch(() => undefined);
+        window.location.href = mailtoUrl;
+        setSubmitInfo(
+          "Spojenie sa nepodarilo nadviazať, preto sa otvoril e-mail s predvyplnenou žiadosťou. Text sme skopírovali aj do schránky.",
+        );
+      } else {
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : "Požiadavku sa nepodarilo odoslať.",
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -391,7 +391,7 @@ export function BookingForm() {
           <p className="mt-2 text-sm leading-5 text-[var(--color-stone)] sm:mt-3 sm:leading-6">
             {isGiftVoucherFlow
               ? "Vyber typ ošetrenia na poukážku a doplň údaje o darcovi a obdarovanom."
-              : "Vyber jednu alebo viac služieb, dátum a dostupný čas. Termín sa zapíše ako predbežne rezervovaný a platí po potvrdení salónom."}
+              : "Vyber jednu alebo viac služieb, dátum a vyhovujúci čas. Odošleš nezáväznú požiadavku o termín, ktorú salón potvrdí osobne."}
           </p>
         </div>
 
@@ -705,13 +705,13 @@ export function BookingForm() {
             ? "Odosielam..."
             : isGiftVoucherFlow
               ? "Pokračovať na QR platbu"
-              : "Predbežne rezervovať termín"}
+              : "Odoslať požiadavku o termín"}
         </button>
 
         <p className="text-xs leading-5 text-[var(--color-stone)]">
           {isGiftVoucherFlow
             ? "Po odoslaní ťa presmerujeme na QR kód pre bankový prevod darčekovej poukážky."
-            : "Po odoslaní sa termín zapíše do kalendára ako obsadený. Zákazníčke príde potvrdenie e-mailom a salón dostane priame upozornenie."}
+            : "Po odoslaní dostaneš SMS o prijatí požiadavky a salón sa ti ozve s potvrdením termínu. Rezervácia nie je automaticky potvrdená."}
         </p>
         {submitInfo ? <p className="text-xs leading-5 text-[var(--color-stone)]">{submitInfo}</p> : null}
         {submitError ? <p className="text-xs leading-5 text-red-300">{submitError}</p> : null}

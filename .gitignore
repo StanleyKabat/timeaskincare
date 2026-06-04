@@ -2,7 +2,11 @@
 node_modules/
 out/
 dist/
-.env*.local
+.env
+.env.*
+!.env.example
 .vercel/
 *.tsbuildinfo
 next-env.d.ts
+.DS_Store
+**/.DS_Store

@@ -44,15 +44,42 @@ function hasGoogleCalendarConfig() {
   );
 }
 
+type SmsProviderConfig = {
+  sid?: string;
+  token?: string;
+  from?: string;
+  messagingServiceSid?: string;
+};
+
+// Reads SMS credentials. New SMS_PROVIDER_* names take priority; the
+// legacy TWILIO_* names stay supported as a fallback.
+function getSmsConfig(): SmsProviderConfig {
+  return {
+    sid: process.env.SMS_PROVIDER_ACCOUNT_ID || process.env.TWILIO_ACCOUNT_SID,
+    token: process.env.SMS_PROVIDER_AUTH_TOKEN || process.env.TWILIO_AUTH_TOKEN,
+    from: process.env.SMS_PROVIDER_FROM_NUMBER || process.env.TWILIO_FROM,
+    messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+  };
+}
+
+function hasSmsConfig() {
+  const config = getSmsConfig();
+  return Boolean(config.sid && config.token && (config.from || config.messagingServiceSid));
+}
+
+function getOwnerPhone() {
+  return (
+    process.env.SALON_OWNER_PHONE ||
+    process.env.TIMEA_NOTIFICATION_PHONE ||
+    siteConfig.phone
+  );
+}
+
 export function getBookingIntegrationStatus() {
   return {
     calendarConfigured: hasGoogleCalendarConfig(),
     emailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.BOOKING_FROM_EMAIL),
-    smsConfigured: Boolean(
-      process.env.TWILIO_ACCOUNT_SID &&
-        process.env.TWILIO_AUTH_TOKEN &&
-        (process.env.TWILIO_FROM || process.env.TWILIO_MESSAGING_SERVICE_SID),
-    ),
+    smsConfigured: hasSmsConfig(),
   };
 }
 
@@ -240,20 +267,7 @@ function bookingText(booking: BookingRequest) {
     .join("\n");
 }
 
-export async function createCalendarBooking(input: unknown) {
-  const booking = validateBookingRequest(input);
-
-  if (!hasGoogleCalendarConfig()) {
-    const error = new Error("Kalendár ešte nie je napojený.");
-    error.name = "CALENDAR_NOT_CONFIGURED";
-    throw error;
-  }
-
-  const slots = await getAvailableSlotsFromCalendar(booking.date, booking.durationMinutes);
-  if (!slots.includes(booking.time)) {
-    throw new Error("Vybraný čas už nie je dostupný. Prosím, vyber iný čas.");
-  }
-
+async function createCalendarEvent(booking: BookingRequest): Promise<GoogleEvent> {
   const accessToken = await getGoogleAccessToken();
   const [hours, minutes] = booking.time.split(":").map(Number);
   const start = `${booking.date}T${String(hours).padStart(2, "0")}:${String(
@@ -311,13 +325,45 @@ export async function createCalendarBooking(input: unknown) {
     throw new Error("Nepodarilo sa vytvoriť termín v Google kalendári.");
   }
 
-  const event = (await response.json()) as GoogleEvent;
-  await Promise.allSettled([
-    sendBookingEmails(booking, event),
-    sendOwnerSmsNotification(booking),
-  ]);
+  return (await response.json()) as GoogleEvent;
+}
 
-  return { booking, event };
+/**
+ * Main reservation entry point. Always works as a reservation REQUEST:
+ * - validates the input,
+ * - (optionally) creates a calendar event when Google Calendar is set up,
+ * - sends an SMS to the salon owner and a confirmation SMS to the customer,
+ * - sends optional e-mails when Resend is configured.
+ * The appointment is NOT auto-confirmed; the salon confirms manually.
+ */
+export async function submitReservation(input: unknown) {
+  const booking = validateBookingRequest(input);
+
+  let event: GoogleEvent | undefined;
+  if (hasGoogleCalendarConfig()) {
+    const slots = await getAvailableSlotsFromCalendar(booking.date, booking.durationMinutes);
+    if (!slots.includes(booking.time)) {
+      throw new Error("Vybraný čas už nie je dostupný. Prosím, vyber iný čas.");
+    }
+    event = await createCalendarEvent(booking);
+  }
+
+  const sms = await sendReservationNotifications(booking);
+
+  // E-mails are best-effort and must never block the reservation request.
+  await Promise.allSettled([sendBookingEmails(booking, event)]);
+
+  // The owner notification is critical: if SMS is configured but the
+  // owner message failed, surface a friendly error to the customer.
+  if (hasSmsConfig() && sms.owner === "failed") {
+    const error = new Error(
+      "Požiadavku sa momentálne nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte telefonicky.",
+    );
+    error.name = "SMS_FAILED";
+    throw error;
+  }
+
+  return { booking, event, sms };
 }
 
 async function sendEmail(to: string | string[], subject: string, text: string) {
@@ -346,12 +392,12 @@ async function sendEmail(to: string | string[], subject: string, text: string) {
   return { skipped: false };
 }
 
-async function sendBookingEmails(booking: BookingRequest, event: GoogleEvent) {
+async function sendBookingEmails(booking: BookingRequest, event?: GoogleEvent) {
   const customerText = [
     `Dobrý deň, ${booking.name},`,
     "",
-    "ďakujeme za rezerváciu v Timea Skincare.",
-    "Termín je predbežne rezervovaný a platí po potvrdení salónom.",
+    "ďakujeme za vašu požiadavku o rezerváciu v Timea Skincare.",
+    "Požiadavku sme prijali a čoskoro vás budeme kontaktovať s potvrdením termínu.",
     "",
     bookingText(booking),
     "",
@@ -360,25 +406,22 @@ async function sendBookingEmails(booking: BookingRequest, event: GoogleEvent) {
   ].join("\n");
 
   const ownerText = [
-    "Nová online rezervácia:",
+    "Nová požiadavka o rezerváciu:",
     "",
     bookingText(booking),
-    event.htmlLink ? `Kalendár: ${event.htmlLink}` : "",
+    event?.htmlLink ? `Kalendár: ${event.htmlLink}` : "",
   ]
     .filter(Boolean)
     .join("\n");
 
   await Promise.all([
-    sendEmail(booking.email, "Timea Skincare - predbežná rezervácia termínu", customerText),
+    sendEmail(booking.email, "Timea Skincare - prijatá požiadavka o rezerváciu", customerText),
     sendEmail(siteConfig.email, `Nová rezervácia - ${booking.name}`, ownerText),
   ]);
 }
 
 async function sendSms(to: string, body: string) {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM;
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+  const { sid, token, from, messagingServiceSid } = getSmsConfig();
 
   if (!sid || !token || (!from && !messagingServiceSid)) {
     return { skipped: true };
@@ -414,12 +457,45 @@ async function sendSms(to: string, body: string) {
   return { skipped: false };
 }
 
-async function sendOwnerSmsNotification(booking: BookingRequest) {
-  const ownerPhone = process.env.TIMEA_NOTIFICATION_PHONE || siteConfig.phone;
-  return sendSms(
-    ownerPhone,
-    `Timea Skincare: nová rezervácia ${booking.date} ${booking.time}, ${booking.name}, ${booking.services.join(", ")}. Tel: ${booking.phone}`,
-  );
+type SmsStatus = "sent" | "failed" | "skipped";
+
+function ownerSmsBody(booking: BookingRequest) {
+  return [
+    "Nová rezervácia – Timea Skincare:",
+    `Meno: ${booking.name}`,
+    `Telefón: ${booking.phone}`,
+    `Služba: ${booking.services.join(", ")}`,
+    `Dátum: ${booking.date}`,
+    `Čas: ${booking.time}`,
+    `Poznámka: ${booking.note ? booking.note : "-"}`,
+  ].join("\n");
+}
+
+const CUSTOMER_SMS_BODY =
+  "Ďakujeme za rezerváciu v Timea Skincare. Vašu požiadavku sme prijali a čoskoro vás budeme kontaktovať s potvrdením termínu.";
+
+async function trySendSms(to: string, body: string): Promise<SmsStatus> {
+  if (!hasSmsConfig()) {
+    return "skipped";
+  }
+
+  try {
+    const result = await sendSms(to, body);
+    return result.skipped ? "skipped" : "sent";
+  } catch (error) {
+    // Log safely without exposing customer data or provider secrets.
+    console.error(
+      "[reservation] SMS send failed:",
+      error instanceof Error ? error.message : "unknown error",
+    );
+    return "failed";
+  }
+}
+
+async function sendReservationNotifications(booking: BookingRequest) {
+  const owner = await trySendSms(getOwnerPhone(), ownerSmsBody(booking));
+  const customer = await trySendSms(booking.phone, CUSTOMER_SMS_BODY);
+  return { owner, customer };
 }
 
 export async function sendTomorrowSmsReminders() {
