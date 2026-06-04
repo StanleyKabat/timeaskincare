@@ -16,36 +16,30 @@ export const metadata: Metadata = {
 
 const galleryItems = [
   {
-    title: "Kozmetické lôžko",
-    category: "Salón",
-    src: "/images/salon/salon-lehatko-detail.jpg",
-    alt: "Kozmetické lôžko v salóne Timea Skincare v Novej Bani",
-    featured: true,
-  },
-  {
     title: "Priestor salónu",
     category: "Salón",
     src: "/images/salon/salon-interier-lehatko.jpg",
     alt: "Interiér kozmetického salónu Timea Skincare s kozmetickým lôžkom a policami",
-  },
-  {
-    title: "Zrkadlo a produkty",
-    category: "Salón",
-    src: "/images/salon/salon-zrkadlo-policky.jpg",
-    alt: "Zrkadlo a kozmetické produkty v salóne Timea Skincare",
-  },
-  {
-    title: "Pokojný kútik",
-    category: "Atmosféra",
-    src: "/images/salon/salon-cakaci-kutik.jpg",
-    alt: "Pokojný kútik so stolíkom a detailmi v salóne Timea Skincare",
     featured: true,
   },
   {
-    title: "Detail zrkadla",
+    title: "Kozmetika v salóne",
+    category: "Salón",
+    src: "/images/salon/kozmetika-v-zrkadle.jpg",
+    alt: "Kozmetické produkty v salóne Timea Skincare v Novej Bani",
+  },
+  {
+    title: "Čakací priestor",
+    category: "Atmosféra",
+    src: "/images/salon/cakaci-priestor-vizitky.jpg",
+    alt: "Čakací priestor s vizitkami a jemnými detailmi v salóne Timea Skincare",
+    featured: true,
+  },
+  {
+    title: "Jemné detaily salónu",
     category: "Atmosféra",
     src: "/images/salon/salon-kvetinove-zrkadlo.jpg",
-    alt: "Kvetinový detail zrkadla v salóne Timea Skincare",
+    alt: "Jemné dekorácie v salóne Timea Skincare v Novej Bani",
   },
   {
     title: "Vstup do budovy",
@@ -62,7 +56,7 @@ const galleryItems = [
   {
     title: "Prístrojové hlavice",
     category: "Technológia",
-    src: "/images/salon/pristroj-hlavice-detail.jpg",
+    src: "/images/salon/darcekovy-poukaz-detail.jpg",
     alt: "Detail prístrojových hlavíc používaných pri kozmetickom ošetrení pleti",
   },
   {
@@ -72,10 +66,10 @@ const galleryItems = [
     alt: "Certifikát ku kozmetickému prístroju v salóne Timea Skincare",
   },
   {
-    title: "Darčekový poukaz",
+    title: "Kartičky na ďalší termín",
     category: "Detail",
-    src: "/images/salon/darcekovy-poukaz-detail.jpg",
-    alt: "Darčekový poukaz a vizitky salónu Timea Skincare",
+    src: "/images/salon/karticky-na-dalsi-termin.jpg",
+    alt: "Kartičky na ďalší termín a vizitka salónu Timea Skincare",
   },
 ];
 
@@ -86,8 +80,8 @@ export default function GalleryPage() {
         <ScrollReveal>
           <SectionHeading
             eyebrow="Galéria"
-            title="Reálne fotky salónu Timea Skincare"
-            text="Prvé reálne zábery priestoru, technológie a detailov salónu v Novej Bani. Fotky výsledkov a pred/po doplníme iba so súhlasom zákazníčok."
+            title="Galéria salónu"
+            text="Pozrite si priestor, atmosféru a detaily salónu Timea Skincare."
           />
         </ScrollReveal>
       </section>

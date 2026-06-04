@@ -29,20 +29,23 @@ export default function Home() {
       <section className="soft-grid reveal-soft">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
           <div>
-            <h1 className="max-w-2xl text-balance font-serif text-[1.95rem] font-semibold leading-[1.12] text-[var(--color-charcoal)] sm:text-5xl sm:leading-[1.08] lg:text-6xl">
-              Pleť, obočie a mihalnice v prirodzenej rovnováhe
+            <h1 className="font-serif text-[2.6rem] font-medium leading-[1.04] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-6xl lg:text-[4.25rem]">
+              Timea Skincare
             </h1>
-            <p className="mt-5 max-w-xl text-sm leading-6 text-[var(--color-stone)] sm:mt-6 sm:text-lg sm:leading-8">
+            <p className="mt-3 max-w-md font-serif text-lg leading-snug text-[var(--color-charcoal)] sm:mt-4 sm:text-2xl">
+              Starostlivosť, ktorá nechá vyniknúť tvoju prirodzenosť.
+            </p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--color-stone)] sm:mt-5 sm:text-base sm:leading-7">
               Pokojné kozmetické ošetrenia, úprava obočia a laminácia mihalníc s
               dôrazom na čistú pleť, prirodzený výsledok a starostlivosť, ktorá
               nepôsobí prehnane.
             </p>
-            <p className="mt-5 flex items-center gap-2 text-xs font-medium tracking-wide text-[var(--color-stone)] sm:text-sm">
+            <p className="mt-5 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-stone)] sm:text-[0.8rem]">
               <span
                 aria-hidden="true"
                 className="inline-block size-1.5 shrink-0 rounded-full bg-[var(--color-powder)]"
               />
-              Timea Skincare · kozmetický salón v Novej Bani
+              kozmetický salón v Novej Bani
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               <ButtonLink href="/kontakt#rezervacia" className="gap-2">
@@ -137,31 +140,39 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--color-line)] bg-[var(--color-ink)] text-[var(--color-charcoal)]">
-        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-10 sm:gap-10 sm:px-6 sm:py-16 md:grid-cols-[1fr_0.9fr] lg:px-8">
-          <ScrollReveal className="min-w-0">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-blush)] sm:text-sm sm:tracking-[0.18em]">
-                O salóne
-              </p>
-              <h2 className="mt-3 max-w-xl font-serif text-2xl font-semibold leading-tight sm:mt-4 sm:text-4xl">
-                Pokojné miesto pre jemnú a profesionálnu starostlivosť
-              </h2>
+      <section className="border-y border-[var(--color-line)] bg-[linear-gradient(160deg,var(--color-surface),var(--color-surface-elevated))] text-[var(--color-charcoal)]">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-[rgba(226,138,180,0.24)] bg-[linear-gradient(150deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 shadow-[0_28px_70px_rgba(0,0,0,0.26)] sm:rounded-[2rem] sm:p-10 lg:p-14">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(226,138,180,0.18),transparent_70%)]"
+            />
+            <div className="relative grid gap-6 sm:gap-10 md:grid-cols-[1fr_0.9fr] md:items-center">
+              <ScrollReveal className="min-w-0">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-powder)] sm:text-sm sm:tracking-[0.18em]">
+                    O salóne
+                  </p>
+                  <h2 className="mt-3 max-w-xl font-serif text-2xl font-semibold leading-tight text-[var(--color-charcoal)] sm:mt-4 sm:text-4xl">
+                    Pokojné miesto pre jemnú a profesionálnu starostlivosť
+                  </h2>
+                </div>
+              </ScrollReveal>
+              <ScrollReveal staggerIndex={1} className="min-w-0">
+                <div className="text-sm leading-7 text-[rgba(247,241,235,0.82)] sm:text-base sm:leading-8">
+                  <p>
+                    V Timea Skincare veríme, že kozmetické ošetrenie nemá byť len
+                    procedúra, ale chvíľa pokoja, starostlivosti a dôvery. Každé
+                    ošetrenie je prispôsobené typu a potrebám pleti, aby bol výsledok
+                    prirodzený, jemný a viditeľný.
+                  </p>
+                  <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-7">
+                    Kontaktovať salón
+                  </ButtonLink>
+                </div>
+              </ScrollReveal>
             </div>
-          </ScrollReveal>
-          <ScrollReveal staggerIndex={1} className="min-w-0">
-            <div className="text-sm leading-7 text-[var(--color-stone)] sm:text-base sm:leading-8">
-              <p>
-                V Timea Skincare veríme, že kozmetické ošetrenie nemá byť len
-                procedúra, ale chvíľa pokoja, starostlivosti a dôvery. Každé
-                ošetrenie je prispôsobené typu a potrebám pleti, aby bol výsledok
-                prirodzený, jemný a viditeľný.
-              </p>
-              <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-7">
-                Kontaktovať salón
-              </ButtonLink>
-            </div>
-          </ScrollReveal>
+          </div>
         </div>
       </section>
 
