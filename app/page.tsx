@@ -7,7 +7,6 @@ import {
   HandHeart,
   MapPin,
   MessageCircle,
-  Sparkles,
   Star,
 } from "lucide-react";
 
@@ -28,20 +27,21 @@ export default function Home() {
   return (
     <>
       <section className="soft-grid reveal-soft">
-        <div className="mx-auto grid max-w-6xl items-center gap-7 px-4 py-8 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
           <div>
-            <p className="mb-4 inline-flex rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-stone)] sm:mb-5 sm:px-4 sm:py-2 sm:text-sm">
+            <p className="mb-4 inline-flex rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-stone)] sm:mb-6 sm:px-4 sm:py-2 sm:text-sm">
               Kozmetický salón v Novej Bani
             </p>
-            <h1 className="max-w-3xl font-serif text-[2.15rem] font-semibold leading-[1.08] text-[var(--color-charcoal)] sm:text-6xl sm:leading-[1.05] lg:text-7xl">
-              Jemná a profesionálna starostlivosť o pleť v Novej Bani
+            <h1 className="max-w-2xl text-balance font-serif text-[1.95rem] font-semibold leading-[1.12] text-[var(--color-charcoal)] sm:text-5xl sm:leading-[1.08] lg:text-6xl">
+              Kozmetika v Novej Bani pre pleť, ktorá potrebuje pokoj
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--color-stone)] sm:mt-6 sm:text-lg sm:leading-8">
-              Timea Skincare je kozmetický salón zameraný na individuálne
-              ošetrenia pleti, úpravu obočia, mihalnice a jemnú starostlivosť,
-              ktorá rešpektuje potreby tvojej pokožky.
+            <p className="mt-5 max-w-xl text-sm leading-6 text-[var(--color-stone)] sm:mt-6 sm:text-lg sm:leading-8">
+              Osobné ošetrenia pleti, úprava obočia a laminácia mihalníc v
+              pokojnom salóne Timea Skincare. Bez zhonu, s dôrazom na čistú
+              pleť, prirodzený výsledok a starostlivosť, ktorá dáva zmysel tvojej
+              pokožke.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               <ButtonLink href="/kontakt#rezervacia" className="gap-2">
                 Rezervovať termín
                 <ArrowRight size={17} aria-hidden="true" />
@@ -52,7 +52,7 @@ export default function Home() {
             </div>
             <ul
               aria-label="Prečo Timea Skincare"
-              className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-7 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-sm"
+              className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-8 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-sm"
             >
               {[
                 { icon: MapPin, label: "Nová Baňa" },
@@ -71,31 +71,22 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="sparkle-field relative hidden min-h-[420px] overflow-hidden rounded-[2rem] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_24px_70px_rgba(0,0,0,0.38)] sm:block">
+          <div className="relative h-60 overflow-hidden rounded-[1.5rem] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_24px_70px_rgba(0,0,0,0.32)] sm:h-auto sm:min-h-[460px] sm:rounded-[2rem]">
             <Image
               src="/images/salon/salon-lehatko-detail.jpg"
-              alt="Kozmetické lôžko v salóne Timea Skincare"
+              alt="Pokojné prostredie kozmetického salónu Timea Skincare v Novej Bani"
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 42vw"
-              className="object-cover opacity-70"
+              className="object-cover"
             />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,17,17,0.08),rgba(18,17,17,0.82)),radial-gradient(circle_at_26%_18%,rgba(226,138,180,0.2),transparent_18rem)]" />
-            <div className="absolute right-4 top-4 rounded-full border border-[var(--color-line)] bg-[rgba(25,24,23,0.78)] px-3 py-1.5 text-xs font-medium text-[var(--color-stone)] sm:right-6 sm:top-6 sm:px-4 sm:py-2 sm:text-sm">
-              Timea Skincare
-            </div>
-            <div className="absolute inset-x-5 bottom-5 sm:inset-x-8 sm:bottom-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-[rgba(25,24,23,0.72)] px-3 py-1.5 text-xs font-semibold text-[var(--color-powder)] sm:mb-5 sm:gap-3 sm:px-4 sm:py-2 sm:text-sm">
-                <Sparkles size={17} aria-hidden="true" />
-                Jemná starostlivosť
-              </div>
-              <p className="max-w-sm text-lg font-semibold leading-tight text-[var(--color-charcoal)] sm:text-2xl">
-                Priestor pre pokoj, čistú pleť a prirodzene upravené detaily.
-              </p>
-              <p className="mt-3 text-xs leading-5 text-[var(--color-stone)] sm:mt-4 sm:text-sm sm:leading-6">
-                Salón Timea Skincare ponúka čisté, pokojné prostredie a individuálny prístup ku každej zákazníčke.
-              </p>
-            </div>
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,17,17,0)_55%,rgba(18,17,17,0.32))]"
+            />
+            <span className="absolute left-4 top-4 inline-flex items-center rounded-full border border-[rgba(255,255,255,0.22)] bg-[rgba(16,16,15,0.55)] px-3 py-1.5 text-[11px] font-medium tracking-wide text-[var(--color-charcoal)] backdrop-blur-sm sm:left-6 sm:top-6 sm:text-xs">
+              Pleť · obočie · mihalnice
+            </span>
           </div>
         </div>
       </section>
