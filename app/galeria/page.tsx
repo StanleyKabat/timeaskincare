@@ -18,7 +18,7 @@ const galleryItems = [
   {
     title: "Priestor salónu",
     category: "Salón",
-    src: "/images/salon/salon-interier-lehatko.jpg",
+    src: "/images/salon/priestor-salonu.jpg",
     alt: "Interiér kozmetického salónu Timea Skincare s kozmetickým lôžkom a policami",
     featured: true,
   },
