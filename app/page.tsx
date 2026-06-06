@@ -73,6 +73,12 @@ export default function Home() {
 
         <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:min-h-[calc(100vh-56px)] sm:px-6 sm:py-14 lg:min-h-[calc(100vh-64px)] lg:px-8 lg:py-16">
           <div className="hero-content sparkle-field max-w-xl lg:max-w-[34rem]">
+            <Sparkles
+              aria-hidden="true"
+              size={28}
+              strokeWidth={1.15}
+              className="hero-heading-sparkle mb-4 sm:mb-5"
+            />
             <h1 className="font-serif text-[2.35rem] font-medium leading-[1.14] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-[2.75rem] sm:leading-[1.12] lg:text-[3.45rem] lg:leading-[1.1]">
               Starostlivosť, ktorá
               <br />
