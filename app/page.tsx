@@ -56,7 +56,7 @@ const homeGallery = [
 export default function Home() {
   return (
     <>
-      <section className="hero-section soft-grid reveal-soft relative min-h-[calc(100vh-56px)] overflow-hidden lg:min-h-[calc(100vh-64px)]">
+      <section className="hero-section soft-grid reveal-soft relative min-h-[calc(100vh-58px)] overflow-hidden lg:min-h-[calc(100vh-68px)]">
         <div className="hero-media pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden="true">
           <Image
             src="/images/hero-timea-skincare-salon-hq.webp"
@@ -70,7 +70,7 @@ export default function Home() {
           <div className="hero-media-overlay absolute inset-0" />
         </div>
 
-        <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] items-center px-5 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-64px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
+        <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] items-center px-5 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-68px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
           <div className="hero-content sparkle-field w-full max-w-2xl lg:max-w-[44rem] xl:max-w-[48rem]">
             <Sparkles
               aria-hidden="true"

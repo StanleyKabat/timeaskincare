@@ -102,10 +102,13 @@ export function Header() {
         headerHidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="mx-auto grid h-[56px] w-full max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-8 lg:h-[64px] lg:px-10 xl:px-14 2xl:px-16">
+      <div className="mx-auto grid h-[58px] w-full max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-8 lg:h-[68px] lg:px-10 xl:px-14 2xl:px-16">
         <Brand onNavigate={() => setIsOpen(false)} />
 
-        <nav className="hidden items-center justify-center lg:flex" aria-label="Hlavná navigácia">
+        <nav
+          className="hidden items-center justify-center gap-1 lg:flex xl:gap-1.5"
+          aria-label="Hlavná navigácia"
+        >
           {navigation.map((item) => {
             const active = isActive(item.href);
             return (
@@ -114,17 +117,17 @@ export function Header() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative rounded-full px-3 py-1.5 text-[13px] font-medium tracking-[0.01em] transition",
+                  "relative rounded-full px-3.5 py-2 text-[15px] font-medium tracking-[0.02em] transition xl:px-4 xl:text-[16px]",
                   active
                     ? "text-[var(--color-powder)]"
-                    : "text-[var(--color-stone)] hover:text-[var(--color-charcoal)]",
+                    : "text-[rgba(247,241,235,0.88)] hover:text-[var(--color-charcoal)]",
                 )}
               >
                 {item.label}
                 {active ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-3 bottom-0 h-px rounded-full bg-[var(--color-powder)] opacity-80"
+                    className="absolute inset-x-3.5 bottom-0.5 h-px rounded-full bg-[var(--color-powder)] opacity-80 xl:inset-x-4"
                   />
                 ) : null}
               </Link>
@@ -132,13 +135,13 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
           <Link
             href="/kontakt#rezervacia"
-            className="hidden min-h-8 items-center gap-1.5 rounded-full border border-[rgba(226,138,180,0.36)] px-3 py-1 text-[13px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex"
+            className="hidden min-h-9 items-center gap-2 rounded-full border border-[rgba(226,138,180,0.36)] px-4 py-1.5 text-[14px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex xl:min-h-10 xl:px-5 xl:text-[15px]"
             onClick={() => setIsOpen(false)}
           >
-            <CalendarDays size={14} aria-hidden="true" className="text-[var(--color-powder)]" />
+            <CalendarDays size={15} aria-hidden="true" className="text-[var(--color-powder)]" />
             Online rezervácia
           </Link>
           <a
@@ -146,18 +149,18 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
-            className="hidden size-8 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
+            className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
-            <FaInstagram size={14} aria-hidden="true" />
+            <FaInstagram size={15} aria-hidden="true" />
           </a>
           <a
             href={siteConfig.facebook}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
-            className="hidden size-8 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
+            className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
-            <FaFacebookF size={13} aria-hidden="true" />
+            <FaFacebookF size={14} aria-hidden="true" />
           </a>
           <button
             type="button"

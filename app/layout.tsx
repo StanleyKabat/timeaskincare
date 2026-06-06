@@ -131,7 +131,7 @@ export default function RootLayout({
           }}
         />
         <Header />
-        <main className="pt-[56px] lg:pt-[64px]">{children}</main>
+        <main className="pt-[58px] lg:pt-[68px]">{children}</main>
         <Footer />
       </body>
     </html>
