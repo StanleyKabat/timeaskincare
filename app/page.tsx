@@ -70,7 +70,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-[linear-gradient(90deg,#100d10_0%,#100d10_24%,rgba(16,13,16,0.95)_35%,rgba(16,13,16,0.74)_46%,rgba(16,13,16,0.47)_57%,rgba(16,13,16,0.22)_70%,rgba(16,13,16,0.06)_84%,rgba(16,13,16,0)_100%)]" />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,13,16,0.45)_0%,rgba(16,13,16,0)_24%,rgba(16,13,16,0)_70%,rgba(16,13,16,0.45)_100%)]" />
           </div>
-          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-58px)] sm:gap-12 sm:px-6 sm:py-16 lg:min-h-[calc(100vh-72px)] lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
             <div className="relative">
             <Sparkles
               aria-hidden="true"

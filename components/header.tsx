@@ -26,17 +26,17 @@ function Brand({
       <span
         className={cn(
           "font-serif italic leading-none tracking-[0.01em] text-[var(--color-charcoal)]",
-          size === "compact" ? "text-lg" : "text-xl sm:text-2xl",
+          size === "compact" ? "text-base" : "text-lg sm:text-xl",
         )}
       >
         Timea Skincare
       </span>
       <span
         className={cn(
-          "mt-1.5 font-medium uppercase text-[var(--color-stone)]",
+          "mt-0.5 font-medium uppercase text-[var(--color-stone)]",
           size === "compact"
-            ? "text-[8px] tracking-[0.26em]"
-            : "text-[8px] tracking-[0.26em] sm:text-[9px] sm:tracking-[0.32em]",
+            ? "text-[7px] tracking-[0.24em]"
+            : "text-[7px] tracking-[0.24em] sm:text-[8px] sm:tracking-[0.28em]",
         )}
       >
         Krása, ktorá vyžaruje teba
@@ -95,14 +95,14 @@ export function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b border-[var(--color-line)] bg-[rgba(16,16,15,0.86)] backdrop-blur transition-transform duration-300 ease-out motion-reduce:transition-none ${
+      className={`fixed inset-x-0 top-0 z-50 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(16,16,15,0.82)] backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
         headerHidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:gap-5 sm:px-6 sm:py-3.5 lg:px-8">
+      <div className="mx-auto flex h-[58px] max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 lg:h-[72px] lg:gap-3 lg:px-8">
         <Brand onNavigate={() => setIsOpen(false)} />
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Hlavná navigácia">
+        <nav className="hidden items-center lg:flex" aria-label="Hlavná navigácia">
           {navigation.map((item) => {
             const active = isActive(item.href);
             return (
@@ -111,7 +111,7 @@ export function Header() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative rounded-full px-3.5 py-2 text-sm font-medium transition",
+                  "relative rounded-full px-2.5 py-1.5 text-[13px] font-medium tracking-[0.01em] transition",
                   active
                     ? "text-[var(--color-powder)]"
                     : "text-[var(--color-stone)] hover:text-[var(--color-charcoal)]",
@@ -121,7 +121,7 @@ export function Header() {
                 {active ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-3.5 bottom-0.5 h-px rounded-full bg-[var(--color-powder)]"
+                    className="absolute inset-x-2.5 bottom-0 h-px rounded-full bg-[var(--color-powder)] opacity-80"
                   />
                 ) : null}
               </Link>
@@ -129,13 +129,13 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <Link
             href="/kontakt#rezervacia"
-            className="hidden min-h-10 items-center gap-2 rounded-full border border-[rgba(226,138,180,0.42)] px-4 py-1.5 text-sm font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex"
+            className="hidden min-h-8 items-center gap-1.5 rounded-full border border-[rgba(226,138,180,0.36)] px-3 py-1 text-[13px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex"
             onClick={() => setIsOpen(false)}
           >
-            <CalendarDays size={16} aria-hidden="true" className="text-[var(--color-powder)]" />
+            <CalendarDays size={14} aria-hidden="true" className="text-[var(--color-powder)]" />
             Online rezervácia
           </Link>
           <a
@@ -143,30 +143,30 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
-            className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
+            className="hidden size-8 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
-            <FaInstagram size={16} aria-hidden="true" />
+            <FaInstagram size={14} aria-hidden="true" />
           </a>
           <a
             href={siteConfig.facebook}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
-            className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
+            className="hidden size-8 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
-            <FaFacebookF size={15} aria-hidden="true" />
+            <FaFacebookF size={13} aria-hidden="true" />
           </a>
           <button
             type="button"
-            className="inline-flex size-9 items-center justify-center rounded-full border border-[rgba(255,255,255,0.16)] bg-[rgba(250,248,246,0.06)] text-[var(--color-charcoal)] transition duration-300 hover:border-[rgba(226,138,180,0.55)] hover:bg-[rgba(226,138,180,0.14)] active:scale-95 lg:hidden"
+            className="inline-flex size-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.16)] bg-[rgba(250,248,246,0.06)] text-[var(--color-charcoal)] transition duration-300 hover:border-[rgba(226,138,180,0.55)] hover:bg-[rgba(226,138,180,0.14)] active:scale-95 lg:hidden"
             aria-label={isOpen ? "Zavrieť menu" : "Otvoriť menu"}
             aria-expanded={isOpen}
             onClick={() => setIsOpen((current) => !current)}
           >
             {isOpen ? (
-              <X size={18} aria-hidden="true" className="transition-transform duration-300 ease-out" />
+              <X size={17} aria-hidden="true" className="transition-transform duration-300 ease-out" />
             ) : (
-              <Menu size={18} aria-hidden="true" className="transition-transform duration-300 ease-out" />
+              <Menu size={17} aria-hidden="true" className="transition-transform duration-300 ease-out" />
             )}
           </button>
         </div>
