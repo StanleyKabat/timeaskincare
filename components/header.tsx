@@ -20,23 +20,23 @@ function Brand({
     <Link
       href="/"
       aria-label="Timea Skincare - domov"
-      className="flex min-w-0 flex-col leading-none"
+      className="flex w-fit shrink-0 flex-col items-start leading-none"
       onClick={onNavigate}
     >
       <span
         className={cn(
-          "font-serif italic leading-none tracking-[0.01em] text-[var(--color-charcoal)]",
-          size === "compact" ? "text-base" : "text-lg sm:text-xl",
+          "whitespace-nowrap font-serif italic leading-none tracking-normal text-[var(--color-charcoal)]",
+          size === "compact" ? "text-[15px]" : "text-[17px] sm:text-lg",
         )}
       >
         Timea Skincare
       </span>
       <span
         className={cn(
-          "mt-0.5 font-medium uppercase text-[var(--color-stone)]",
+          "mt-0.5 whitespace-nowrap font-medium uppercase text-[var(--color-stone)]",
           size === "compact"
-            ? "text-[7px] tracking-[0.24em]"
-            : "text-[7px] tracking-[0.24em] sm:text-[8px] sm:tracking-[0.28em]",
+            ? "text-[6.5px] tracking-[0.12em]"
+            : "text-[6.5px] tracking-[0.12em] sm:text-[7px] sm:tracking-[0.14em]",
         )}
       >
         Krása, ktorá vyžaruje teba
