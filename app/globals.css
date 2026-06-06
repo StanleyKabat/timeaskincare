@@ -181,21 +181,22 @@ main {
 }
 
 .hero-media-overlay {
+  z-index: 2;
   background:
     linear-gradient(
       90deg,
       rgba(14, 10, 14, 1) 0%,
-      rgba(14, 10, 14, 0.96) 10%,
-      rgba(14, 10, 14, 0.78) 22%,
-      rgba(14, 10, 14, 0.42) 36%,
-      rgba(14, 10, 14, 0.14) 48%,
-      rgba(14, 10, 14, 0) 58%
+      rgba(14, 10, 14, 0.94) 12%,
+      rgba(14, 10, 14, 0.72) 26%,
+      rgba(14, 10, 14, 0.38) 40%,
+      rgba(14, 10, 14, 0.1) 52%,
+      rgba(14, 10, 14, 0) 62%
     ),
     linear-gradient(
       180deg,
-      rgba(14, 10, 14, 0.22) 0%,
+      rgba(14, 10, 14, 0.18) 0%,
       rgba(14, 10, 14, 0) 32%,
-      rgba(14, 10, 14, 0.28) 100%
+      rgba(14, 10, 14, 0.22) 100%
     );
 }
 
@@ -286,8 +287,13 @@ main {
   overflow: hidden;
 }
 
-.soft-grid > * {
+.soft-grid > *:not(.hero-media) {
   position: relative;
+  z-index: 1;
+}
+
+.hero-section .hero-media {
+  position: absolute;
   z-index: 1;
 }
 

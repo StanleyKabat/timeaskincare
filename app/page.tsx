@@ -57,17 +57,19 @@ export default function Home() {
   return (
     <>
       <section className="hero-section soft-grid reveal-soft relative min-h-[calc(100vh-58px)] overflow-hidden lg:min-h-[calc(100vh-68px)]">
-        <div className="hero-media pointer-events-none absolute z-0 hidden md:block" aria-hidden="true">
-          <Image
-            src="/images/hero-salon-interier-hq.jpg"
-            alt=""
-            fill
-            priority
-            quality={95}
-            sizes="(min-width: 768px) 66vw, 100vw"
-            className="object-cover object-[48%_38%] lg:object-[50%_36%]"
-          />
-          <div className="hero-media-overlay absolute inset-0" />
+        <div className="hero-media pointer-events-none hidden md:block" aria-hidden="true">
+          <div className="relative h-full w-full">
+            <Image
+              src="/images/hero-salon-interier-hq.jpg"
+              alt=""
+              fill
+              priority
+              quality={95}
+              sizes="(min-width: 768px) 66vw, 100vw"
+              className="object-cover object-[48%_38%] lg:object-[50%_36%]"
+            />
+            <div className="hero-media-overlay absolute inset-0" />
+          </div>
         </div>
 
         <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] items-center px-5 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-68px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
