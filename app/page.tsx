@@ -55,9 +55,23 @@ const homeGallery = [
 export default function Home() {
   return (
     <>
-      <section className="soft-grid reveal-soft">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
-          <div className="relative">
+      <section className="soft-grid reveal-soft relative overflow-hidden">
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
+            <Image
+              src="/images/hero-timea-skincare-salon-hq.webp"
+              alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
+              fill
+              priority
+              quality={95}
+              sizes="100vw"
+              className="object-cover object-[72%_center]"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,#100d10_0%,#100d10_24%,rgba(16,13,16,0.95)_35%,rgba(16,13,16,0.74)_46%,rgba(16,13,16,0.47)_57%,rgba(16,13,16,0.22)_70%,rgba(16,13,16,0.06)_84%,rgba(16,13,16,0)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,13,16,0.45)_0%,rgba(16,13,16,0)_24%,rgba(16,13,16,0)_70%,rgba(16,13,16,0.45)_100%)]" />
+          </div>
+          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
+            <div className="relative">
             <Sparkles
               aria-hidden="true"
               size={26}
@@ -107,26 +121,23 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="relative lg:-mr-8">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[560px] lg:rounded-l-none lg:rounded-r-[2rem] lg:shadow-none">
+          <div className="relative lg:hidden">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem]">
               <Image
                 src="/images/hero-timea-skincare-salon-hq.webp"
                 alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
                 fill
                 priority
                 quality={95}
-                sizes="(max-width: 1024px) 100vw, 55vw"
+                sizes="100vw"
                 className="object-cover object-center"
               />
               <div
                 aria-hidden="true"
                 className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,14,15,0.34)_0%,transparent_30%,transparent_58%,rgba(16,14,15,0.55)_100%)]"
               />
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 hidden bg-[linear-gradient(90deg,#100e0f_0%,rgba(16,14,15,0.92)_18%,rgba(16,14,15,0.5)_38%,rgba(16,14,15,0.12)_64%,rgba(16,14,15,0)_100%)] lg:block"
-              />
             </div>
+          </div>
           </div>
         </div>
       </section>
