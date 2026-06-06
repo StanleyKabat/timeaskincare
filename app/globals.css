@@ -174,7 +174,10 @@ main {
 
 .hero-media {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 34%;
 }
 
 .hero-media-overlay {
@@ -182,20 +185,24 @@ main {
     linear-gradient(
       90deg,
       rgba(14, 10, 14, 1) 0%,
-      rgba(14, 10, 14, 0.98) 14%,
-      rgba(14, 10, 14, 0.9) 24%,
-      rgba(14, 10, 14, 0.72) 36%,
-      rgba(14, 10, 14, 0.48) 46%,
-      rgba(14, 10, 14, 0.24) 56%,
-      rgba(14, 10, 14, 0.08) 66%,
-      rgba(14, 10, 14, 0) 76%
+      rgba(14, 10, 14, 0.96) 10%,
+      rgba(14, 10, 14, 0.78) 22%,
+      rgba(14, 10, 14, 0.42) 36%,
+      rgba(14, 10, 14, 0.14) 48%,
+      rgba(14, 10, 14, 0) 58%
     ),
     linear-gradient(
       180deg,
-      rgba(14, 10, 14, 0.28) 0%,
-      rgba(14, 10, 14, 0) 34%,
-      rgba(14, 10, 14, 0.32) 100%
+      rgba(14, 10, 14, 0.22) 0%,
+      rgba(14, 10, 14, 0) 32%,
+      rgba(14, 10, 14, 0.28) 100%
     );
+}
+
+@media (min-width: 1280px) {
+  .hero-media {
+    left: 38%;
+  }
 }
 
 .hero-inner {

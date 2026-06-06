@@ -57,15 +57,15 @@ export default function Home() {
   return (
     <>
       <section className="hero-section soft-grid reveal-soft relative min-h-[calc(100vh-58px)] overflow-hidden lg:min-h-[calc(100vh-68px)]">
-        <div className="hero-media pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden="true">
+        <div className="hero-media pointer-events-none absolute z-0 hidden md:block" aria-hidden="true">
           <Image
-            src="/images/hero-timea-skincare-salon-hq.webp"
+            src="/images/hero-salon-interier-hq.jpg"
             alt=""
             fill
             priority
             quality={95}
-            sizes="100vw"
-            className="object-cover object-[72%_center] lg:object-[68%_center]"
+            sizes="(min-width: 768px) 66vw, 100vw"
+            className="object-cover object-[48%_38%] lg:object-[50%_36%]"
           />
           <div className="hero-media-overlay absolute inset-0" />
         </div>
@@ -122,15 +122,15 @@ export default function Home() {
             </ul>
           </div>
 
-          <div className="hero-mobile-image relative mt-8 aspect-[4/3] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 sm:aspect-[16/10] md:hidden">
+          <div className="hero-mobile-image relative mt-8 aspect-[3/4] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 md:hidden">
             <Image
-              src="/images/hero-timea-skincare-salon-hq.webp"
+              src="/images/hero-salon-interier-hq.jpg"
               alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
               fill
               priority
               quality={95}
               sizes="100vw"
-              className="object-cover object-[58%_center]"
+              className="object-cover object-[50%_35%]"
             />
           </div>
         </div>
