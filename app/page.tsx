@@ -110,12 +110,12 @@ export default function Home() {
           <div className="relative">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[540px]">
               <Image
-                src="/images/salon/salon-lehatko-detail.jpg"
-                alt="Ošetrovacia miestnosť kozmetického salónu Timea Skincare v Novej Bani"
+                src="/images/hero-timea-skincare-salon.webp"
+                alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
+                className="object-cover object-center"
               />
               <div
                 aria-hidden="true"
