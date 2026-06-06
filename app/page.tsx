@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
-  CalendarCheck,
+  CalendarDays,
   CheckCircle2,
-  HandHeart,
+  Gem,
+  Heart,
   MapPin,
   MessageCircle,
-  Star,
+  Sparkles,
 } from "lucide-react";
 
 import { ButtonLink } from "@/components/button-link";
@@ -23,52 +25,80 @@ export const metadata: Metadata = {
   },
 };
 
+const homeGallery = [
+  {
+    src: "/images/salon/salon-interier-lehatko.jpg",
+    alt: "Police s kozmetickými produktmi v salóne Timea Skincare",
+  },
+  {
+    src: "/images/salon/salon-zrkadlo-policky.jpg",
+    alt: "Okrúhle zrkadlo a kozmetický kútik v salóne Timea Skincare",
+  },
+  {
+    src: "/images/salon/certifikat-pristroj.jpg",
+    alt: "Certifikát Timey Polcovej v salóne Timea Skincare",
+  },
+  {
+    src: "/images/salon/karticky-na-dalsi-termin.jpg",
+    alt: "Brandové kartičky a jemné detaily salónu Timea Skincare",
+  },
+  {
+    src: "/images/salon/cakaci-priestor-vizitky.jpg",
+    alt: "Čakací kútik so sviečkami a jemnými detailmi v salóne Timea Skincare",
+  },
+  {
+    src: "/images/salon/salon-cakaci-kutik.jpg",
+    alt: "Kvetinové zrkadlo a atmosféra salónu Timea Skincare",
+  },
+];
+
 export default function Home() {
   return (
     <>
       <section className="soft-grid reveal-soft">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
-          <div>
-            <h1 className="font-serif text-[2.6rem] font-medium leading-[1.04] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-6xl lg:text-[4.25rem]">
-              Timea Skincare
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-73px)] sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
+          <div className="relative">
+            <Sparkles
+              aria-hidden="true"
+              size={26}
+              className="mb-4 text-[var(--color-powder)] opacity-70 sm:mb-5"
+            />
+            <h1 className="font-serif text-[2.4rem] font-medium leading-[1.12] tracking-[-0.005em] text-[var(--color-charcoal)] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.08]">
+              Starostlivosť, ktorá
+              <br className="hidden sm:block" /> nechá vyniknúť tvoju
+              <br className="hidden sm:block" /> prirodzenosť
             </h1>
-            <p className="mt-3 max-w-md font-serif text-lg leading-snug text-[var(--color-charcoal)] sm:mt-4 sm:text-2xl">
-              Starostlivosť, ktorá nechá vyniknúť tvoju prirodzenosť.
+            <span
+              aria-hidden="true"
+              className="mt-6 block h-px w-16 rounded-full bg-[linear-gradient(90deg,var(--color-powder),transparent)] sm:mt-7"
+            />
+            <p className="mt-5 max-w-md text-sm leading-7 text-[var(--color-stone)] sm:mt-6 sm:text-base sm:leading-7">
+              Profesionálna starostlivosť o pleť, obočie a mihalnice v príjemnom
+              prostredí, kde sa krása stáva rituálom.
             </p>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--color-stone)] sm:mt-5 sm:text-base sm:leading-7">
-              Pokojné kozmetické ošetrenia, úprava obočia a laminácia mihalníc s
-              dôrazom na čistú pleť, prirodzený výsledok a starostlivosť, ktorá
-              nepôsobí prehnane.
-            </p>
-            <p className="mt-5 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-stone)] sm:text-[0.8rem]">
-              <span
-                aria-hidden="true"
-                className="inline-block size-1.5 shrink-0 rounded-full bg-[var(--color-powder)]"
-              />
-              kozmetický salón v Novej Bani
-            </p>
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
               <ButtonLink href="/kontakt#rezervacia" className="gap-2">
+                <CalendarDays size={17} aria-hidden="true" />
                 Rezervovať termín
-                <ArrowRight size={17} aria-hidden="true" />
+                <ArrowRight size={16} aria-hidden="true" />
               </ButtonLink>
-              <ButtonLink href="/sluzby" variant="secondary">
+              <ButtonLink href="/sluzby" variant="secondary" className="gap-2">
                 Pozrieť služby
+                <ArrowRight size={16} aria-hidden="true" />
               </ButtonLink>
             </div>
             <ul
               aria-label="Prečo Timea Skincare"
-              className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-8 sm:flex sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-sm"
+              className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-9 sm:text-sm"
             >
               {[
-                { icon: MapPin, label: "Nová Baňa" },
-                { icon: HandHeart, label: "Individuálny prístup" },
-                { icon: Star, label: "Reálne recenzie" },
-                { icon: CalendarCheck, label: "Online rezervácia" },
+                { icon: Sparkles, label: "Prírodné výsledky" },
+                { icon: Heart, label: "Individuálny prístup" },
+                { icon: Gem, label: "Prémiové produkty" },
               ].map(({ icon: Icon, label }) => (
                 <li key={label} className="flex items-center gap-2">
                   <Icon
-                    size={14}
+                    size={15}
                     aria-hidden="true"
                     className="shrink-0 text-[var(--color-powder)]"
                   />
@@ -77,23 +107,73 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="relative h-60 overflow-hidden rounded-[1.5rem] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[0_24px_70px_rgba(0,0,0,0.32)] sm:h-auto sm:min-h-[460px] sm:rounded-[2rem]">
-            <Image
-              src="/images/salon/salon-lehatko-detail.jpg"
-              alt="Pokojné prostredie kozmetického salónu Timea Skincare v Novej Bani"
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 42vw"
-              className="object-cover"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,17,17,0)_55%,rgba(18,17,17,0.32))]"
-            />
-            <span className="absolute left-4 top-4 inline-flex items-center rounded-full border border-[rgba(255,255,255,0.22)] bg-[rgba(16,16,15,0.55)] px-3 py-1.5 text-[11px] font-medium tracking-wide text-[var(--color-charcoal)] backdrop-blur-sm sm:left-6 sm:top-6 sm:text-xs">
-              Pleť · obočie · mihalnice
-            </span>
+          <div className="relative">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[540px]">
+              <Image
+                src="/images/salon/salon-lehatko-detail.jpg"
+                alt="Ošetrovacia miestnosť kozmetického salónu Timea Skincare v Novej Bani"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[linear-gradient(0deg,rgba(17,16,15,0.55),transparent_42%)]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 hidden bg-[linear-gradient(90deg,#11100f_0%,rgba(17,16,15,0.45)_16%,transparent_46%)] lg:block"
+              />
+            </div>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 pt-2 sm:px-6 sm:pb-16 lg:px-8">
+        <ScrollReveal>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="font-serif text-2xl font-medium text-[var(--color-charcoal)] sm:text-3xl">
+                Galéria salónu
+              </h2>
+              <p className="mt-2 max-w-md text-sm leading-6 text-[var(--color-stone)]">
+                Priestor, atmosféra a detaily salónu Timea Skincare.
+              </p>
+            </div>
+            <Link
+              href="/galeria"
+              className="group inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-powder)] transition hover:gap-2.5"
+            >
+              Zobraziť celú galériu
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </ScrollReveal>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          {homeGallery.map((item, index) => (
+            <ScrollReveal key={item.src} staggerIndex={index} className="min-w-0">
+              <Link
+                href="/galeria"
+                aria-label="Otvoriť galériu salónu Timea Skincare"
+                className="interactive-card group block overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]"
+              >
+                <div className="relative aspect-[3/4]">
+                  <Image
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                  />
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-[linear-gradient(0deg,rgba(16,16,15,0.3),transparent_55%)]"
+                  />
+                </div>
+              </Link>
+            </ScrollReveal>
+          ))}
         </div>
       </section>
 
