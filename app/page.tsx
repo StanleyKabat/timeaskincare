@@ -107,23 +107,24 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="relative">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[540px]">
+          <div className="relative lg:-mr-8">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[560px] lg:rounded-l-none lg:rounded-r-[2rem] lg:shadow-none">
               <Image
                 src="/images/hero-timea-skincare-salon.webp"
                 alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                quality={95}
+                sizes="(max-width: 1024px) 100vw, 55vw"
                 className="object-cover object-center"
               />
               <div
                 aria-hidden="true"
-                className="absolute inset-0 bg-[linear-gradient(0deg,rgba(17,16,15,0.55),transparent_42%)]"
+                className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,14,15,0.34)_0%,transparent_30%,transparent_58%,rgba(16,14,15,0.55)_100%)]"
               />
               <div
                 aria-hidden="true"
-                className="absolute inset-0 hidden bg-[linear-gradient(90deg,#11100f_0%,rgba(17,16,15,0.45)_16%,transparent_46%)] lg:block"
+                className="absolute inset-0 hidden bg-[linear-gradient(90deg,#100e0f_0%,rgba(16,14,15,0.92)_18%,rgba(16,14,15,0.5)_38%,rgba(16,14,15,0.12)_64%,rgba(16,14,15,0)_100%)] lg:block"
               />
             </div>
           </div>
