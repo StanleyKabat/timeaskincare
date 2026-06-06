@@ -56,30 +56,29 @@ const homeGallery = [
 export default function Home() {
   return (
     <>
-      <section className="hero-section soft-grid reveal-soft relative overflow-hidden">
-        <div className="hero-image-col hidden lg:block" aria-hidden="true">
-          <div className="hero-image-wrapper">
-            <Image
-              src="/images/hero-timea-skincare-salon-hq.webp"
-              alt=""
-              fill
-              priority
-              quality={95}
-              sizes="58vw"
-              className="object-cover object-[62%_center]"
-            />
-          </div>
+      <section className="hero-section soft-grid reveal-soft relative min-h-[calc(100vh-56px)] overflow-hidden lg:min-h-[calc(100vh-64px)]">
+        <div className="hero-media pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden="true">
+          <Image
+            src="/images/hero-timea-skincare-salon-hq.webp"
+            alt=""
+            fill
+            priority
+            quality={95}
+            sizes="100vw"
+            className="object-cover object-[72%_center] lg:object-[68%_center]"
+          />
+          <div className="hero-media-overlay absolute inset-0" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:min-h-[calc(100vh-56px)] sm:px-6 sm:py-14 lg:min-h-[calc(100vh-64px)] lg:px-8 lg:py-16">
-          <div className="hero-content sparkle-field max-w-xl lg:max-w-[34rem]">
+        <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] items-center px-5 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-64px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
+          <div className="hero-content sparkle-field w-full max-w-2xl lg:max-w-[44rem] xl:max-w-[48rem]">
             <Sparkles
               aria-hidden="true"
               size={28}
               strokeWidth={1.15}
               className="hero-heading-sparkle mb-4 sm:mb-5"
             />
-            <h1 className="font-serif text-[2.35rem] font-medium leading-[1.14] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-[2.75rem] sm:leading-[1.12] lg:text-[3.45rem] lg:leading-[1.1]">
+            <h1 className="font-serif text-[2.35rem] font-medium leading-[1.14] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-[2.75rem] sm:leading-[1.12] lg:text-[3.55rem] lg:leading-[1.1] xl:text-[3.85rem]">
               Starostlivosť, ktorá
               <br />
               nechá vyniknúť tvoju
@@ -123,7 +122,7 @@ export default function Home() {
             </ul>
           </div>
 
-          <div className="hero-mobile-image relative mt-8 aspect-[4/3] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 sm:aspect-[16/10] lg:hidden">
+          <div className="hero-mobile-image relative mt-8 aspect-[4/3] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 sm:aspect-[16/10] md:hidden">
             <Image
               src="/images/hero-timea-skincare-salon-hq.webp"
               alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
@@ -137,7 +136,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[90rem] px-5 pb-12 pt-4 sm:px-8 sm:pb-16 sm:pt-6 lg:px-10 xl:px-14 2xl:px-16">
         <ScrollReveal>
           <div className="mx-auto max-w-2xl text-center">
             <span

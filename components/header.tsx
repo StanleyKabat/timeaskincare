@@ -102,7 +102,7 @@ export function Header() {
         headerHidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="mx-auto grid h-[56px] max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 lg:h-[64px] lg:px-8">
+      <div className="mx-auto grid h-[56px] w-full max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-8 lg:h-[64px] lg:px-10 xl:px-14 2xl:px-16">
         <Brand onNavigate={() => setIsOpen(false)} />
 
         <nav className="hidden items-center justify-center lg:flex" aria-label="Hlavná navigácia">
