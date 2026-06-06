@@ -25,18 +25,18 @@ function Brand({
     >
       <span
         className={cn(
-          "whitespace-nowrap font-serif italic leading-none tracking-normal text-[var(--color-charcoal)]",
-          size === "compact" ? "text-[15px]" : "text-[17px] sm:text-lg",
+          "whitespace-nowrap font-[family-name:var(--font-brand)] leading-none tracking-[0.01em] text-[var(--color-charcoal)]",
+          size === "compact" ? "text-[22px]" : "text-[26px] sm:text-[28px]",
         )}
       >
         Timea Skincare
       </span>
       <span
         className={cn(
-          "mt-0.5 whitespace-nowrap font-medium uppercase text-[var(--color-stone)]",
+          "mt-1 whitespace-nowrap font-medium uppercase text-[var(--color-stone)]",
           size === "compact"
-            ? "text-[6.5px] tracking-[0.12em]"
-            : "text-[6.5px] tracking-[0.12em] sm:text-[7px] sm:tracking-[0.14em]",
+            ? "text-[7px] tracking-[0.18em]"
+            : "text-[8px] tracking-[0.26em] sm:text-[9px] sm:tracking-[0.32em]",
         )}
       >
         Krása, ktorá vyžaruje teba
@@ -90,19 +90,22 @@ export function Header() {
 
   const headerHidden = isHidden && !isOpen;
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    if (href.startsWith("/#")) return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(16,16,15,0.82)] backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
+      className={`fixed inset-x-0 top-0 z-50 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(14,10,14,0.86)] backdrop-blur-md transition-transform duration-300 ease-out motion-reduce:transition-none ${
         headerHidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="mx-auto flex h-[58px] max-w-6xl items-center justify-between gap-2 px-4 sm:px-6 lg:h-[72px] lg:gap-3 lg:px-8">
+      <div className="mx-auto grid h-[56px] max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 lg:h-[64px] lg:px-8">
         <Brand onNavigate={() => setIsOpen(false)} />
 
-        <nav className="hidden items-center lg:flex" aria-label="Hlavná navigácia">
+        <nav className="hidden items-center justify-center lg:flex" aria-label="Hlavná navigácia">
           {navigation.map((item) => {
             const active = isActive(item.href);
             return (
@@ -111,7 +114,7 @@ export function Header() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative rounded-full px-2.5 py-1.5 text-[13px] font-medium tracking-[0.01em] transition",
+                  "relative rounded-full px-3 py-1.5 text-[13px] font-medium tracking-[0.01em] transition",
                   active
                     ? "text-[var(--color-powder)]"
                     : "text-[var(--color-stone)] hover:text-[var(--color-charcoal)]",
@@ -121,7 +124,7 @@ export function Header() {
                 {active ? (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-2.5 bottom-0 h-px rounded-full bg-[var(--color-powder)] opacity-80"
+                    className="absolute inset-x-3 bottom-0 h-px rounded-full bg-[var(--color-powder)] opacity-80"
                   />
                 ) : null}
               </Link>
@@ -129,7 +132,7 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1 sm:gap-1.5">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
           <Link
             href="/kontakt#rezervacia"
             className="hidden min-h-8 items-center gap-1.5 rounded-full border border-[rgba(226,138,180,0.36)] px-3 py-1 text-[13px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex"

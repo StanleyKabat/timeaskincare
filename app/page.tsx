@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Gem,
   Heart,
+  Leaf,
   MapPin,
   MessageCircle,
   Sparkles,
@@ -27,20 +28,20 @@ export const metadata: Metadata = {
 
 const homeGallery = [
   {
-    src: "/images/salon/salon-interier-lehatko.jpg",
-    alt: "Police s kozmetickými produktmi v salóne Timea Skincare",
+    src: "/images/salon/kozmetika-v-zrkadle.jpg",
+    alt: "Kozmetické produkty na polici v salóne Timea Skincare",
   },
   {
     src: "/images/salon/salon-zrkadlo-policky.jpg",
-    alt: "Okrúhle zrkadlo a kozmetický kútik v salóne Timea Skincare",
+    alt: "Okrúhle zrkadlo a police s produktmi v salóne Timea Skincare",
   },
   {
-    src: "/images/salon/certifikat-pristroj.jpg",
+    src: "/images/salon/certifikat-detail.jpg",
     alt: "Certifikát Timey Polcovej v salóne Timea Skincare",
   },
   {
-    src: "/images/salon/karticky-na-dalsi-termin.jpg",
-    alt: "Brandové kartičky a jemné detaily salónu Timea Skincare",
+    src: "/images/salon/pristroj-hlavice-detail.jpg",
+    alt: "Profesionálne kozmetické nástroje a detaily v salóne Timea Skincare",
   },
   {
     src: "/images/salon/cakaci-priestor-vizitky.jpg",
@@ -48,69 +49,63 @@ const homeGallery = [
   },
   {
     src: "/images/salon/salon-cakaci-kutik.jpg",
-    alt: "Kvetinové zrkadlo a atmosféra salónu Timea Skincare",
+    alt: "Dekoratívny košík a teplá atmosféra salónu Timea Skincare",
   },
 ];
 
 export default function Home() {
   return (
     <>
-      <section className="soft-grid reveal-soft relative overflow-hidden">
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
+      <section className="hero-section soft-grid reveal-soft relative overflow-hidden">
+        <div className="hero-image-col hidden lg:block" aria-hidden="true">
+          <div className="hero-image-wrapper">
             <Image
               src="/images/hero-timea-skincare-salon-hq.webp"
-              alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
+              alt=""
               fill
               priority
               quality={95}
-              sizes="100vw"
-              className="object-cover object-[72%_center]"
+              sizes="58vw"
+              className="object-cover object-[62%_center]"
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,#100d10_0%,#100d10_24%,rgba(16,13,16,0.95)_35%,rgba(16,13,16,0.74)_46%,rgba(16,13,16,0.47)_57%,rgba(16,13,16,0.22)_70%,rgba(16,13,16,0.06)_84%,rgba(16,13,16,0)_100%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,13,16,0.45)_0%,rgba(16,13,16,0)_24%,rgba(16,13,16,0)_70%,rgba(16,13,16,0.45)_100%)]" />
           </div>
-          <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:min-h-[calc(100vh-58px)] sm:gap-12 sm:px-6 sm:py-16 lg:min-h-[calc(100vh-72px)] lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:px-8">
-            <div className="relative">
-            <Sparkles
-              aria-hidden="true"
-              size={26}
-              className="mb-4 text-[var(--color-powder)] opacity-70 sm:mb-5"
-            />
-            <h1 className="font-serif text-[2.4rem] font-medium leading-[1.12] tracking-[-0.005em] text-[var(--color-charcoal)] sm:text-5xl lg:text-[3.5rem] lg:leading-[1.08]">
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:min-h-[calc(100vh-56px)] sm:px-6 sm:py-14 lg:min-h-[calc(100vh-64px)] lg:px-8 lg:py-16">
+          <div className="hero-content sparkle-field max-w-xl lg:max-w-[34rem]">
+            <h1 className="font-serif text-[2.35rem] font-medium leading-[1.14] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-[2.75rem] sm:leading-[1.12] lg:text-[3.45rem] lg:leading-[1.1]">
               Starostlivosť, ktorá
-              <br className="hidden sm:block" /> nechá vyniknúť tvoju
-              <br className="hidden sm:block" /> prirodzenosť
+              <br />
+              nechá vyniknúť tvoju
+              <br />
+              prirodzenosť
             </h1>
-            <span
-              aria-hidden="true"
-              className="mt-6 block h-px w-16 rounded-full bg-[linear-gradient(90deg,var(--color-powder),transparent)] sm:mt-7"
-            />
-            <p className="mt-5 max-w-md text-sm leading-7 text-[var(--color-stone)] sm:mt-6 sm:text-base sm:leading-7">
-              Profesionálna starostlivosť o pleť, obočie a mihalnice v príjemnom
-              prostredí, kde sa krása stáva rituálom.
+            <p className="mt-5 max-w-md text-sm leading-7 text-[var(--color-stone)] sm:mt-6 sm:text-[15px] sm:leading-7">
+              Profesionálna starostlivosť o pleť, obočie a mihalnice
+              <br className="hidden sm:block" />
+              v príjemnom prostredí, kde sa krása stáva rituálom.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
-              <ButtonLink href="/kontakt#rezervacia" className="gap-2">
+              <ButtonLink href="/kontakt#rezervacia" className="gap-2 px-6">
                 <CalendarDays size={17} aria-hidden="true" />
                 Rezervovať termín
                 <ArrowRight size={16} aria-hidden="true" />
               </ButtonLink>
-              <ButtonLink href="/sluzby" variant="secondary" className="gap-2">
+              <ButtonLink href="/sluzby" variant="secondary" className="gap-2 px-6">
                 Pozrieť služby
                 <ArrowRight size={16} aria-hidden="true" />
               </ButtonLink>
             </div>
             <ul
               aria-label="Prečo Timea Skincare"
-              className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-xs text-[var(--color-stone)] sm:mt-9 sm:text-sm"
+              className="hero-benefits mt-8 text-xs text-[var(--color-stone)] sm:mt-10 sm:text-sm"
             >
               {[
-                { icon: Sparkles, label: "Prírodné výsledky" },
+                { icon: Leaf, label: "Prirodzené výsledky" },
                 { icon: Heart, label: "Individuálny prístup" },
                 { icon: Gem, label: "Prémiové produkty" },
               ].map(({ icon: Icon, label }) => (
-                <li key={label} className="flex items-center gap-2">
+                <li key={label}>
                   <Icon
                     size={15}
                     aria-hidden="true"
@@ -121,66 +116,51 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="relative lg:hidden">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem]">
-              <Image
-                src="/images/hero-timea-skincare-salon-hq.webp"
-                alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
-                fill
-                priority
-                quality={95}
-                sizes="100vw"
-                className="object-cover object-center"
-              />
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 bg-[linear-gradient(180deg,rgba(16,14,15,0.34)_0%,transparent_30%,transparent_58%,rgba(16,14,15,0.55)_100%)]"
-              />
-            </div>
-          </div>
+
+          <div className="hero-mobile-image relative mt-8 aspect-[4/3] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 sm:aspect-[16/10] lg:hidden">
+            <Image
+              src="/images/hero-timea-skincare-salon-hq.webp"
+              alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
+              fill
+              priority
+              quality={95}
+              sizes="100vw"
+              className="object-cover object-[58%_center]"
+            />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-12 pt-2 sm:px-6 sm:pb-16 lg:px-8">
+      <section className="mx-auto max-w-6xl px-4 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-6 lg:px-8">
         <ScrollReveal>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="font-serif text-2xl font-medium text-[var(--color-charcoal)] sm:text-3xl">
-                Galéria salónu
-              </h2>
-              <p className="mt-2 max-w-md text-sm leading-6 text-[var(--color-stone)]">
-                Priestor, atmosféra a detaily salónu Timea Skincare.
-              </p>
-            </div>
-            <Link
-              href="/galeria"
-              className="group inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-powder)] transition hover:gap-2.5"
-            >
-              Zobraziť celú galériu
-              <ArrowRight size={15} aria-hidden="true" />
-            </Link>
+          <div className="mx-auto max-w-2xl text-center">
+            <span
+              aria-hidden="true"
+              className="mx-auto block h-px w-14 rounded-full bg-[linear-gradient(90deg,transparent,var(--color-powder),transparent)]"
+            />
+            <h2 className="mt-5 font-serif text-[2rem] font-medium text-[var(--color-charcoal)] sm:text-[2.35rem]">
+              Galéria salónu
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--color-stone)] sm:text-[15px]">
+              Priestor, atmosféra a detaily salónu Timea Skincare.
+            </p>
           </div>
         </ScrollReveal>
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
           {homeGallery.map((item, index) => (
             <ScrollReveal key={item.src} staggerIndex={index} className="min-w-0">
               <Link
                 href="/galeria"
                 aria-label="Otvoriť galériu salónu Timea Skincare"
-                className="interactive-card group block overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]"
+                className="gallery-home-card group block"
               >
-                <div className="relative aspect-[3/4]">
+                <div className="relative aspect-[3/4] overflow-hidden">
                   <Image
                     src={item.src}
                     alt={item.alt}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
-                  />
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 bg-[linear-gradient(0deg,rgba(16,16,15,0.3),transparent_55%)]"
+                    className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
               </Link>
@@ -232,7 +212,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[var(--color-line)] bg-[linear-gradient(160deg,var(--color-surface),var(--color-surface-elevated))] text-[var(--color-charcoal)]">
+      <section
+        id="o-salone"
+        className="border-y border-[var(--color-line)] bg-[linear-gradient(160deg,var(--color-surface),var(--color-surface-elevated))] text-[var(--color-charcoal)]"
+      >
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
           <div className="relative overflow-hidden rounded-[1.5rem] border border-[rgba(226,138,180,0.24)] bg-[linear-gradient(150deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6 shadow-[0_28px_70px_rgba(0,0,0,0.26)] sm:rounded-[2rem] sm:p-10 lg:p-14">
             <div

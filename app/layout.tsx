@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Cormorant_Garamond, Great_Vibes, Inter } from "next/font/google";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -15,6 +15,13 @@ const inter = Inter({
 const cormorant = Cormorant_Garamond({
   subsets: ["latin-ext"],
   variable: "--font-serif",
+  display: "swap",
+});
+
+const greatVibes = Great_Vibes({
+  weight: "400",
+  subsets: ["latin-ext"],
+  variable: "--font-brand",
   display: "swap",
 });
 
@@ -115,7 +122,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sk" className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang="sk" className={`${inter.variable} ${cormorant.variable} ${greatVibes.variable}`}>
       <body>
         <script
           type="application/ld+json"
@@ -124,7 +131,7 @@ export default function RootLayout({
           }}
         />
         <Header />
-        <main className="pt-[58px] lg:pt-[72px]">{children}</main>
+        <main className="pt-[56px] lg:pt-[64px]">{children}</main>
         <Footer />
       </body>
     </html>

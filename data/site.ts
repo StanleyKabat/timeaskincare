@@ -20,9 +20,8 @@ export const siteConfig = {
 export const navigation = [
   { label: "Domov", href: "/" },
   { label: "Služby", href: "/sluzby" },
+  { label: "O salóne", href: "/#o-salone" },
   { label: "Cenník", href: "/cennik" },
-  { label: "Galéria", href: "/galeria" },
-  { label: "Recenzie", href: "/recenzie" },
   { label: "Kontakt", href: "/kontakt" },
 ];
 
