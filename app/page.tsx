@@ -110,7 +110,7 @@ export default function Home() {
           <div className="relative lg:-mr-8">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:aspect-[16/10] sm:rounded-[2rem] lg:aspect-auto lg:h-[560px] lg:rounded-l-none lg:rounded-r-[2rem] lg:shadow-none">
               <Image
-                src="/images/hero-timea-skincare-salon.webp"
+                src="/images/hero-timea-skincare-salon-hq.webp"
                 alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
                 fill
                 priority
