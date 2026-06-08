@@ -214,6 +214,7 @@ main {
 .hero-content {
   position: relative;
   z-index: 2;
+  overflow: visible;
 }
 
 .hero-heading-sparkle {
@@ -348,7 +349,7 @@ main {
 
   .sparkle-field::before {
     top: 2.5rem;
-    left: -2rem;
+    left: 0;
     width: 8rem;
     height: 8rem;
     opacity: 0.06;
@@ -365,7 +366,7 @@ main {
 
 .sparkle-field {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sparkle-field::before,
@@ -388,7 +389,7 @@ main {
 
 .sparkle-field::before {
   top: 3.5rem;
-  left: -3rem;
+  left: 0;
   width: 11rem;
   height: 11rem;
   opacity: 0.07;

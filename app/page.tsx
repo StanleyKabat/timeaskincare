@@ -72,13 +72,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] items-center px-5 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-68px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
+        <div className="hero-inner relative z-10 mx-auto flex w-full max-w-[90rem] flex-col items-stretch px-6 py-10 sm:px-8 sm:py-14 lg:min-h-[calc(100vh-68px)] lg:px-10 lg:py-16 xl:px-14 2xl:px-16">
           <div className="hero-content sparkle-field w-full max-w-2xl lg:max-w-[44rem] xl:max-w-[48rem]">
             <Sparkles
               aria-hidden="true"
               size={28}
               strokeWidth={1.15}
-              className="hero-heading-sparkle mb-4 sm:mb-5"
+              className="hero-heading-sparkle -ml-0.5 mb-4 sm:mb-5"
             />
             <h1 className="font-serif text-[2.35rem] font-medium leading-[1.14] tracking-[-0.01em] text-[var(--color-charcoal)] sm:text-[2.75rem] sm:leading-[1.12] lg:text-[3.55rem] lg:leading-[1.1] xl:text-[3.85rem]">
               Starostlivosť, ktorá
@@ -92,7 +92,7 @@ export default function Home() {
               <br className="hidden sm:block" />
               v príjemnom prostredí, kde sa krása stáva rituálom.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
+            <div className="mt-7 flex flex-col gap-3 px-1 sm:mt-8 sm:flex-row sm:items-center">
               <ButtonLink href="/kontakt#rezervacia" className="gap-2 px-6">
                 <CalendarDays size={17} aria-hidden="true" />
                 Rezervovať termín
