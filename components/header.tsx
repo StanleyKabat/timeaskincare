@@ -106,7 +106,7 @@ export function Header() {
         <Brand onNavigate={() => setIsOpen(false)} />
 
         <nav
-          className="hidden items-center justify-center gap-1 lg:flex xl:gap-1.5"
+          className="col-start-2 hidden items-center justify-center gap-1 lg:flex xl:gap-1.5"
           aria-label="Hlavná navigácia"
         >
           {navigation.map((item) => {
@@ -135,7 +135,7 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+        <div className="col-start-3 flex items-center justify-end gap-1.5 sm:gap-2">
           <Link
             href="/kontakt#rezervacia"
             className="hidden min-h-9 items-center gap-2 rounded-full border border-[rgba(226,138,180,0.36)] px-4 py-1.5 text-[14px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex xl:min-h-10 xl:px-5 xl:text-[15px]"
