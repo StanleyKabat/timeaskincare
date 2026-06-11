@@ -48,8 +48,8 @@ const homeGallery = [
     alt: "Čakací kútik so sviečkami a jemnými detailmi v salóne Timea Skincare",
   },
   {
-    src: "/images/salon/salon-cakaci-kutik.jpg",
-    alt: "Dekoratívny košík a teplá atmosféra salónu Timea Skincare",
+    src: "/images/salon/darcekovy-poukaz-detail.jpg",
+    alt: "Darčekový košík s ružovou stužkou a jemné detaily salónu Timea Skincare",
   },
 ];
 
@@ -60,12 +60,12 @@ export default function Home() {
         <div className="hero-media pointer-events-none hidden md:block" aria-hidden="true">
           <div className="relative h-full w-full">
             <Image
-              src="/images/hero-salon-interier-hq.jpg"
+              src="/images/salon/salon-interier-lehatko.jpg"
               alt=""
               fill
               priority
               quality={95}
-              sizes="(min-width: 768px) 66vw, 100vw"
+              sizes="(min-width: 1536px) 1360px, (min-width: 1024px) 70vw, 100vw"
               className="object-cover object-[48%_38%] lg:object-[50%_36%]"
             />
             <div className="hero-media-overlay absolute inset-0" />
@@ -166,7 +166,7 @@ export default function Home() {
                     src={item.src}
                     alt={item.alt}
                     fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    sizes="(min-width: 1280px) 240px, (min-width: 640px) 33vw, 50vw"
                     className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   />
                 </div>
