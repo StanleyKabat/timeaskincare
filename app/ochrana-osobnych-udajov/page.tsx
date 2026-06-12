@@ -62,6 +62,17 @@ export default function PrivacyPolicyPage() {
         </div>
 
         <div>
+          <h2 className="text-base font-semibold text-[var(--color-charcoal)]">Cookies</h2>
+          <p className="mt-2">
+            Táto webstránka nepoužíva analytické ani marketingové cookies a nesleduje
+            návštevníkov. Vlastný kód stránky neukladá žiadne cookies. Na podstránke Kontakt sa
+            nachádza mapa Google Maps, ktorá sa načíta až po kliknutí používateľa. Pri načítaní
+            mapy môže spoločnosť Google spracúvať technické údaje podľa svojich pravidiel. Písma
+            a ostatné súbory sa načítavajú priamo z našej domény.
+          </p>
+        </div>
+
+        <div>
           <h2 className="text-base font-semibold text-[var(--color-charcoal)]">
             Doba uchovávania údajov
           </h2>

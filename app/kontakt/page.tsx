@@ -12,6 +12,7 @@ import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 
 import { BookingForm } from "@/components/booking-form";
 import { ButtonLink } from "@/components/button-link";
+import { MapEmbed } from "@/components/map-embed";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { siteConfig } from "@/data/site";
@@ -219,13 +220,7 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
-            <iframe
-              src={siteConfig.mapsEmbedUrl}
-              title="Mapa salónu Timea Skincare"
-              className="h-52 w-full border-0 grayscale invert-[0.9] hue-rotate-180 saturate-[0.65] sm:h-72"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            <MapEmbed />
             <div className="border-t border-[var(--color-line)] p-4 text-center">
               <a
                 href={siteConfig.mapsUrl}
