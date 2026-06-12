@@ -21,16 +21,16 @@ export const homeGalleryPreview: SalonPhoto[] = [
     alt: "Profesionálne kozmetické produkty na osvetlených policiach v salóne Timea Skincare",
   },
   {
-    src: "/images/salon/zrkadlo-produkty-hq.jpg",
-    alt: "Okrúhle zrkadlo a police s produktmi v salóne Timea Skincare",
-  },
-  {
     src: "/images/salon/certifikaty-stena-hq.jpg",
     alt: "Profesionálne certifikáty Timey Polcovej zavesené na stene salónu",
   },
   {
     src: "/images/salon/nastroje-obocie-hq.jpg",
     alt: "Ružové profesionálne nástroje na úpravu obočia a mihalníc v salóne Timea Skincare",
+  },
+  {
+    src: "/images/salon/zrkadlo-produkty-hq.jpg",
+    alt: "Okrúhle zrkadlo a police s produktmi v salóne Timea Skincare",
   },
   {
     src: "/images/salon/cakaci-atmosfera-hq.jpg",
