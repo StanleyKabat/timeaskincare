@@ -41,8 +41,8 @@ export default function Home() {
               fill
               priority
               quality={90}
-              sizes="(min-width: 1536px) 1360px, (min-width: 1024px) 70vw, 100vw"
-              className="object-cover object-[48%_38%] lg:object-[50%_36%]"
+              sizes="(min-width: 1280px) 50vw, (min-width: 768px) 55vw, 100vw"
+              className="object-cover object-[50%_42%]"
             />
             <div className="hero-media-overlay absolute inset-0" />
           </div>

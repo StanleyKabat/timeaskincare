@@ -177,25 +177,28 @@ main {
   top: 0;
   right: 0;
   bottom: 0;
-  left: 30%;
+  /* Užší stĺpec pre fotku na výšku – pomer kontajnera sa blíži pomeru fotky,
+     takže object-cover nemusí fotku extrémne približovať a interiér salónu
+     (lehátko, police, lampa, okno) zostáva čitateľný. */
+  left: 46%;
   /* Fotka je vpravo ostrá a smerom k textu sa plynulo rozplýva do skutočného
      pozadia sekcie (vrátane hviezdičiek) – bez tvrdej hrany. */
   -webkit-mask-image: linear-gradient(
     to left,
     black 0%,
-    black 44%,
-    rgba(0, 0, 0, 0.85) 60%,
-    rgba(0, 0, 0, 0.45) 78%,
-    rgba(0, 0, 0, 0.12) 92%,
+    black 52%,
+    rgba(0, 0, 0, 0.82) 68%,
+    rgba(0, 0, 0, 0.4) 84%,
+    rgba(0, 0, 0, 0.1) 94%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to left,
     black 0%,
-    black 44%,
-    rgba(0, 0, 0, 0.85) 60%,
-    rgba(0, 0, 0, 0.45) 78%,
-    rgba(0, 0, 0, 0.12) 92%,
+    black 52%,
+    rgba(0, 0, 0, 0.82) 68%,
+    rgba(0, 0, 0, 0.4) 84%,
+    rgba(0, 0, 0, 0.1) 94%,
     transparent 100%
   );
 }
@@ -205,21 +208,21 @@ main {
   background:
     linear-gradient(
       90deg,
-      rgba(14, 10, 14, 0.42) 0%,
-      rgba(14, 10, 14, 0.18) 26%,
+      rgba(14, 10, 14, 0.36) 0%,
+      rgba(14, 10, 14, 0.14) 28%,
       rgba(14, 10, 14, 0) 50%
     ),
     linear-gradient(
       180deg,
-      rgba(14, 10, 14, 0.18) 0%,
-      rgba(14, 10, 14, 0) 32%,
-      rgba(14, 10, 14, 0.22) 100%
+      rgba(14, 10, 14, 0.16) 0%,
+      rgba(14, 10, 14, 0) 30%,
+      rgba(14, 10, 14, 0.2) 100%
     );
 }
 
 @media (min-width: 1280px) {
   .hero-media {
-    left: 34%;
+    left: 50%;
   }
 }
 
