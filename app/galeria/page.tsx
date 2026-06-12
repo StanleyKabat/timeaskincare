@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ButtonLink } from "@/components/button-link";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
+import { galleryPageItems } from "@/data/gallery";
 
 export const metadata: Metadata = {
   title: "Galéria salónu a výsledkov",
@@ -13,65 +14,6 @@ export const metadata: Metadata = {
     canonical: "/galeria",
   },
 };
-
-const galleryItems = [
-  {
-    title: "Priestor salónu",
-    category: "Salón",
-    src: "/images/salon/priestor-salonu.jpg",
-    alt: "Interiér kozmetického salónu Timea Skincare s kozmetickým lôžkom a policami",
-    featured: true,
-  },
-  {
-    title: "Kozmetika v salóne",
-    category: "Salón",
-    src: "/images/salon/kozmetika-v-zrkadle.jpg",
-    alt: "Kozmetické produkty v salóne Timea Skincare v Novej Bani",
-  },
-  {
-    title: "Čakací priestor",
-    category: "Atmosféra",
-    src: "/images/salon/cakaci-priestor-vizitky.jpg",
-    alt: "Čakací priestor s vizitkami a jemnými detailmi v salóne Timea Skincare",
-    featured: true,
-  },
-  {
-    title: "Jemné detaily salónu",
-    category: "Atmosféra",
-    src: "/images/salon/salon-kvetinove-zrkadlo.jpg",
-    alt: "Jemné dekorácie v salóne Timea Skincare v Novej Bani",
-  },
-  {
-    title: "Vstup do budovy",
-    category: "Lokalita",
-    src: "/images/salon/budova-salon-vstup.jpg",
-    alt: "Budova a vstup, kde sa nachádza salón Timea Skincare v Novej Bani",
-  },
-  {
-    title: "Prístrojové ošetrenie",
-    category: "Technológia",
-    src: "/images/salon/pristroj-oxygen-osetrenie.jpg",
-    alt: "Kozmetický prístroj na ošetrenie pleti v salóne Timea Skincare",
-  },
-  {
-    title: "Prístrojové hlavice",
-    category: "Technológia",
-    src: "/images/salon/darcekovy-poukaz-detail.jpg",
-    alt: "Detail prístrojových hlavíc používaných pri kozmetickom ošetrení pleti",
-  },
-  {
-    title: "Certifikát",
-    category: "Dôvera",
-    src: "/images/salon/certifikat-pristroj.jpg",
-    alt: "Certifikát ku kozmetickému prístroju v salóne Timea Skincare",
-  },
-  {
-    title: "Kartičky na ďalší termín",
-    category: "Detail",
-    src: "/images/salon/karticky-na-dalsi-termin.jpg",
-    alt: "Kartičky na ďalší termín a vizitka salónu Timea Skincare",
-  },
-];
 
 export default function GalleryPage() {
   return (
@@ -87,9 +29,9 @@ export default function GalleryPage() {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-4 px-4 pb-10 sm:grid-cols-2 sm:gap-5 sm:px-6 sm:pb-12 lg:grid-cols-3 lg:px-8">
-        {galleryItems.map((item, index) => (
+        {galleryPageItems.map((item, index) => (
           <ScrollReveal
-            key={`${item.title}-${item.src}`}
+            key={item.src}
             staggerIndex={index}
             className={`min-w-0 ${item.featured ? "sm:col-span-2" : ""}`}
           >
@@ -99,7 +41,12 @@ export default function GalleryPage() {
                   src={item.src}
                   alt={item.alt}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  quality={88}
+                  sizes={
+                    item.featured
+                      ? "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 66vw"
+                      : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  }
                   className="object-cover"
                 />
                 <div className="absolute inset-x-3 bottom-3 rounded-md border border-[var(--color-line)] bg-[rgba(16,16,15,0.78)] p-3 backdrop-blur-sm">

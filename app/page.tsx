@@ -18,6 +18,7 @@ import { ReviewCard } from "@/components/review-card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { SectionHeading } from "@/components/section-heading";
 import { reviews } from "@/data/reviews";
+import { homeGalleryPreview, heroSalonPhoto } from "@/data/gallery";
 import { serviceGroups, siteConfig } from "@/data/site";
 
 export const metadata: Metadata = {
@@ -26,32 +27,7 @@ export const metadata: Metadata = {
   },
 };
 
-const homeGallery = [
-  {
-    src: "/images/salon/kozmetika-v-zrkadle.jpg",
-    alt: "Kozmetické produkty na polici v salóne Timea Skincare",
-  },
-  {
-    src: "/images/salon/salon-zrkadlo-policky.jpg",
-    alt: "Okrúhle zrkadlo a police s produktmi v salóne Timea Skincare",
-  },
-  {
-    src: "/images/salon/certifikat-detail.jpg",
-    alt: "Certifikát Timey Polcovej v salóne Timea Skincare",
-  },
-  {
-    src: "/images/salon/pristroj-hlavice-detail.jpg",
-    alt: "Profesionálne kozmetické nástroje a detaily v salóne Timea Skincare",
-  },
-  {
-    src: "/images/salon/cakaci-priestor-vizitky.jpg",
-    alt: "Čakací kútik so sviečkami a jemnými detailmi v salóne Timea Skincare",
-  },
-  {
-    src: "/images/salon/darcekovy-poukaz-detail.jpg",
-    alt: "Darčekový košík s ružovou stužkou a jemné detaily salónu Timea Skincare",
-  },
-];
+const homeGallery = homeGalleryPreview;
 
 export default function Home() {
   return (
@@ -60,11 +36,11 @@ export default function Home() {
         <div className="hero-media pointer-events-none hidden md:block" aria-hidden="true">
           <div className="relative h-full w-full">
             <Image
-              src="/images/salon/salon-interier-lehatko.jpg"
+              src={heroSalonPhoto.src}
               alt=""
               fill
               priority
-              quality={95}
+              quality={90}
               sizes="(min-width: 1536px) 1360px, (min-width: 1024px) 70vw, 100vw"
               className="object-cover object-[48%_38%] lg:object-[50%_36%]"
             />
@@ -126,11 +102,11 @@ export default function Home() {
 
           <div className="hero-mobile-image relative mt-8 aspect-[3/4] shadow-[0_24px_70px_rgba(0,0,0,0.34)] sm:mt-10 md:hidden">
             <Image
-              src="/images/hero-salon-interier-hq.jpg"
-              alt="Kozmetický salón Timea Skincare s kozmetickým lôžkom a profesionálnou výbavou"
+              src={heroSalonPhoto.src}
+              alt={heroSalonPhoto.alt}
               fill
               priority
-              quality={95}
+              quality={90}
               sizes="100vw"
               className="object-cover object-[50%_35%]"
             />
@@ -166,6 +142,7 @@ export default function Home() {
                     src={item.src}
                     alt={item.alt}
                     fill
+                    quality={88}
                     sizes="(min-width: 1280px) 240px, (min-width: 640px) 33vw, 50vw"
                     className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   />
