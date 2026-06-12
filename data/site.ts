@@ -21,6 +21,7 @@ export const navigation = [
   { label: "Domov", href: "/" },
   { label: "Služby", href: "/sluzby" },
   { label: "O salóne", href: "/#o-salone" },
+  { label: "Galéria", href: "/galeria" },
   { label: "Cenník", href: "/cennik" },
   { label: "Kontakt", href: "/kontakt" },
 ];
