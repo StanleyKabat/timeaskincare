@@ -48,6 +48,7 @@ function Brand({
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -88,11 +89,54 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Scroll-spy: on the homepage, track which in-page section (nav hash links)
+  // is currently crossing the middle of the viewport so only one nav item is
+  // active at a time.
+  useEffect(() => {
+    if (pathname !== "/") return;
+
+    const ids = navigation
+      .filter((item) => item.href.startsWith("/#"))
+      .map((item) => item.href.slice(2));
+
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((element): element is HTMLElement => element !== null);
+
+    if (sections.length === 0) return;
+
+    const visible = new Set<string>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visible.add(entry.target.id);
+          } else {
+            visible.delete(entry.target.id);
+          }
+        }
+        const next = ids.find((id) => visible.has(id)) ?? null;
+        setActiveSection(next);
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: 0 },
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => {
+      observer.disconnect();
+      setActiveSection(null);
+    };
+  }, [pathname]);
+
   const headerHidden = isHidden && !isOpen;
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    if (href.startsWith("/#")) return pathname === "/";
+    if (href.startsWith("/#")) {
+      return pathname === "/" && activeSection === href.slice(2);
+    }
+    if (href === "/") {
+      return pathname === "/" && activeSection === null;
+    }
     return pathname.startsWith(href);
   };
 
