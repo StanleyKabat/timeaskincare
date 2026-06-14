@@ -210,22 +210,40 @@ export default function Home() {
               <ScrollReveal className="min-w-0">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-powder)] sm:text-sm sm:tracking-[0.18em]">
-                    O salóne
+                    O mne
                   </p>
                   <h2 className="mt-3 max-w-xl font-serif text-2xl font-semibold leading-tight text-[var(--color-charcoal)] sm:mt-4 sm:text-4xl">
-                    Pokojné miesto pre jemnú a profesionálnu starostlivosť
+                    Kozmetika v Novej Bani s osobným prístupom
                   </h2>
+                  <p className="mt-5 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-powder)] sm:text-base">
+                    Precízny. Prirodzený. Osobný. Pokojný.
+                  </p>
                 </div>
               </ScrollReveal>
               <ScrollReveal staggerIndex={1} className="min-w-0">
-                <div className="text-sm leading-7 text-[rgba(247,241,235,0.82)] sm:text-base sm:leading-8">
+                <div className="space-y-4 text-sm leading-7 text-[rgba(247,241,235,0.82)] sm:text-base sm:leading-8">
                   <p>
-                    V Timea Skincare veríme, že kozmetické ošetrenie nemá byť len
-                    procedúra, ale chvíľa pokoja, starostlivosti a dôvery. Každé
-                    ošetrenie je prispôsobené typu a potrebám pleti, aby bol výsledok
-                    prirodzený, jemný a viditeľný.
+                    Volám sa Tímea a kozmetike sa venujem už viac ako dva a pol roka. Je
+                    to pre mňa vášeň, radosť a práca, ktorá ma napĺňa každý deň.
                   </p>
-                  <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-7">
+                  <p>
+                    Vždy som mala blízko ku kreatívnej a tvorivej práci, no zároveň ma
+                    prirodzene bavila starostlivosť o druhých. Práve kozmetika pre mňa
+                    spája cit pre detail, estetiku, jemnosť a osobný prístup ku každej
+                    zákazníčke.
+                  </p>
+                  <p>
+                    Pri práci je pre mňa najdôležitejšia precíznosť, prirodzený výsledok a
+                    spokojnosť zákazníčky. Každej venujem svoj čas a pozornosť, pretože
+                    chcem, aby návšteva u mňa bola nielen o výsledku, ale aj o príjemnom
+                    pocite, oddychu a dôvere.
+                  </p>
+                  <p>
+                    U mňa sa nemusíš hanbiť za svoju pleť ani za to, že prichádzaš s
+                    problémom. Som tu na to, aby som ti pomohla nájsť vhodné riešenie
+                    jemne, precízne a s rešpektom k tomu, čo si praješ.
+                  </p>
+                  <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-3">
                     Kontaktovať salón
                   </ButtonLink>
                 </div>
