@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { AboutMe } from "@/components/about-me";
 import { ButtonLink } from "@/components/button-link";
 import { ReviewCard } from "@/components/review-card";
 import { ScrollReveal } from "@/components/scroll-reveal";
@@ -206,7 +207,7 @@ export default function Home() {
               aria-hidden="true"
               className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(226,138,180,0.18),transparent_70%)]"
             />
-            <div className="relative grid gap-6 sm:gap-10 md:grid-cols-[1fr_0.9fr] md:items-center">
+            <div className="relative grid gap-6 sm:gap-10 md:grid-cols-[1fr_0.9fr] md:items-start">
               <ScrollReveal className="min-w-0">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-powder)] sm:text-sm sm:tracking-[0.18em]">
@@ -221,32 +222,7 @@ export default function Home() {
                 </div>
               </ScrollReveal>
               <ScrollReveal staggerIndex={1} className="min-w-0">
-                <div className="space-y-4 text-sm leading-7 text-[rgba(247,241,235,0.82)] sm:text-base sm:leading-8">
-                  <p>
-                    Volám sa Tímea a kozmetike sa venujem už viac ako dva a pol roka. Je
-                    to pre mňa vášeň, radosť a práca, ktorá ma napĺňa každý deň.
-                  </p>
-                  <p>
-                    Vždy som mala blízko ku kreatívnej a tvorivej práci, no zároveň ma
-                    prirodzene bavila starostlivosť o druhých. Práve kozmetika pre mňa
-                    spája cit pre detail, estetiku, jemnosť a osobný prístup ku každej
-                    zákazníčke.
-                  </p>
-                  <p>
-                    Pri práci je pre mňa najdôležitejšia precíznosť, prirodzený výsledok a
-                    spokojnosť zákazníčky. Každej venujem svoj čas a pozornosť, pretože
-                    chcem, aby návšteva u mňa bola nielen o výsledku, ale aj o príjemnom
-                    pocite, oddychu a dôvere.
-                  </p>
-                  <p>
-                    U mňa sa nemusíš hanbiť za svoju pleť ani za to, že prichádzaš s
-                    problémom. Som tu na to, aby som ti pomohla nájsť vhodné riešenie
-                    jemne, precízne a s rešpektom k tomu, čo si praješ.
-                  </p>
-                  <ButtonLink href="/kontakt#rezervacia" variant="secondary" className="mt-3">
-                    Kontaktovať salón
-                  </ButtonLink>
-                </div>
+                <AboutMe />
               </ScrollReveal>
             </div>
           </div>
