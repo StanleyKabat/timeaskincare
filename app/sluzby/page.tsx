@@ -44,7 +44,7 @@ export default function ServicesPage() {
           <SectionHeading
             eyebrow="Služby"
             title="Kozmetické služby v Novej Bani"
-            text="Prehľad služieb Timea Skincare. Detailné trvanie, vhodnosť a odporúčania po procedúre budú doplnené podľa finálnych podkladov."
+            text="Prehľad služieb Timea Skincare. Každé ošetrenie prispôsobím aktuálnemu stavu tvojej pleti a tomu, čo práve potrebuješ. Ak si nie si istá výberom služby, rada ti poradím pri rezervácii."
           />
         </ScrollReveal>
       </section>
