@@ -261,7 +261,7 @@ export default function Home() {
                 {siteConfig.location}
               </p>
               <h2 className="mt-2 text-2xl font-semibold text-[var(--color-charcoal)]">
-                Dohodnime si termín, ktorý ti bude vyhovovať.
+                Dohodni si termín, ktorý ti bude vyhovovať.
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">

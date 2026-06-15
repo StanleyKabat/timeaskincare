@@ -100,7 +100,7 @@ export default function ContactPage() {
               Formulárom
             </h2>
             <p className="mt-2 text-sm leading-5 text-[var(--color-charcoal)] sm:leading-6">
-              Vyplň meno, e-mail a telefón. Ozveme sa ti s potvrdením termínu.
+              Vyplň meno, e-mail a telefón. Ozvem sa ti s potvrdením termínu.
             </p>
             <p className="mt-3 text-sm font-semibold text-[var(--color-charcoal)] sm:mt-4">
               Rezervovať na stránke
@@ -212,7 +212,7 @@ export default function ContactPage() {
                 <MapPin className="mt-0.5 shrink-0 text-[var(--color-powder)]" size={22} />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--color-charcoal)]">
-                    Kde nás nájdete
+                    Kde nájdeš salón
                   </p>
                   <p className="mt-2 break-words text-xs leading-5 text-[var(--color-stone)]">
                     {siteConfig.address}

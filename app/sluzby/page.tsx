@@ -118,7 +118,7 @@ export default function ServicesPage() {
               Nie si si istá výberom služby?
             </h2>
             <p className="mt-2 text-sm text-[var(--color-stone)]">
-              Napíš nám a odporučíme vhodný postup podľa potrieb tvojej pleti.
+              Napíš mi a odporučím ti vhodný postup podľa potrieb tvojej pleti.
             </p>
           </div>
           <ButtonLink href="/kontakt#rezervacia" className="gap-2">

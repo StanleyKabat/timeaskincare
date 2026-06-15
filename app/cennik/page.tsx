@@ -75,7 +75,7 @@ export default function PricingPage() {
             </p>
             <p className="mt-3 text-sm leading-6 text-[var(--color-stone)]">
               Konečná cena sa môže líšiť podľa rozsahu ošetrenia a aktuálnych
-              potrieb pleti. Pri rezervácii ti odporučíme vhodnú službu podľa
+              potrieb pleti. Pri rezervácii ti odporučím vhodnú službu podľa
               toho, čo tvoja pleť alebo obočie práve potrebuje.
             </p>
           </div>
