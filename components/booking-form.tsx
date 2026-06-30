@@ -194,6 +194,7 @@ export function BookingForm() {
     const email = String(formData.get("email") || "");
     const phone = String(formData.get("phone") || "");
     const note = String(formData.get("note") || "");
+    const company = String(formData.get("company") || "");
     const voucherTreatment = String(formData.get("voucherTreatment") || "");
     const voucherFromName = String(formData.get("voucherFrom") || "").trim();
     const voucherForName = String(formData.get("voucherFor") || "").trim();
@@ -329,6 +330,7 @@ export function BookingForm() {
           time,
           durationMinutes: totalDurationMinutes,
           note,
+          company,
         }),
       });
       const data = (await response.json()) as {
@@ -350,9 +352,7 @@ export function BookingForm() {
       setAvailableSlots([]);
 
       setSubmitInfo(
-        data.customerSms === "sent"
-          ? "Ďakujeme, vašu požiadavku o rezerváciu sme prijali. Potvrdenie o prijatí sme vám poslali SMS-kou a čoskoro vás budeme kontaktovať s potvrdením termínu."
-          : "Ďakujeme, vašu požiadavku o rezerváciu sme prijali. Čoskoro vás budeme kontaktovať s potvrdením termínu.",
+        "Ďakujem, tvoju žiadosť o rezerváciu som prijala. Na e-mail ti prišlo potvrdenie o prijatí – po kontrole dostupnosti ti pošlem potvrdenie termínu.",
       );
     } catch (error) {
       // Network-level failure: offer the e-mail fallback so the request is not lost.
@@ -381,6 +381,13 @@ export function BookingForm() {
       className="w-full min-w-0 scroll-mt-28 rounded-lg border border-[var(--color-line)] border-t-[rgba(226,138,180,0.58)] bg-[var(--color-surface)] p-4 shadow-[0_22px_55px_rgba(0,0,0,0.14)] sm:p-6"
     >
       <div className="grid min-w-0 gap-4 sm:gap-5">
+        {/* Honeypot proti spamu – reálni návštevníci toto pole nevidia ani nevypĺňajú. */}
+        <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden">
+          <label>
+            Firma
+            <input type="text" name="company" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
         <div className="min-w-0">
           <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-powder)] sm:text-sm sm:tracking-[0.18em]">
             {isGiftVoucherFlow ? "Zakúpenie poukážky" : "Rezervácia na stránke"}
@@ -711,7 +718,7 @@ export function BookingForm() {
         <p className="text-xs leading-5 text-[var(--color-stone)]">
           {isGiftVoucherFlow
             ? "Po odoslaní ťa presmerujeme na QR kód pre bankový prevod darčekovej poukážky."
-            : "Po odoslaní dostaneš SMS o prijatí požiadavky a salón sa ti ozve s potvrdením termínu. Rezervácia nie je automaticky potvrdená."}
+            : "Po odoslaní ti na e-mail príde potvrdenie o prijatí žiadosti. Termín nie je automaticky potvrdený – po kontrole dostupnosti ti pošlem potvrdenie e-mailom."}
         </p>
         {submitInfo ? <p className="text-xs leading-5 text-[var(--color-stone)]">{submitInfo}</p> : null}
         {submitError ? <p className="text-xs leading-5 text-red-300">{submitError}</p> : null}

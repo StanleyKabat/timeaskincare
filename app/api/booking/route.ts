@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { getBookingIntegrationStatus, submitReservation } from "@/lib/booking-integrations";
+import { getRequestOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const result = await submitReservation(payload);
+    const result = await submitReservation(payload, getRequestOrigin(request));
+
+    if (result.spam) {
+      // Honeypot tripped: respond OK without leaking that it was filtered.
+      return NextResponse.json({ ok: true, ...getBookingIntegrationStatus() });
+    }
 
     return NextResponse.json({
       ok: true,

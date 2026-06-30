@@ -6,6 +6,9 @@ import {
   isWithinBookingRules,
   type BusyInterval,
 } from "@/lib/booking";
+import { createBookingToken } from "@/lib/booking-token";
+import { buildGoogleCalendarLink, buildIcsFile } from "@/lib/calendar";
+import { getSiteUrl } from "@/lib/site-url";
 
 export type BookingRequest = {
   name: string;
@@ -328,16 +331,33 @@ async function createCalendarEvent(booking: BookingRequest): Promise<GoogleEvent
   return (await response.json()) as GoogleEvent;
 }
 
+// Simple honeypot: a hidden "company" field that humans never fill in.
+function isHoneypotTripped(input: unknown) {
+  if (!input || typeof input !== "object") {
+    return false;
+  }
+
+  const value = (input as Record<string, unknown>).company;
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 /**
  * Main reservation entry point. Always works as a reservation REQUEST:
  * - validates the input,
  * - (optionally) creates a calendar event when Google Calendar is set up,
  * - sends an SMS to the salon owner and a confirmation SMS to the customer,
- * - sends optional e-mails when Resend is configured.
- * The appointment is NOT auto-confirmed; the salon confirms manually.
+ * - sends a "request received" e-mail to the customer and a confirm/decline
+ *   e-mail to Timea when Resend is configured.
+ * The appointment is NOT auto-confirmed; Timea confirms manually via e-mail.
  */
-export async function submitReservation(input: unknown) {
+export async function submitReservation(input: unknown, origin?: string) {
+  // Bots that fill the honeypot get a silent success; nothing is sent.
+  if (isHoneypotTripped(input)) {
+    return { spam: true as const };
+  }
+
   const booking = validateBookingRequest(input);
+  const baseUrl = origin || getSiteUrl();
 
   let event: GoogleEvent | undefined;
   if (hasGoogleCalendarConfig()) {
@@ -351,22 +371,38 @@ export async function submitReservation(input: unknown) {
   const sms = await sendReservationNotifications(booking);
 
   // E-mails are best-effort and must never block the reservation request.
-  await Promise.allSettled([sendBookingEmails(booking, event)]);
+  await Promise.allSettled([sendReservationRequestEmails(booking, baseUrl, event)]);
 
   // The owner notification is critical: if SMS is configured but the
   // owner message failed, surface a friendly error to the customer.
   if (hasSmsConfig() && sms.owner === "failed") {
     const error = new Error(
-      "Požiadavku sa momentálne nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte telefonicky.",
+      "Požiadavku sa momentálne nepodarilo odoslať. Skús to prosím znova alebo ma kontaktuj telefonicky.",
     );
     error.name = "SMS_FAILED";
     throw error;
   }
 
-  return { booking, event, sms };
+  return { booking, event, sms, spam: false as const };
 }
 
-async function sendEmail(to: string | string[], subject: string, text: string) {
+type EmailAttachment = {
+  filename: string;
+  content: string;
+  contentType?: string;
+};
+
+type EmailOptions = {
+  html?: string;
+  attachments?: EmailAttachment[];
+};
+
+async function sendEmail(
+  to: string | string[],
+  subject: string,
+  text: string,
+  options: EmailOptions = {},
+) {
   if (!process.env.RESEND_API_KEY || !process.env.BOOKING_FROM_EMAIL) {
     return { skipped: true };
   }
@@ -382,6 +418,8 @@ async function sendEmail(to: string | string[], subject: string, text: string) {
       to,
       subject,
       text,
+      ...(options.html ? { html: options.html } : {}),
+      ...(options.attachments ? { attachments: options.attachments } : {}),
     }),
   });
 
@@ -392,31 +430,240 @@ async function sendEmail(to: string | string[], subject: string, text: string) {
   return { skipped: false };
 }
 
-async function sendBookingEmails(booking: BookingRequest, event?: GoogleEvent) {
+function formatDateHuman(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) {
+    return date;
+  }
+
+  return `${day}. ${month}. ${year}`;
+}
+
+function appointmentSummaryLines(booking: BookingRequest) {
+  return [
+    `Služby: ${booking.services.join(", ")}`,
+    `Dátum: ${formatDateHuman(booking.date)}`,
+    `Čas: ${booking.time}`,
+    `Trvanie: ${booking.durationMinutes} min`,
+  ];
+}
+
+function customerSummaryLines(booking: BookingRequest) {
+  return [
+    `Meno: ${booking.name}`,
+    `E-mail: ${booking.email}`,
+    `Telefón: ${booking.phone}`,
+    ...appointmentSummaryLines(booking),
+    booking.note ? `Poznámka: ${booking.note}` : "",
+  ].filter(Boolean);
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function emailLayout(title: string, bodyHtml: string) {
+  return `<div style="font-family:Arial,Helvetica,sans-serif;background:#faf8f6;padding:24px;color:#242629;">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e8e8e5;border-radius:16px;overflow:hidden;">
+      <div style="padding:18px 28px;border-bottom:1px solid #f1e7ec;">
+        <span style="font-size:18px;font-weight:700;color:#d979a8;letter-spacing:0.02em;">Timea Skincare</span>
+      </div>
+      <div style="padding:24px 28px;font-size:15px;line-height:1.6;">
+        <h1 style="font-size:18px;margin:0 0 14px;color:#242629;">${escapeHtml(title)}</h1>
+        ${bodyHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function emailButton(href: string, label: string) {
+  return `<a href="${href}" style="display:inline-block;background:#d979a8;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px;">${escapeHtml(
+    label,
+  )}</a>`;
+}
+
+function summaryHtml(lines: string[]) {
+  return `<div style="background:#faf8f6;border:1px solid #f1e7ec;border-radius:12px;padding:14px 18px;margin:8px 0 18px;">${lines
+    .map((line) => `<div style="margin:2px 0;">${escapeHtml(line)}</div>`)
+    .join("")}</div>`;
+}
+
+function icsAttachment(booking: BookingRequest): EmailAttachment[] | undefined {
+  const ics = buildIcsFile(booking);
+  if (!ics) {
+    return undefined;
+  }
+
+  return [
+    {
+      filename: "timea-skincare.ics",
+      content: Buffer.from(ics, "utf8").toString("base64"),
+      contentType: "text/calendar",
+    },
+  ];
+}
+
+// Sent right after the form is submitted: customer gets a "request received"
+// e-mail (no calendar link yet), Timea gets the request with confirm/decline links.
+async function sendReservationRequestEmails(
+  booking: BookingRequest,
+  baseUrl: string,
+  event?: GoogleEvent,
+) {
+  const token = createBookingToken(booking);
+  const manageUrl = `${baseUrl}/rezervacia/sprava?token=${encodeURIComponent(token)}`;
+  const confirmUrl = `${manageUrl}&intent=confirm`;
+  const declineUrl = `${manageUrl}&intent=decline`;
+
   const customerText = [
     `Dobrý deň, ${booking.name},`,
     "",
-    "ďakujeme za vašu požiadavku o rezerváciu v Timea Skincare.",
-    "Požiadavku sme prijali a čoskoro vás budeme kontaktovať s potvrdením termínu.",
+    "ďakujem za tvoju rezerváciu. Tvoj termín zatiaľ nie je potvrdený.",
+    "Po kontrole dostupnosti ti pošlem potvrdenie e-mailom.",
     "",
-    bookingText(booking),
+    ...appointmentSummaryLines(booking),
     "",
-    "V prípade zmeny nás kontaktujte telefonicky alebo správou.",
+    "Teším sa na tvoju návštevu.",
+    "Timea Skincare",
     siteConfig.phone,
   ].join("\n");
 
+  const customerHtml = emailLayout(
+    "Žiadosť o rezerváciu bola prijatá",
+    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+     <p>ďakujem za tvoju rezerváciu. Tvoj termín <strong>zatiaľ nie je potvrdený</strong>. Po kontrole dostupnosti ti pošlem potvrdenie e-mailom.</p>
+     ${summaryHtml(appointmentSummaryLines(booking))}
+     <p style="margin:0;">Teším sa na tvoju návštevu.<br/>Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
+  );
+
   const ownerText = [
-    "Nová požiadavka o rezerváciu:",
+    "Nová žiadosť o rezerváciu (zatiaľ nepotvrdená):",
     "",
-    bookingText(booking),
+    ...customerSummaryLines(booking),
     event?.htmlLink ? `Kalendár: ${event.htmlLink}` : "",
+    "",
+    `Potvrdiť rezerváciu: ${confirmUrl}`,
+    `Odmietnuť rezerváciu: ${declineUrl}`,
   ]
     .filter(Boolean)
     .join("\n");
 
+  const ownerHtml = emailLayout(
+    "Nová žiadosť o rezerváciu",
+    `<p>Máš novú <strong>žiadosť o rezerváciu</strong> (zatiaľ nepotvrdenú).</p>
+     ${summaryHtml(customerSummaryLines(booking))}
+     <p style="margin:0 0 16px;">${emailButton(confirmUrl, "Potvrdiť rezerváciu")}
+       &nbsp;&nbsp;
+       <a href="${declineUrl}" style="display:inline-block;color:#8b8d88;text-decoration:underline;font-weight:600;padding:12px 4px;">Odmietnuť rezerváciu</a>
+     </p>
+     <p style="font-size:13px;color:#8b8d88;margin:0;">Po kliknutí sa otvorí stránka, kde rezerváciu finálne potvrdíš alebo odmietneš.</p>`,
+  );
+
   await Promise.all([
-    sendEmail(booking.email, "Timea Skincare - prijatá požiadavka o rezerváciu", customerText),
-    sendEmail(siteConfig.email, `Nová rezervácia - ${booking.name}`, ownerText),
+    sendEmail(booking.email, "Žiadosť o rezerváciu bola prijatá", customerText, {
+      html: customerHtml,
+    }),
+    sendEmail(siteConfig.email, `Nová žiadosť o rezerváciu – ${booking.name}`, ownerText, {
+      html: ownerHtml,
+    }),
+  ]);
+}
+
+/** Sends the confirmed-booking e-mails (customer + owner) with .ics + Google link. */
+export async function confirmReservation(booking: BookingRequest) {
+  const attachments = icsAttachment(booking);
+  const calendarLink = buildGoogleCalendarLink(booking);
+
+  const customerText = [
+    `Dobrý deň, ${booking.name},`,
+    "",
+    "tvoj termín je potvrdený. Teším sa na tvoju návštevu.",
+    "",
+    ...appointmentSummaryLines(booking),
+    `Adresa: ${siteConfig.address}`,
+    "",
+    calendarLink ? `Pridať do kalendára: ${calendarLink}` : "",
+    "",
+    "Timea Skincare",
+    siteConfig.phone,
+    siteConfig.email,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const customerHtml = emailLayout(
+    "Rezervácia potvrdená",
+    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+     <p>tvoj termín je <strong>potvrdený</strong>. Teším sa na tvoju návštevu.</p>
+     ${summaryHtml([...appointmentSummaryLines(booking), `Adresa: ${siteConfig.address}`])}
+     ${calendarLink ? `<p style="margin:0 0 16px;">${emailButton(calendarLink, "Pridať do Google kalendára")}</p>` : ""}
+     <p style="font-size:13px;color:#8b8d88;margin:0 0 16px;">V prílohe je aj súbor .ics, ktorý pridá termín do akéhokoľvek kalendára.</p>
+     <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}<br/>${escapeHtml(siteConfig.email)}</p>`,
+  );
+
+  const ownerText = [
+    "Potvrdená rezervácia:",
+    "",
+    ...customerSummaryLines(booking),
+    calendarLink ? `Pridať do kalendára: ${calendarLink}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const ownerHtml = emailLayout(
+    "Potvrdená rezervácia",
+    `<p>Táto rezervácia bola <strong>potvrdená</strong>.</p>
+     ${summaryHtml(customerSummaryLines(booking))}
+     ${calendarLink ? `<p style="margin:0;">${emailButton(calendarLink, "Pridať do Google kalendára")}</p>` : ""}`,
+  );
+
+  await Promise.all([
+    sendEmail(booking.email, "Rezervácia potvrdená – Timea Skincare", customerText, {
+      html: customerHtml,
+      attachments,
+    }),
+    sendEmail(siteConfig.email, `Potvrdená rezervácia – ${booking.name}`, ownerText, {
+      html: ownerHtml,
+      attachments,
+    }),
+  ]);
+}
+
+/** Sends the declined-booking e-mail to the customer (and a copy to Timea). */
+export async function declineReservation(booking: BookingRequest) {
+  const customerText = [
+    `Dobrý deň, ${booking.name},`,
+    "",
+    "mrzí ma to, ale vybraný termín sa mi nepodarilo potvrdiť.",
+    "Ozvem sa ti, prípadne si môžeš zvoliť iný čas cez rezervačný formulár.",
+    "",
+    ...appointmentSummaryLines(booking),
+    "",
+    "Timea Skincare",
+    siteConfig.phone,
+  ].join("\n");
+
+  const customerHtml = emailLayout(
+    "Rezervácia – Timea Skincare",
+    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+     <p>mrzí ma to, ale vybraný termín sa mi <strong>nepodarilo potvrdiť</strong>. Ozvem sa ti, prípadne si môžeš zvoliť iný čas cez rezervačný formulár.</p>
+     ${summaryHtml(appointmentSummaryLines(booking))}
+     <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
+  );
+
+  await Promise.all([
+    sendEmail(booking.email, "Rezervácia – Timea Skincare", customerText, {
+      html: customerHtml,
+    }),
+    sendEmail(
+      siteConfig.email,
+      `Odmietnutá rezervácia – ${booking.name}`,
+      ["Táto rezervácia bola odmietnutá:", "", ...customerSummaryLines(booking)].join("\n"),
+    ),
   ]);
 }
 
