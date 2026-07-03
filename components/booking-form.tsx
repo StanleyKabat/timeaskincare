@@ -68,7 +68,7 @@ const bookingText = {
     noteLabel: "Poznámka",
     notePlaceholder: "Voliteľné: alergie, preferencia, otázka k termínu...",
     voucherNoSlotNotice:
-      "Pri darčekovej poukážke sa termín teraz nevyberá. Po výbere typu ošetrenia ťa presmerujeme na QR platbu.",
+      "Pri darčekovej poukážke sa termín teraz nevyberá. Po výbere typu ošetrenia sa zobrazí QR kód a platobné údaje.",
     consentText:
       "Súhlasím so spracovaním osobných údajov za účelom vybavenia rezervácie, odoslania potvrdenia a pripomienky termínu e-mailom alebo SMS.",
     privacyLinkText: "Zásady ochrany osobných údajov",
@@ -76,7 +76,7 @@ const bookingText = {
     submitVoucher: "Pokračovať na QR platbu",
     submitNormal: "Odoslať požiadavku o termín",
     footerVoucher:
-      "Po odoslaní ťa presmerujeme na QR kód pre bankový prevod darčekovej poukážky.",
+      "Po odoslaní sa zobrazí QR kód a platobné údaje pre bankový prevod darčekovej poukážky.",
     footerNormal:
       "Po odoslaní ti na e-mail príde potvrdenie o prijatí žiadosti. Termín nie je automaticky potvrdený – po kontrole dostupnosti ti pošlem potvrdenie e-mailom.",
     successInfo:
@@ -96,6 +96,20 @@ const bookingText = {
     errSlotsLoadGeneric: "Dostupné časy sa nepodarilo načítať.",
     calendarNotConnected:
       "Kalendár ešte nie je napojený, preto sú časy zatiaľ orientačné.",
+    qrHeading: "Platba darčekovej poukážky",
+    qrInstructions:
+      "Naskenuj QR kód v bankovej aplikácii. Platobný príkaz sa predvyplní automaticky. Ak QR kód nefunguje, použi platobné údaje nižšie.",
+    qrError:
+      "QR kód sa nepodarilo vytvoriť. Použi prosím platobné údaje nižšie.",
+    qrAlt: "QR kód pre platbu darčekovej poukážky",
+    ibanLabel: "IBAN",
+    amountLabel: "Suma",
+    accountNameLabel: "Názov účtu",
+    messageLabel: "Správa pre prijímateľa",
+    copyIban: "Skopírovať IBAN",
+    copyMessage: "Skopírovať správu pre prijímateľa",
+    copyAll: "Skopírovať platobné údaje",
+    copied: "Skopírované",
   },
   en: {
     servicesLabel: "Services",
@@ -140,7 +154,7 @@ const bookingText = {
     noteLabel: "Note",
     notePlaceholder: "Optional: allergies, preferences, a question about the appointment...",
     voucherNoSlotNotice:
-      "For a gift voucher no appointment time is selected now. After you choose the treatment, we will redirect you to the QR payment.",
+      "For a gift voucher no appointment time is selected now. After you choose the treatment, a QR code and payment details will appear.",
     consentText:
       "I agree to the processing of my personal data for the purpose of handling the booking, sending a confirmation and an appointment reminder by email or SMS.",
     privacyLinkText: "Privacy Policy",
@@ -148,7 +162,7 @@ const bookingText = {
     submitVoucher: "Continue to QR payment",
     submitNormal: "Send appointment request",
     footerVoucher:
-      "After sending, we will redirect you to a QR code for the bank transfer of the gift voucher.",
+      "After sending, a QR code and payment details for the gift voucher bank transfer will appear below.",
     footerNormal:
       "After sending, you will receive a confirmation of receipt by email. The appointment is not confirmed automatically – after checking availability I will send you a confirmation by email.",
     successInfo:
@@ -168,6 +182,19 @@ const bookingText = {
     errSlotsLoadGeneric: "Available times could not be loaded.",
     calendarNotConnected:
       "The calendar is not connected yet, so the times are approximate for now.",
+    qrHeading: "Gift voucher payment",
+    qrInstructions:
+      "Scan the QR code in your banking app. The payment should be filled in automatically. If the QR code does not work, use the payment details below.",
+    qrError: "The QR code could not be generated. Please use the payment details below.",
+    qrAlt: "Gift voucher payment QR code",
+    ibanLabel: "IBAN",
+    amountLabel: "Amount",
+    accountNameLabel: "Account name",
+    messageLabel: "Payment message",
+    copyIban: "Copy IBAN",
+    copyMessage: "Copy payment message",
+    copyAll: "Copy payment details",
+    copied: "Copied",
   },
 } as const;
 
@@ -201,6 +228,16 @@ function formatSelectedServicesLabel(count: number, locale: Locale) {
 
   return `${count} služieb`;
 }
+
+type VoucherPayment = {
+  qrDataUrl: string;
+  iban: string;
+  accountName: string;
+  amount: string;
+  currency: string;
+  message: string;
+  error: string;
+};
 
 export function BookingForm({
   locale = "sk",
@@ -239,6 +276,18 @@ export function BookingForm({
   const [submitInfo, setSubmitInfo] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [voucherPayment, setVoucherPayment] = useState<VoucherPayment | null>(null);
+  const [copiedField, setCopiedField] = useState("");
+
+  function copyPaymentText(field: string, text: string) {
+    void navigator.clipboard
+      ?.writeText(text)
+      .then(() => {
+        setCopiedField(field);
+        window.setTimeout(() => setCopiedField(""), 2000);
+      })
+      .catch(() => undefined);
+  }
 
   const selectedServices = useMemo(
     () =>
@@ -328,6 +377,7 @@ export function BookingForm({
     setSelectedVoucherTreatment("");
     setVoucherFrom("");
     setVoucherFor("");
+    setVoucherPayment(null);
 
     setSelectedServiceNames((current) => {
       const isAlreadySelected = current.includes(serviceName);
@@ -414,27 +464,39 @@ export function BookingForm({
 
       const amount = selectedTreatment.amount.toFixed(2);
       const paymentMessage = `${giftVoucherPaymentConfig.notePrefix} - ${voucherTreatment} - od ${voucherFromName} pre ${voucherForName}`;
-      const qrPayload = `SPD*1.0*ACC:${giftVoucherPaymentConfig.iban}*AM:${amount}*CC:${giftVoucherPaymentConfig.currency}*MSG:${paymentMessage}`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(qrPayload)}`;
+      const baseDetails = {
+        iban: giftVoucherPaymentConfig.iban,
+        accountName: giftVoucherPaymentConfig.accountName,
+        amount,
+        currency: giftVoucherPaymentConfig.currency,
+        message: paymentMessage,
+      };
 
-      void navigator.clipboard
-        ?.writeText(
-          [
-            "Platba darčekovej poukážky",
-            `Meno: ${name}`,
-            `E-mail: ${email}`,
-            `Telefón: ${phone}`,
-            `Typ ošetrenia: ${voucherTreatment}`,
-            `Od koho je poukážka: ${voucherFromName}`,
-            `Pre koho je poukážka: ${voucherForName}`,
-            `Suma: ${amount} €`,
-            `IBAN: ${giftVoucherPaymentConfig.iban}`,
-            `Poznámka: ${paymentMessage}`,
-          ].join("\n"),
-        )
-        .catch(() => undefined);
+      try {
+        const response = await fetch("/api/booking/voucher-qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            treatment: voucherTreatment,
+            from: voucherFromName,
+            for: voucherForName,
+          }),
+        });
+        const data = (await response.json()) as { ok?: boolean; qrDataUrl?: string };
 
-      window.location.href = qrUrl;
+        if (!response.ok || !data.ok || !data.qrDataUrl) {
+          throw new Error("qr");
+        }
+
+        setVoucherPayment({ ...baseDetails, qrDataUrl: data.qrDataUrl, error: "" });
+      } catch {
+        // The QR image failed, but the manual bank-transfer details below are
+        // enough to complete the payment, so we still show the payment panel.
+        setVoucherPayment({ ...baseDetails, qrDataUrl: "", error: t.qrError });
+      } finally {
+        setIsSubmitting(false);
+      }
+
       return;
     }
 
@@ -873,6 +935,97 @@ export function BookingForm({
         </p>
         {submitInfo ? <p className="text-xs leading-5 text-[var(--color-stone)]">{submitInfo}</p> : null}
         {submitError ? <p className="text-xs leading-5 text-red-300">{submitError}</p> : null}
+
+        {voucherPayment ? (
+          <div className="grid gap-4 rounded-2xl border border-[rgba(226,138,180,0.35)] bg-[rgba(226,138,180,0.06)] p-4 sm:p-5">
+            <div>
+              <h3 className="text-base font-semibold text-[var(--color-charcoal)]">
+                {t.qrHeading}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-[var(--color-stone)]">
+                {t.qrInstructions}
+              </p>
+            </div>
+
+            {voucherPayment.qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={voucherPayment.qrDataUrl}
+                alt={t.qrAlt}
+                width={220}
+                height={220}
+                className="mx-auto h-auto w-[220px] max-w-full rounded-xl bg-white p-3 shadow-[0_10px_28px_rgba(36,38,41,0.12)]"
+              />
+            ) : (
+              <p className="text-sm leading-6 text-red-500">
+                {voucherPayment.error || t.qrError}
+              </p>
+            )}
+
+            <dl className="grid gap-2 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 text-sm">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                <dt className="font-semibold text-[var(--color-charcoal)]">{t.ibanLabel}</dt>
+                <dd className="break-all text-[var(--color-stone)] sm:text-right">
+                  {voucherPayment.iban}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                <dt className="font-semibold text-[var(--color-charcoal)]">{t.amountLabel}</dt>
+                <dd className="text-[var(--color-stone)] sm:text-right">
+                  {voucherPayment.amount} {voucherPayment.currency}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                <dt className="font-semibold text-[var(--color-charcoal)]">
+                  {t.accountNameLabel}
+                </dt>
+                <dd className="text-[var(--color-stone)] sm:text-right">
+                  {voucherPayment.accountName}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                <dt className="font-semibold text-[var(--color-charcoal)]">{t.messageLabel}</dt>
+                <dd className="break-words text-[var(--color-stone)] sm:text-right">
+                  {voucherPayment.message}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => copyPaymentText("iban", voucherPayment.iban)}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)]"
+              >
+                {copiedField === "iban" ? t.copied : t.copyIban}
+              </button>
+              <button
+                type="button"
+                onClick={() => copyPaymentText("message", voucherPayment.message)}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)]"
+              >
+                {copiedField === "message" ? t.copied : t.copyMessage}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  copyPaymentText(
+                    "all",
+                    [
+                      `${t.ibanLabel}: ${voucherPayment.iban}`,
+                      `${t.amountLabel}: ${voucherPayment.amount} ${voucherPayment.currency}`,
+                      `${t.accountNameLabel}: ${voucherPayment.accountName}`,
+                      `${t.messageLabel}: ${voucherPayment.message}`,
+                    ].join("\n"),
+                  )
+                }
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)]"
+              >
+                {copiedField === "all" ? t.copied : t.copyAll}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </form>
   );
