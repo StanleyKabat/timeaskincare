@@ -1,7 +1,7 @@
 export const bookingConfig = {
   openingHour: 8,
   closingHour: 18,
-  breakMinutes: 15,
+  breakMinutes: 10,
   slotStepMinutes: 30,
   minLeadMinutes: 12 * 60,
   nextDayCutoffHour: 20,
