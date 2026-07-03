@@ -140,7 +140,10 @@ export const giftVoucherTreatments = [
 ];
 
 export const giftVoucherPaymentConfig = {
-  iban: "[DOPLNIŤ_IBAN]",
+  // Public receiving IBAN for gift-voucher bank transfers. Stored spaceless so
+  // the SPD QR payload (ACC field) is valid. This IBAN is meant to be shown to
+  // customers on the QR/payment details, so it is not a secret.
+  iban: "SK7209000000005243051534",
   accountName: "Timea Skincare",
   currency: "EUR",
   notePrefix: "Darčekový poukaz",
