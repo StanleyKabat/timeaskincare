@@ -6,12 +6,13 @@ import { useEffect } from "react";
 import { getLocaleFromPathname } from "@/lib/i18n/config";
 
 /**
- * Keeps <html lang> in sync with the active locale on the client.
+ * Keeps <html lang> in sync with the active locale during client-side navigation.
  *
- * The root layout renders `lang="sk"` for SSR (correct for every Slovak route).
- * This effect updates it to the detected locale after navigation, so English
- * routes under `/en` report `lang="en"` without restructuring the root layout
- * or adding middleware.
+ * The root layout now renders the correct `lang` on the server (via the
+ * `x-pathname` header set in middleware), so the initial HTML is already correct
+ * for crawlers and screen readers. The root layout does not re-render on
+ * client-side (SPA) navigation, so this harmless effect keeps `<html lang>` in
+ * sync when the user navigates between Slovak and English routes.
  */
 export function HtmlLang() {
   const pathname = usePathname() ?? "/";

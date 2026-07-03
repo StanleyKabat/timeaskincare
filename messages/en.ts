@@ -18,6 +18,7 @@ export const en: Dictionary = {
   },
   header: {
     brandTagline: "Beauty that radiates you",
+    brandAriaLabel: "Timea Skincare - home",
     booking: "Online booking",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -30,6 +31,10 @@ export const en: Dictionary = {
     contactHeading: "Contact",
     socialHeading: "Social media",
     rights: "All rights reserved.",
+  },
+  social: {
+    instagram: "Timea Skincare on Instagram (opens in a new window)",
+    facebook: "Timea Skincare on Facebook (opens in a new window)",
   },
   languageSwitcher: {
     label: "SK",

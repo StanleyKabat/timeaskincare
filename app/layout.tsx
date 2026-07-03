@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Great_Vibes, Inter } from "next/font/google";
+import { headers } from "next/headers";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { HtmlLang } from "@/components/html-lang";
 import { siteConfig } from "@/data/site";
+import { getLocaleFromPathname } from "@/lib/i18n/config";
 import "./globals.css";
 
 const inter = Inter({
@@ -117,13 +119,18 @@ const localBusinessJsonLd = {
   })),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // `x-pathname` is set by middleware so we can render the correct server-side
+  // `<html lang>` per locale. Falls back to Slovak (the default) if absent.
+  const pathname = (await headers()).get("x-pathname") ?? "/";
+  const lang = getLocaleFromPathname(pathname);
+
   return (
-    <html lang="sk" className={`${inter.variable} ${cormorant.variable} ${greatVibes.variable}`}>
+    <html lang={lang} className={`${inter.variable} ${cormorant.variable} ${greatVibes.variable}`}>
       <body>
         <script
           type="application/ld+json"

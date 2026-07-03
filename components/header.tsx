@@ -15,14 +15,20 @@ import { cn } from "@/lib/utils";
 function Brand({
   onNavigate,
   size = "default",
+  homeHref,
+  ariaLabel,
+  tagline,
 }: {
   onNavigate?: () => void;
   size?: "default" | "compact";
+  homeHref: string;
+  ariaLabel: string;
+  tagline: string;
 }) {
   return (
     <Link
-      href="/"
-      aria-label="Timea Skincare - domov"
+      href={homeHref}
+      aria-label={ariaLabel}
       className="flex w-fit shrink-0 flex-col items-start leading-none"
       onClick={onNavigate}
     >
@@ -42,7 +48,7 @@ function Brand({
             : "text-[8px] tracking-[0.26em] sm:text-[9px] sm:tracking-[0.32em]",
         )}
       >
-        Krása, ktorá vyžaruje teba
+        {tagline}
       </span>
     </Link>
   );
@@ -136,6 +142,7 @@ export function Header() {
   const locale = getLocaleFromPathname(pathname ?? "/");
   const navItems = locale === "en" ? navigationEn : navigation;
   const dictionary = getDictionary(locale);
+  const homeHref = locale === "en" ? "/en" : "/";
 
   const isActive = (href: string) => {
     if (href.startsWith("/#")) {
@@ -157,11 +164,16 @@ export function Header() {
       }`}
     >
       <div className="mx-auto grid h-[58px] w-full max-w-[90rem] grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-8 lg:h-[68px] lg:px-10 xl:px-14 2xl:px-16">
-        <Brand onNavigate={() => setIsOpen(false)} />
+        <Brand
+          homeHref={homeHref}
+          ariaLabel={dictionary.header.brandAriaLabel}
+          tagline={dictionary.header.brandTagline}
+          onNavigate={() => setIsOpen(false)}
+        />
 
         <nav
           className="col-start-2 hidden items-center justify-center gap-1 lg:flex xl:gap-1.5"
-          aria-label="Hlavná navigácia"
+          aria-label={dictionary.header.mainNav}
         >
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -203,7 +215,7 @@ export function Header() {
             href={siteConfig.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+            aria-label={dictionary.social.instagram}
             className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
             <FaInstagram size={15} aria-hidden="true" />
@@ -212,7 +224,7 @@ export function Header() {
             href={siteConfig.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
+            aria-label={dictionary.social.facebook}
             className="hidden size-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-stone)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-charcoal)] sm:inline-flex"
           >
             <FaFacebookF size={14} aria-hidden="true" />
@@ -220,7 +232,7 @@ export function Header() {
           <button
             type="button"
             className="inline-flex size-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.16)] bg-[rgba(250,248,246,0.06)] text-[var(--color-charcoal)] transition duration-300 hover:border-[rgba(226,138,180,0.55)] hover:bg-[rgba(226,138,180,0.14)] active:scale-95 lg:hidden"
-            aria-label={isOpen ? "Zavrieť menu" : "Otvoriť menu"}
+            aria-label={isOpen ? dictionary.header.closeMenu : dictionary.header.openMenu}
             aria-expanded={isOpen}
             onClick={() => setIsOpen((current) => !current)}
           >
@@ -237,18 +249,24 @@ export function Header() {
         <div className="absolute inset-x-0 top-full z-40 border-t border-[rgba(255,255,255,0.1)] bg-[linear-gradient(175deg,rgba(16,16,15,0.98)_0%,rgba(23,22,21,0.98)_64%,rgba(26,22,25,0.98)_100%)] px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-2 lg:hidden mobile-menu-overlay">
           <div className="mobile-menu-panel mx-auto w-full max-w-lg overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.14)] bg-[linear-gradient(152deg,rgba(250,248,246,0.1)_0%,rgba(250,248,246,0.04)_100%)] px-3.5 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.36)] backdrop-blur-xl">
             <div className="mb-2.5 flex items-center justify-between gap-3">
-              <Brand size="compact" onNavigate={() => setIsOpen(false)} />
+              <Brand
+                size="compact"
+                homeHref={homeHref}
+                ariaLabel={dictionary.header.brandAriaLabel}
+                tagline={dictionary.header.brandTagline}
+                onNavigate={() => setIsOpen(false)}
+              />
               <button
                 type="button"
                 className="inline-flex size-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] bg-[rgba(250,248,246,0.08)] text-[var(--color-charcoal)] transition duration-300 hover:border-[rgba(217,121,168,0.5)] hover:bg-[rgba(217,121,168,0.14)] active:scale-95"
-                aria-label="Zavrieť menu"
+                aria-label={dictionary.header.closeMenu}
                 onClick={() => setIsOpen(false)}
               >
                 <X size={16} aria-hidden="true" className="transition-transform duration-300 hover:rotate-90" />
               </button>
             </div>
 
-            <nav className="grid gap-1 pb-0.5" aria-label="Mobilná navigácia">
+            <nav className="grid gap-1 pb-0.5" aria-label={dictionary.header.mobileNav}>
               {navItems.map((item, index) => (
                 <Link
                   key={item.href}
@@ -288,7 +306,7 @@ export function Header() {
                   href={siteConfig.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+                  aria-label={dictionary.social.instagram}
                   className="inline-flex size-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] text-[rgba(247,241,235,0.9)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-powder)]"
                   onClick={() => setIsOpen(false)}
                 >
@@ -298,7 +316,7 @@ export function Header() {
                   href={siteConfig.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
+                  aria-label={dictionary.social.facebook}
                   className="inline-flex size-10 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] text-[rgba(247,241,235,0.9)] transition hover:border-[var(--color-powder)] hover:text-[var(--color-powder)]"
                   onClick={() => setIsOpen(false)}
                 >

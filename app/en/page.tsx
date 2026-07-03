@@ -65,6 +65,7 @@ export default function EnglishHome() {
       reviewAttribution="Timea Skincare client"
       location={siteConfig.location}
       instagramUrl={siteConfig.instagram}
+      instagramAriaLabel={en.social.instagram}
       hrefs={{
         book: "/kontakt#rezervacia",
         services: "/en/services",

@@ -33,6 +33,8 @@ type HomePageProps = {
   reviewAttribution?: string;
   location: string;
   instagramUrl: string;
+  /** Accessible label for the Instagram link (locale-specific; defaults to Slovak). */
+  instagramAriaLabel?: string;
   hrefs: {
     book: string;
     services: string;
@@ -56,6 +58,7 @@ export function HomePage({
   reviewAttribution,
   location,
   instagramUrl,
+  instagramAriaLabel = "Instagram Timea Skincare (otvorí sa v novom okne)",
   hrefs,
 }: HomePageProps) {
   return (
@@ -317,7 +320,7 @@ export function HomePage({
                 href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+                aria-label={instagramAriaLabel}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)]"
               >
                 <MessageCircle size={17} aria-hidden="true" />

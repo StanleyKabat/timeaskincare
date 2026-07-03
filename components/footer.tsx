@@ -95,7 +95,7 @@ export function Footer() {
               href={siteConfig.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Instagram Timea Skincare (otvorí sa v novom okne)"
+              aria-label={dictionary.social.instagram}
               className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)]"
             >
               <FaInstagram size={16} aria-hidden="true" className="text-[var(--color-powder)]" />
@@ -105,7 +105,7 @@ export function Footer() {
               href={siteConfig.facebook}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Facebook Timea Skincare (otvorí sa v novom okne)"
+              aria-label={dictionary.social.facebook}
               className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)]"
             >
               <FaFacebookF size={14} aria-hidden="true" className="text-[var(--color-powder)]" />

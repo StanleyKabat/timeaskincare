@@ -17,6 +17,7 @@ export const sk = {
   },
   header: {
     brandTagline: "Krása, ktorá vyžaruje teba",
+    brandAriaLabel: "Timea Skincare - domov",
     booking: "Online rezervácia",
     openMenu: "Otvoriť menu",
     closeMenu: "Zavrieť menu",
@@ -29,6 +30,10 @@ export const sk = {
     contactHeading: "Kontakt",
     socialHeading: "Sociálne siete",
     rights: "Všetky práva vyhradené.",
+  },
+  social: {
+    instagram: "Instagram Timea Skincare (otvorí sa v novom okne)",
+    facebook: "Facebook Timea Skincare (otvorí sa v novom okne)",
   },
   languageSwitcher: {
     /** Label shown on the control (the language it switches TO). */
