@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { navigation, siteConfig } from "@/data/site";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { cn } from "@/lib/utils";
 
 function Brand({
@@ -180,6 +181,7 @@ export function Header() {
         </nav>
 
         <div className="col-start-3 flex items-center justify-end gap-1.5 sm:gap-2">
+          <LanguageSwitcher onNavigate={() => setIsOpen(false)} />
           <Link
             href="/kontakt#rezervacia"
             className="hidden min-h-9 items-center gap-2 rounded-full border border-[rgba(226,138,180,0.36)] px-4 py-1.5 text-[14px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex xl:min-h-10 xl:px-5 xl:text-[15px]"
@@ -272,6 +274,7 @@ export function Header() {
                 className="mobile-menu-item mt-2 flex items-center justify-center gap-3"
                 style={{ animationDelay: `${(navigation.length + 1) * 70}ms` }}
               >
+                <LanguageSwitcher variant="mobile" onNavigate={() => setIsOpen(false)} />
                 <a
                   href={siteConfig.instagram}
                   target="_blank"
