@@ -34,7 +34,7 @@ export const navigationEn = [
   { label: "Services", href: "/en/services" },
   { label: "About me", href: "/en#o-salone" },
   { label: "Gallery", href: "/galeria" },
-  { label: "Pricing", href: "/cennik" },
+  { label: "Pricing", href: "/en/pricing" },
   { label: "Contact", href: "/en/contact" },
 ];
 

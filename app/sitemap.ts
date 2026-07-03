@@ -11,6 +11,7 @@ const routes = [
   "/en",
   "/en/services",
   "/en/contact",
+  "/en/pricing",
 ];
 const lastModified = new Date("2026-07-03");
 
