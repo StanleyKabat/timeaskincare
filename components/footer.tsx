@@ -16,8 +16,7 @@ export function Footer() {
   const navItems = locale === "en" ? navigationEn : navigation;
   const dictionary = getDictionary(locale);
 
-  // Privacy/legal page stays Slovak until /en/privacy-policy exists.
-  const privacyHref = "/ochrana-osobnych-udajov";
+  const privacyHref = locale === "en" ? "/en/privacy-policy" : "/ochrana-osobnych-udajov";
 
   return (
     <footer className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">

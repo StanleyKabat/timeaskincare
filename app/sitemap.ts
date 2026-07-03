@@ -14,6 +14,7 @@ const routes = [
   "/en/pricing",
   "/en/gallery",
   "/en/reviews",
+  "/en/privacy-policy",
 ];
 const lastModified = new Date("2026-07-03");
 
@@ -27,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ? 1
         : route === "/en"
           ? 0.9
-          : route === "/ochrana-osobnych-udajov"
+          : route === "/ochrana-osobnych-udajov" || route === "/en/privacy-policy"
             ? 0.5
             : 0.8,
   }));
