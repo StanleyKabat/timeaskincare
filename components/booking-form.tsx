@@ -110,6 +110,12 @@ const bookingText = {
     copyMessage: "Skopírovať správu pre prijímateľa",
     copyAll: "Skopírovať platobné údaje",
     copied: "Skopírované",
+    paymentSentHelper:
+      "Po odoslaní platby klikni na tlačidlo nižšie. Po overení platby ti pošleme darčekový poukaz vo formáte PDF na e-mail.",
+    paymentSentButton: "Platbu som odoslala",
+    paymentSentSuccess:
+      "Ďakujeme. Objednávku darčekového poukazu sme prijali. Po overení platby ti pošleme PDF poukaz na e-mail.",
+    paymentSentError: "Objednávku sa nepodarilo odoslať. Skús to prosím znova.",
   },
   en: {
     servicesLabel: "Services",
@@ -195,6 +201,12 @@ const bookingText = {
     copyMessage: "Copy payment message",
     copyAll: "Copy payment details",
     copied: "Copied",
+    paymentSentHelper:
+      "After sending the payment, click the button below. Once the payment is verified, we will send the gift voucher as a PDF to your email.",
+    paymentSentButton: "I have sent the payment",
+    paymentSentSuccess:
+      "Thank you. Your gift voucher request has been received. After payment verification, we will send the PDF voucher to your email.",
+    paymentSentError: "The request could not be sent. Please try again.",
   },
 } as const;
 
@@ -237,7 +249,18 @@ type VoucherPayment = {
   currency: string;
   message: string;
   error: string;
+  // Customer + voucher data captured at QR generation, needed for the
+  // "I have sent the payment" request (canonical Slovak treatment kept).
+  name: string;
+  email: string;
+  phone: string;
+  note: string;
+  treatment: string;
+  from: string;
+  forName: string;
 };
+
+type VoucherRequestStatus = "idle" | "sending" | "sent" | "error";
 
 export function BookingForm({
   locale = "sk",
@@ -278,6 +301,8 @@ export function BookingForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voucherPayment, setVoucherPayment] = useState<VoucherPayment | null>(null);
   const [copiedField, setCopiedField] = useState("");
+  const [voucherRequestStatus, setVoucherRequestStatus] =
+    useState<VoucherRequestStatus>("idle");
 
   function copyPaymentText(field: string, text: string) {
     void navigator.clipboard
@@ -287,6 +312,33 @@ export function BookingForm({
         window.setTimeout(() => setCopiedField(""), 2000);
       })
       .catch(() => undefined);
+  }
+
+  async function handleVoucherPaymentSent(payment: VoucherPayment) {
+    setVoucherRequestStatus("sending");
+    try {
+      const response = await fetch("/api/booking/voucher-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: payment.name,
+          email: payment.email,
+          phone: payment.phone,
+          note: payment.note,
+          treatment: payment.treatment,
+          from: payment.from,
+          for: payment.forName,
+          locale,
+        }),
+      });
+      const data = (await response.json()) as { ok?: boolean };
+      if (!response.ok || !data.ok) {
+        throw new Error("request");
+      }
+      setVoucherRequestStatus("sent");
+    } catch {
+      setVoucherRequestStatus("error");
+    }
   }
 
   const selectedServices = useMemo(
@@ -378,6 +430,7 @@ export function BookingForm({
     setVoucherFrom("");
     setVoucherFor("");
     setVoucherPayment(null);
+    setVoucherRequestStatus("idle");
 
     setSelectedServiceNames((current) => {
       const isAlreadySelected = current.includes(serviceName);
@@ -470,7 +523,17 @@ export function BookingForm({
         amount,
         currency: giftVoucherPaymentConfig.currency,
         message: paymentMessage,
+        name,
+        email,
+        phone,
+        note,
+        treatment: voucherTreatment,
+        from: voucherFromName,
+        forName: voucherForName,
       };
+
+      // A freshly generated QR starts a new payment-sent request cycle.
+      setVoucherRequestStatus("idle");
 
       try {
         const response = await fetch("/api/booking/voucher-qr", {
@@ -1023,6 +1086,31 @@ export function BookingForm({
               >
                 {copiedField === "all" ? t.copied : t.copyAll}
               </button>
+            </div>
+
+            <div className="border-t border-[rgba(226,138,180,0.25)] pt-4">
+              {voucherRequestStatus === "sent" ? (
+                <p className="rounded-xl border border-[rgba(73,107,67,0.3)] bg-[rgba(73,107,67,0.08)] px-4 py-3 text-sm leading-6 text-[var(--color-leaf)]">
+                  {t.paymentSentSuccess}
+                </p>
+              ) : (
+                <div className="grid gap-3">
+                  <p className="text-sm leading-6 text-[var(--color-stone)]">
+                    {t.paymentSentHelper}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={voucherRequestStatus === "sending"}
+                    onClick={() => handleVoucherPaymentSent(voucherPayment)}
+                    className="inline-flex min-h-11 items-center justify-center self-start rounded-full bg-[var(--color-powder)] px-5 py-2.5 text-sm font-semibold text-[var(--color-ink)] shadow-[0_12px_34px_rgba(226,138,180,0.24)] transition hover:bg-[var(--color-charcoal)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {voucherRequestStatus === "sending" ? t.submitting : t.paymentSentButton}
+                  </button>
+                  {voucherRequestStatus === "error" ? (
+                    <p className="text-sm leading-6 text-red-500">{t.paymentSentError}</p>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         ) : null}

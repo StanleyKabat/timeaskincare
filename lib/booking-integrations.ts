@@ -491,7 +491,7 @@ export async function submitReservation(input: unknown, origin?: string) {
   return { booking, event: undefined as GoogleEvent | undefined, sms, spam: false as const };
 }
 
-type EmailAttachment = {
+export type EmailAttachment = {
   filename: string;
   content: string;
   contentType?: string;
@@ -502,7 +502,7 @@ type EmailOptions = {
   attachments?: EmailAttachment[];
 };
 
-async function sendEmail(
+export async function sendEmail(
   to: string | string[],
   subject: string,
   text: string,
@@ -603,7 +603,7 @@ function customerSummaryLines(booking: BookingRequest) {
   ].filter(Boolean);
 }
 
-function escapeHtml(value: string) {
+export function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -611,7 +611,7 @@ function escapeHtml(value: string) {
     .replace(/"/g, "&quot;");
 }
 
-function emailLayout(title: string, bodyHtml: string) {
+export function emailLayout(title: string, bodyHtml: string) {
   return `<div style="font-family:Arial,Helvetica,sans-serif;background:#faf8f6;padding:24px;color:#242629;">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e8e8e5;border-radius:16px;overflow:hidden;">
       <div style="padding:18px 28px;border-bottom:1px solid #f1e7ec;">
@@ -625,13 +625,13 @@ function emailLayout(title: string, bodyHtml: string) {
   </div>`;
 }
 
-function emailButton(href: string, label: string) {
+export function emailButton(href: string, label: string) {
   return `<a href="${href}" style="display:inline-block;background:#d979a8;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px;">${escapeHtml(
     label,
   )}</a>`;
 }
 
-function summaryHtml(lines: string[]) {
+export function summaryHtml(lines: string[]) {
   return `<div style="background:#faf8f6;border:1px solid #f1e7ec;border-radius:12px;padding:14px 18px;margin:8px 0 18px;">${lines
     .map((line) => `<div style="margin:2px 0;">${escapeHtml(line)}</div>`)
     .join("")}</div>`;
