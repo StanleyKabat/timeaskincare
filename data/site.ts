@@ -33,7 +33,7 @@ export const navigationEn = [
   { label: "Home", href: "/en" },
   { label: "Services", href: "/en/services" },
   { label: "About me", href: "/en#o-salone" },
-  { label: "Gallery", href: "/galeria" },
+  { label: "Gallery", href: "/en/gallery" },
   { label: "Pricing", href: "/en/pricing" },
   { label: "Contact", href: "/en/contact" },
 ];
