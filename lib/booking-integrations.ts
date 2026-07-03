@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import { toEnglishServiceNames } from "@/data/booking-en";
 import { bookableServices, siteConfig } from "@/data/site";
 import {
@@ -28,6 +30,11 @@ export type BookingRequest = {
    * value, old signed tokens, direct API calls).
    */
   locale?: BookingLocale;
+  /**
+   * Token issued-at timestamp (ms). Present on tokens; used only to strengthen
+   * the idempotency key so re-clicking the same confirm link is a no-op.
+   */
+  iat?: number;
 };
 
 type GoogleBusyItem = {
@@ -281,7 +288,79 @@ function bookingText(booking: BookingRequest) {
     .join("\n");
 }
 
-async function createCalendarEvent(booking: BookingRequest): Promise<GoogleEvent> {
+/**
+ * Deterministic idempotency key derived from stable, signed token fields.
+ * Two clicks of the same confirm link produce the same key, so we never create
+ * a duplicate calendar event. No database required.
+ */
+export function getBookingKey(booking: BookingRequest): string {
+  const parts = [
+    booking.email.trim().toLowerCase(),
+    booking.date,
+    booking.time,
+    [...booking.services].map((service) => service.trim()).sort().join("|"),
+    typeof booking.iat === "number" ? String(booking.iat) : "",
+  ];
+
+  return crypto.createHash("sha256").update(parts.join("::")).digest("hex");
+}
+
+/** Owner-facing (Slovak) description for a confirmed calendar event. */
+function confirmedEventDescription(booking: BookingRequest) {
+  return [
+    bookingText(booking),
+    booking.locale === "en" ? "Jazyk zákazníčky: angličtina" : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * Looks up an existing confirmed event for this booking via its private
+ * extended property. Returns the event if found, otherwise null. Any Google
+ * API error propagates so the caller can abort safely.
+ */
+async function findConfirmedEventByKey(
+  bookingKey: string,
+  date: string,
+): Promise<GoogleEvent | null> {
+  const accessToken = await getGoogleAccessToken();
+  const url = new URL(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+      googleConfig.calendarId!,
+    )}/events`,
+  );
+
+  const window = getDateWindowUtc(date);
+  if (window) {
+    url.searchParams.set("timeMin", window.start.toISOString());
+    url.searchParams.set("timeMax", window.end.toISOString());
+  }
+  url.searchParams.set("privateExtendedProperty", `bookingKey=${bookingKey}`);
+  url.searchParams.set("singleEvents", "true");
+  url.searchParams.set("maxResults", "5");
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Nepodarilo sa overiť existujúci termín v Google kalendári.");
+  }
+
+  const data = (await response.json()) as { items?: GoogleEvent[] };
+  return data.items && data.items.length > 0 ? data.items[0] : null;
+}
+
+/**
+ * Creates the confirmed calendar event. Timezone handling matches the previous
+ * request-time logic: local wall-clock dateTimes are sent together with the
+ * Europe/Bratislava timeZone, so Google resolves the correct instant.
+ */
+async function createConfirmedCalendarEvent(
+  booking: BookingRequest,
+  bookingKey: string,
+): Promise<GoogleEvent> {
   const accessToken = await getGoogleAccessToken();
   const [hours, minutes] = booking.time.split(":").map(Number);
   const start = `${booking.date}T${String(hours).padStart(2, "0")}:${String(
@@ -306,31 +385,25 @@ async function createCalendarEvent(booking: BookingRequest): Promise<GoogleEvent
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        summary: `ONLINE REZERVÁCIA - ${booking.name} - čaká na potvrdenie`,
-        description: bookingText(booking),
-        start: {
-          dateTime: start,
-          timeZone: bookingConfig.timeZone,
-        },
-        end: {
-          dateTime: end,
-          timeZone: bookingConfig.timeZone,
-        },
+        summary: `POTVRDENÁ REZERVÁCIA - ${booking.name}`,
+        description: confirmedEventDescription(booking),
+        start: { dateTime: start, timeZone: bookingConfig.timeZone },
+        end: { dateTime: end, timeZone: bookingConfig.timeZone },
         attendees: [{ email: booking.email, displayName: booking.name }],
         extendedProperties: {
           private: {
             source: "timeaskincare-web",
+            bookingKey,
             customerName: booking.name,
             customerEmail: booking.email,
             customerPhone: booking.phone,
             services: booking.services.join(" | "),
             durationMinutes: String(booking.durationMinutes),
+            locale: booking.locale === "en" ? "en" : "sk",
             smsReminderSent: "false",
           },
         },
-        reminders: {
-          useDefault: true,
-        },
+        reminders: { useDefault: true },
       }),
     },
   );
@@ -340,6 +413,24 @@ async function createCalendarEvent(booking: BookingRequest): Promise<GoogleEvent
   }
 
   return (await response.json()) as GoogleEvent;
+}
+
+/**
+ * Idempotently ensures a confirmed calendar event exists for this booking.
+ * If one already exists (e.g. the confirm link was opened twice), no new event
+ * is created. Any Google API error propagates so the caller aborts safely and
+ * never sends a false confirmation e-mail.
+ */
+async function ensureConfirmedCalendarEvent(
+  booking: BookingRequest,
+): Promise<GoogleEvent> {
+  const bookingKey = getBookingKey(booking);
+  const existing = await findConfirmedEventByKey(bookingKey, booking.date);
+  if (existing) {
+    return existing;
+  }
+
+  return createConfirmedCalendarEvent(booking, bookingKey);
 }
 
 // Simple honeypot: a hidden "company" field that humans never fill in.
@@ -370,19 +461,20 @@ export async function submitReservation(input: unknown, origin?: string) {
   const booking = validateBookingRequest(input);
   const baseUrl = origin || getSiteUrl();
 
-  let event: GoogleEvent | undefined;
+  // Availability re-check only. Phase 1: a pending request no longer writes to
+  // Google Calendar. The confirmed event is created later, when Timea confirms
+  // the request (see confirmReservation), so the slot is not held prematurely.
   if (hasGoogleCalendarConfig()) {
     const slots = await getAvailableSlotsFromCalendar(booking.date, booking.durationMinutes);
     if (!slots.includes(booking.time)) {
       throw new Error("Vybraný čas už nie je dostupný. Prosím, vyber iný čas.");
     }
-    event = await createCalendarEvent(booking);
   }
 
   const sms = await sendReservationNotifications(booking);
 
   // E-mails are best-effort and must never block the reservation request.
-  await Promise.allSettled([sendReservationRequestEmails(booking, baseUrl, event)]);
+  await Promise.allSettled([sendReservationRequestEmails(booking, baseUrl)]);
 
   // The owner notification is critical: if SMS is configured but the
   // owner message failed, surface a friendly error to the customer.
@@ -394,7 +486,9 @@ export async function submitReservation(input: unknown, origin?: string) {
     throw error;
   }
 
-  return { booking, event, sms, spam: false as const };
+  // `event` stays undefined by design (no request-time calendar write). The
+  // field is kept so the /api/booking response shape is unchanged.
+  return { booking, event: undefined as GoogleEvent | undefined, sms, spam: false as const };
 }
 
 type EmailAttachment = {
@@ -660,6 +754,16 @@ async function sendReservationRequestEmails(
 
 /** Sends the confirmed-booking e-mails (customer + owner) with .ics + Google link. */
 export async function confirmReservation(booking: BookingRequest) {
+  // Phase 1: create the confirmed Google Calendar event BEFORE any customer
+  // e-mail. When Google is configured and this fails, the error propagates to
+  // the confirm route, which redirects Timea to a safe error state — so the
+  // customer never receives a false "confirmed" e-mail. Idempotent: a repeated
+  // confirm click reuses the existing event instead of creating a duplicate.
+  // When Google is not configured, behavior is unchanged (e-mails only).
+  if (hasGoogleCalendarConfig()) {
+    await ensureConfirmedCalendarEvent(booking);
+  }
+
   const isEnglish = booking.locale === "en";
   const customerAttachments = icsAttachment(booking, {
     includeLocation: true,

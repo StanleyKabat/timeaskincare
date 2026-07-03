@@ -97,6 +97,9 @@ export function verifyBookingToken(token: unknown): BookingRequest | null {
       note: typeof parsed.note === "string" ? parsed.note : "",
       // Backwards compatible: tokens issued before locale support default to "sk".
       locale: parsed.locale === "en" ? "en" : "sk",
+      // Issued-at is present on all tokens (old and new); used only to
+      // strengthen the confirmation idempotency key.
+      iat: typeof parsed.iat === "number" ? parsed.iat : undefined,
     };
   } catch {
     return null;
