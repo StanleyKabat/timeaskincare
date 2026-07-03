@@ -91,6 +91,24 @@ export const sk = {
       bookButton: "Rezervovať",
     },
   },
-};
+} as const;
 
-export type Dictionary = typeof sk;
+/**
+ * Widens the Slovak reference dictionary so other locales can provide their own
+ * translated string values, while the key structure is still enforced. Missing
+ * keys, extra keys, or wrong-shaped values remain type errors.
+ *
+ * - string literals (e.g. "Domov") widen to `string` (so "Home" is valid),
+ * - string tuples/arrays widen to `readonly string[]`,
+ * - nested objects widen recursively,
+ * - other value types are preserved.
+ */
+type WidenStrings<T> = T extends string
+  ? string
+  : T extends readonly (infer U)[]
+    ? readonly WidenStrings<U>[]
+    : T extends object
+      ? { [K in keyof T]: WidenStrings<T[K]> }
+      : T;
+
+export type Dictionary = WidenStrings<typeof sk>;

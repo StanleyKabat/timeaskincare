@@ -7,7 +7,7 @@ import { ButtonLink } from "@/components/button-link";
 
 type AboutMeProps = {
   intro: string;
-  paragraphs: string[];
+  paragraphs: readonly string[];
   moreLabel: string;
   lessLabel: string;
   ctaHref: string;
