@@ -13,6 +13,7 @@ const routes = [
   "/en/contact",
   "/en/pricing",
   "/en/gallery",
+  "/en/reviews",
 ];
 const lastModified = new Date("2026-07-03");
 

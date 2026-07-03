@@ -68,7 +68,7 @@ export default function EnglishHome() {
         book: "/kontakt#rezervacia",
         services: "/sluzby",
         gallery: "/galeria",
-        reviews: "/recenzie",
+        reviews: "/en/reviews",
         aboutCta: "/kontakt#rezervacia",
       }}
     />
