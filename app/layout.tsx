@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Great_Vibes, Inter } from "next/font/google";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { HtmlLang } from "@/components/html-lang";
 import { siteConfig } from "@/data/site";
 import "./globals.css";
 
@@ -130,6 +131,7 @@ export default function RootLayout({
             __html: JSON.stringify(localBusinessJsonLd),
           }}
         />
+        <HtmlLang />
         <Header />
         <main className="pt-[58px] lg:pt-[68px]">{children}</main>
         <Footer />

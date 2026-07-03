@@ -14,11 +14,11 @@ export const defaultLocale: Locale = "sk";
 /**
  * Locales that are actually published and safe to link to.
  *
- * Until the English pages exist, only Slovak is enabled. This keeps the
- * language switcher hidden and prevents exposing `/en` links that would 404.
- * When the English pages are ready, add "en" here to activate the switcher.
+ * Locales that have at least one published page and are safe to link to. The
+ * English homepage (`/en`) is live, so the switcher is active. Slovak remains
+ * the default; English subpages are added in later phases.
  */
-export const enabledLocales: readonly Locale[] = ["sk"];
+export const enabledLocales: readonly Locale[] = ["sk", "en"];
 
 export function isLocaleEnabled(locale: Locale): boolean {
   return enabledLocales.includes(locale);
