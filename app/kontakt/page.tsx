@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     "Objednajte sa do kozmetického salónu Timea Skincare v Novej Bani. Kontakt, mapa, sociálne siete a rezervačný formulár.",
   alternates: {
     canonical: "/kontakt",
+    languages: {
+      sk: "/kontakt",
+      en: "/en/contact",
+      "x-default": "/kontakt",
+    },
   },
 };
 

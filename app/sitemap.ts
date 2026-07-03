@@ -10,6 +10,7 @@ const routes = [
   "/ochrana-osobnych-udajov",
   "/en",
   "/en/services",
+  "/en/contact",
 ];
 const lastModified = new Date("2026-07-03");
 
