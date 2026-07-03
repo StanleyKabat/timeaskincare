@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
+import { toEnglishServiceName } from "@/data/booking-en";
 import {
   bookableServices,
   giftVoucherPaymentConfig,
@@ -210,6 +211,10 @@ export function BookingForm({
 } = {}) {
   const t = bookingText[locale] ?? bookingText.sk;
   const privacyHref = locale === "en" ? "/en/privacy-policy" : "/ochrana-osobnych-udajov";
+  // Display-only: English name for the UI while the canonical Slovak name is
+  // still used for state, the API payload and duration lookups.
+  const displayServiceName = (canonicalName: string) =>
+    locale === "en" ? toEnglishServiceName(canonicalName) : canonicalName;
   const searchParams = useSearchParams();
   const preselectedServiceName = useMemo(
     () => resolveServiceName(searchParams.get("service")),
@@ -293,7 +298,7 @@ export function BookingForm({
         };
 
         if (!response.ok) {
-          throw new Error(data.error || t.errSlotsLoad);
+          throw new Error(locale === "en" ? t.errSlotsLoad : data.error || t.errSlotsLoad);
         }
 
         setAvailableSlots(data.slots ?? []);
@@ -315,7 +320,7 @@ export function BookingForm({
     void loadSlots();
 
     return () => controller.abort();
-  }, [isGiftVoucherFlow, selectedDate, totalDurationMinutes, t]);
+  }, [isGiftVoucherFlow, selectedDate, totalDurationMinutes, t, locale]);
 
   function toggleService(serviceName: string) {
     setSelectedTime("");
@@ -490,6 +495,7 @@ export function BookingForm({
           durationMinutes: totalDurationMinutes,
           note,
           company,
+          locale,
         }),
       });
       const data = (await response.json()) as {
@@ -501,7 +507,9 @@ export function BookingForm({
       };
 
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || t.errSend);
+        // The backend returns Slovak error strings. For the English form show a
+        // generic English message so no Slovak text leaks into the EN experience.
+        throw new Error(locale === "en" ? t.errSend : data.error || t.errSend);
       }
 
       form.reset();
@@ -597,7 +605,7 @@ export function BookingForm({
                 >
                   <span className="flex items-center justify-between gap-2">
                     <span className="min-w-0">
-                      <span className="block text-[13px] font-medium leading-5">{service.name}</span>
+                      <span className="block text-[13px] font-medium leading-5">{displayServiceName(service.name)}</span>
                       <span className="block text-[11px] text-[var(--color-stone)]">
                         {service.durationMinutes != null
                           ? service.durationLabel ?? formatDuration(service.durationMinutes)
@@ -632,7 +640,7 @@ export function BookingForm({
               >
                 <span className="flex items-center justify-between gap-2">
                   <span className="min-w-0">
-                    <span className="block text-[13px] font-medium leading-5">{voucherService.name}</span>
+                    <span className="block text-[13px] font-medium leading-5">{displayServiceName(voucherService.name)}</span>
                     <span className="block text-[11px] text-[var(--color-stone)]">
                       {t.voucherNoSlot}
                     </span>

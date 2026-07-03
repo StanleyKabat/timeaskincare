@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 
+import { toEnglishServiceNames } from "@/data/booking-en";
 import { siteConfig } from "@/data/site";
 import { bookingConfig } from "@/lib/booking";
 import type { BookingRequest } from "@/lib/booking-integrations";
@@ -10,6 +11,11 @@ export const FALLBACK_DURATION_MINUTES = 60;
 export type CalendarOptions = {
   /** When false, the calendar event omits the salon address (owner calendar). */
   includeLocation?: boolean;
+  /**
+   * Locale for the customer-facing summary/description text. Defaults to "sk".
+   * Timezone handling is identical regardless of locale.
+   */
+  locale?: "sk" | "en";
 };
 
 const TIME_ZONE = bookingConfig.timeZone; // "Europe/Bratislava"
@@ -59,11 +65,28 @@ function getLocalStamps(booking: BookingRequest) {
   return { startStamp, endStamp };
 }
 
-export function eventTitle(booking: BookingRequest) {
+export function eventTitle(booking: BookingRequest, locale: "sk" | "en" = "sk") {
+  if (locale === "en") {
+    return "Timea Skincare appointment";
+  }
+
   return `Timea Skincare – ${booking.services.join(", ")}`;
 }
 
-function eventDescription(booking: BookingRequest) {
+function eventDescription(booking: BookingRequest, locale: "sk" | "en" = "sk") {
+  if (locale === "en") {
+    return [
+      "Confirmed appointment at Timea Skincare.",
+      `Services: ${toEnglishServiceNames(booking.services).join(", ")}`,
+      "",
+      "Timea Skincare",
+      siteConfig.phone,
+      siteConfig.email,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
   return [
     `Služby: ${booking.services.join(", ")}`,
     `Zákazníčka: ${booking.name}`,
@@ -94,11 +117,12 @@ export function buildGoogleCalendarLink(
   }
 
   const includeLocation = options.includeLocation !== false;
+  const locale = options.locale ?? "sk";
   const params = new URLSearchParams({
     action: "TEMPLATE",
-    text: eventTitle(booking),
+    text: eventTitle(booking, locale),
     dates: `${stamps.startStamp}/${stamps.endStamp}`,
-    details: eventDescription(booking),
+    details: eventDescription(booking, locale),
     ctz: TIME_ZONE,
   });
 
@@ -150,6 +174,7 @@ export function buildIcsFile(
   }
 
   const includeLocation = options.includeLocation !== false;
+  const locale = options.locale ?? "sk";
   const uid = `${stamps.startStamp}-${crypto.randomUUID()}@timeaskincare.sk`;
 
   const lines = [
@@ -164,9 +189,9 @@ export function buildIcsFile(
     `DTSTAMP:${formatUtcStamp(Date.now())}`,
     `DTSTART;TZID=${TIME_ZONE}:${stamps.startStamp}`,
     `DTEND;TZID=${TIME_ZONE}:${stamps.endStamp}`,
-    `SUMMARY:${escapeIcs(eventTitle(booking))}`,
+    `SUMMARY:${escapeIcs(eventTitle(booking, locale))}`,
     ...(includeLocation ? [`LOCATION:${escapeIcs(siteConfig.address)}`] : []),
-    `DESCRIPTION:${escapeIcs(eventDescription(booking))}`,
+    `DESCRIPTION:${escapeIcs(eventDescription(booking, locale))}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ];

@@ -40,6 +40,10 @@ export function createBookingToken(booking: BookingRequest): string {
     time: booking.time,
     durationMinutes: booking.durationMinutes,
     note: booking.note ?? "",
+    // Persist the booking locale so the confirmation/decline e-mails sent later
+    // are in the same language the customer used. Old tokens without this field
+    // default to Slovak on verify.
+    locale: booking.locale === "en" ? "en" : "sk",
     iat: Date.now(),
   });
 
@@ -91,6 +95,8 @@ export function verifyBookingToken(token: unknown): BookingRequest | null {
       time: parsed.time,
       durationMinutes: Number(parsed.durationMinutes) || 0,
       note: typeof parsed.note === "string" ? parsed.note : "",
+      // Backwards compatible: tokens issued before locale support default to "sk".
+      locale: parsed.locale === "en" ? "en" : "sk",
     };
   } catch {
     return null;

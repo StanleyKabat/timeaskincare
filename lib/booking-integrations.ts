@@ -1,3 +1,4 @@
+import { toEnglishServiceNames } from "@/data/booking-en";
 import { bookableServices, siteConfig } from "@/data/site";
 import {
   bookingConfig,
@@ -10,6 +11,8 @@ import { createBookingToken } from "@/lib/booking-token";
 import { buildGoogleCalendarLink, buildIcsFile } from "@/lib/calendar";
 import { getSiteUrl } from "@/lib/site-url";
 
+export type BookingLocale = "sk" | "en";
+
 export type BookingRequest = {
   name: string;
   email: string;
@@ -19,6 +22,12 @@ export type BookingRequest = {
   time: string;
   durationMinutes: number;
   note?: string;
+  /**
+   * Language the customer used when booking. Drives customer-facing e-mail and
+   * calendar language. Defaults to "sk" for backwards compatibility (missing
+   * value, old signed tokens, direct API calls).
+   */
+  locale?: BookingLocale;
 };
 
 type GoogleBusyItem = {
@@ -113,6 +122,7 @@ function validateBookingRequest(input: unknown): BookingRequest {
   }
 
   const data = input as Partial<BookingRequest>;
+  const locale: BookingLocale = data.locale === "en" ? "en" : "sk";
   const name = cleanText(String(data.name || ""), 120);
   const email = cleanText(String(data.email || ""), 180);
   const phone = cleanText(String(data.phone || ""), 40);
@@ -169,6 +179,7 @@ function validateBookingRequest(input: unknown): BookingRequest {
     time,
     durationMinutes,
     note,
+    locale,
   };
 }
 
@@ -430,15 +441,25 @@ async function sendEmail(
   return { skipped: false };
 }
 
-function formatDateHuman(date: string) {
+function formatDateHuman(date: string, locale: BookingLocale = "sk") {
   const [year, month, day] = date.split("-").map(Number);
   if (!year || !month || !day) {
     return date;
   }
 
+  if (locale === "en") {
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(year, month - 1, day)));
+  }
+
   return `${day}. ${month}. ${year}`;
 }
 
+/** Slovak appointment lines. Used by owner (Slovak) e-mails and Slovak customers. */
 function appointmentSummaryLines(booking: BookingRequest) {
   return [
     `Služby: ${booking.services.join(", ")}`,
@@ -448,6 +469,36 @@ function appointmentSummaryLines(booking: BookingRequest) {
   ];
 }
 
+/**
+ * Customer-facing appointment lines. English uses English service names and an
+ * English date format; Slovak keeps the exact original wording.
+ */
+function customerAppointmentLines(booking: BookingRequest) {
+  if (booking.locale === "en") {
+    return [
+      `Services: ${toEnglishServiceNames(booking.services).join(", ")}`,
+      `Date: ${formatDateHuman(booking.date, "en")}`,
+      `Time: ${booking.time}`,
+      `Duration: ${booking.durationMinutes} min`,
+    ];
+  }
+
+  return appointmentSummaryLines(booking);
+}
+
+/** English detail block for the "request received" customer e-mail. */
+function customerRequestDetailLines(booking: BookingRequest) {
+  return [
+    `Services: ${toEnglishServiceNames(booking.services).join(", ")}`,
+    `Date: ${formatDateHuman(booking.date, "en")}`,
+    `Time: ${booking.time}`,
+    `Phone: ${booking.phone}`,
+    `Email: ${booking.email}`,
+    booking.note ? `Note: ${booking.note}` : "",
+  ].filter(Boolean);
+}
+
+// Owner e-mails always stay Slovak. Service names remain canonical Slovak.
 function customerSummaryLines(booking: BookingRequest) {
   return [
     `Meno: ${booking.name}`,
@@ -521,32 +572,62 @@ async function sendReservationRequestEmails(
   const manageUrl = `${baseUrl}/rezervacia/sprava?token=${encodeURIComponent(token)}`;
   const confirmUrl = `${manageUrl}&intent=confirm`;
   const declineUrl = `${manageUrl}&intent=decline`;
+  const isEnglish = booking.locale === "en";
 
-  const customerText = [
-    `Dobrý deň, ${booking.name},`,
-    "",
-    "ďakujem za tvoju rezerváciu. Tvoj termín zatiaľ nie je potvrdený.",
-    "Po kontrole dostupnosti ti pošlem potvrdenie e-mailom.",
-    "",
-    ...appointmentSummaryLines(booking),
-    "",
-    "Teším sa na tvoju návštevu.",
-    "Timea Skincare",
-    siteConfig.phone,
-  ].join("\n");
+  const customerSubject = isEnglish
+    ? "We received your appointment request | Timea Skincare"
+    : "Žiadosť o rezerváciu bola prijatá";
 
-  const customerHtml = emailLayout(
-    "Žiadosť o rezerváciu bola prijatá",
-    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+  const customerText = isEnglish
+    ? [
+        `Hello ${booking.name},`,
+        "",
+        "thank you for your appointment request at Timea Skincare. Your request has been received and is not confirmed yet. I will review the selected services and time and get back to you with confirmation as soon as possible.",
+        "",
+        "Requested appointment:",
+        ...customerRequestDetailLines(booking),
+        "",
+        "Thank you,",
+        "Timea Skincare",
+        siteConfig.phone,
+      ].join("\n")
+    : [
+        `Dobrý deň, ${booking.name},`,
+        "",
+        "ďakujem za tvoju rezerváciu. Tvoj termín zatiaľ nie je potvrdený.",
+        "Po kontrole dostupnosti ti pošlem potvrdenie e-mailom.",
+        "",
+        ...appointmentSummaryLines(booking),
+        "",
+        "Teším sa na tvoju návštevu.",
+        "Timea Skincare",
+        siteConfig.phone,
+      ].join("\n");
+
+  const customerHtml = isEnglish
+    ? emailLayout(
+        "We received your appointment request",
+        `<p>Hello ${escapeHtml(booking.name)},</p>
+     <p>thank you for your appointment request at Timea Skincare. Your request has been received and is <strong>not confirmed yet</strong>. I will review the selected services and time and get back to you with confirmation as soon as possible.</p>
+     ${summaryHtml(customerRequestDetailLines(booking))}
+     <p style="margin:0;">Thank you,<br/>Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
+      )
+    : emailLayout(
+        "Žiadosť o rezerváciu bola prijatá",
+        `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
      <p>ďakujem za tvoju rezerváciu. Tvoj termín <strong>zatiaľ nie je potvrdený</strong>. Po kontrole dostupnosti ti pošlem potvrdenie e-mailom.</p>
      ${summaryHtml(appointmentSummaryLines(booking))}
      <p style="margin:0;">Teším sa na tvoju návštevu.<br/>Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
-  );
+      );
+
+  // Owner e-mail stays Slovak; only a small language indicator is added for EN.
+  const ownerLanguageLine = isEnglish ? "Jazyk zákazníčky: angličtina" : "";
 
   const ownerText = [
     "Nová žiadosť o rezerváciu (zatiaľ nepotvrdená):",
     "",
     ...customerSummaryLines(booking),
+    ownerLanguageLine,
     event?.htmlLink ? `Kalendár: ${event.htmlLink}` : "",
     "",
     `Potvrdiť rezerváciu: ${confirmUrl}`,
@@ -559,6 +640,7 @@ async function sendReservationRequestEmails(
     "Nová žiadosť o rezerváciu",
     `<p>Máš novú <strong>žiadosť o rezerváciu</strong> (zatiaľ nepotvrdenú).</p>
      ${summaryHtml(customerSummaryLines(booking))}
+     ${isEnglish ? `<p style="font-size:13px;color:#8b8d88;margin:0 0 12px;">Jazyk zákazníčky: angličtina</p>` : ""}
      <p style="margin:0 0 16px;">${emailButton(confirmUrl, "Potvrdiť rezerváciu")}
        &nbsp;&nbsp;
        <a href="${declineUrl}" style="display:inline-block;color:#8b8d88;text-decoration:underline;font-weight:600;padding:12px 4px;">Odmietnuť rezerváciu</a>
@@ -567,7 +649,7 @@ async function sendReservationRequestEmails(
   );
 
   await Promise.all([
-    sendEmail(booking.email, "Žiadosť o rezerváciu bola prijatá", customerText, {
+    sendEmail(booking.email, customerSubject, customerText, {
       html: customerHtml,
     }),
     sendEmail(siteConfig.email, `Nová žiadosť o rezerváciu – ${booking.name}`, ownerText, {
@@ -578,37 +660,77 @@ async function sendReservationRequestEmails(
 
 /** Sends the confirmed-booking e-mails (customer + owner) with .ics + Google link. */
 export async function confirmReservation(booking: BookingRequest) {
-  const customerAttachments = icsAttachment(booking, { includeLocation: true });
+  const isEnglish = booking.locale === "en";
+  const customerAttachments = icsAttachment(booking, {
+    includeLocation: true,
+    locale: booking.locale,
+  });
   const ownerAttachments = icsAttachment(booking, { includeLocation: false });
-  const customerCalendarLink = buildGoogleCalendarLink(booking, { includeLocation: true });
+  const customerCalendarLink = buildGoogleCalendarLink(booking, {
+    includeLocation: true,
+    locale: booking.locale,
+  });
   const ownerCalendarLink = buildGoogleCalendarLink(booking, { includeLocation: false });
 
-  const customerText = [
-    `Dobrý deň, ${booking.name},`,
-    "",
-    "tvoj termín je potvrdený. Teším sa na tvoju návštevu.",
-    "",
-    ...appointmentSummaryLines(booking),
-    `Adresa: ${siteConfig.address}`,
-    "",
-    customerCalendarLink ? `Pridať do kalendára: ${customerCalendarLink}` : "",
-    "",
-    "Timea Skincare",
-    siteConfig.phone,
-    siteConfig.email,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const customerSubject = isEnglish
+    ? "Your appointment is confirmed | Timea Skincare"
+    : "Rezervácia potvrdená – Timea Skincare";
 
-  const customerHtml = emailLayout(
-    "Rezervácia potvrdená",
-    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+  const customerText = isEnglish
+    ? [
+        `Hello ${booking.name},`,
+        "",
+        "your appointment at Timea Skincare has been confirmed.",
+        "",
+        "Appointment details:",
+        ...customerAppointmentLines(booking),
+        `Address: ${siteConfig.address}`,
+        "",
+        customerCalendarLink ? `Add to calendar: ${customerCalendarLink}` : "",
+        "",
+        "I look forward to seeing you.",
+        "Timea Skincare",
+        siteConfig.phone,
+        siteConfig.email,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : [
+        `Dobrý deň, ${booking.name},`,
+        "",
+        "tvoj termín je potvrdený. Teším sa na tvoju návštevu.",
+        "",
+        ...appointmentSummaryLines(booking),
+        `Adresa: ${siteConfig.address}`,
+        "",
+        customerCalendarLink ? `Pridať do kalendára: ${customerCalendarLink}` : "",
+        "",
+        "Timea Skincare",
+        siteConfig.phone,
+        siteConfig.email,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+  const customerHtml = isEnglish
+    ? emailLayout(
+        "Your appointment is confirmed",
+        `<p>Hello ${escapeHtml(booking.name)},</p>
+     <p>your appointment at Timea Skincare has been <strong>confirmed</strong>.</p>
+     ${summaryHtml([...customerAppointmentLines(booking), `Address: ${siteConfig.address}`])}
+     ${customerCalendarLink ? `<p style="margin:0 0 16px;">${emailButton(customerCalendarLink, "Add to Google Calendar")}</p>` : ""}
+     <p style="font-size:13px;color:#8b8d88;margin:0 0 16px;">A .ics file is also attached, which adds the appointment to any calendar.</p>
+     <p style="margin:0;">I look forward to seeing you.<br/>Timea Skincare<br/>${escapeHtml(siteConfig.phone)}<br/>${escapeHtml(siteConfig.email)}</p>`,
+      )
+    : emailLayout(
+        "Rezervácia potvrdená",
+        `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
      <p>tvoj termín je <strong>potvrdený</strong>. Teším sa na tvoju návštevu.</p>
      ${summaryHtml([...appointmentSummaryLines(booking), `Adresa: ${siteConfig.address}`])}
      ${customerCalendarLink ? `<p style="margin:0 0 16px;">${emailButton(customerCalendarLink, "Pridať do Google kalendára")}</p>` : ""}
      <p style="font-size:13px;color:#8b8d88;margin:0 0 16px;">V prílohe je aj súbor .ics, ktorý pridá termín do akéhokoľvek kalendára.</p>
      <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}<br/>${escapeHtml(siteConfig.email)}</p>`,
-  );
+      );
 
   const ownerText = [
     "Potvrdená rezervácia:",
@@ -627,7 +749,7 @@ export async function confirmReservation(booking: BookingRequest) {
   );
 
   await Promise.all([
-    sendEmail(booking.email, "Rezervácia potvrdená – Timea Skincare", customerText, {
+    sendEmail(booking.email, customerSubject, customerText, {
       html: customerHtml,
       attachments: customerAttachments,
     }),
@@ -640,28 +762,54 @@ export async function confirmReservation(booking: BookingRequest) {
 
 /** Sends the declined-booking e-mail to the customer (and a copy to Timea). */
 export async function declineReservation(booking: BookingRequest) {
-  const customerText = [
-    `Dobrý deň, ${booking.name},`,
-    "",
-    "mrzí ma to, ale vybraný termín sa mi nepodarilo potvrdiť.",
-    "Ozvem sa ti, prípadne si môžeš zvoliť iný čas cez rezervačný formulár.",
-    "",
-    ...appointmentSummaryLines(booking),
-    "",
-    "Timea Skincare",
-    siteConfig.phone,
-  ].join("\n");
+  const isEnglish = booking.locale === "en";
 
-  const customerHtml = emailLayout(
-    "Rezervácia – Timea Skincare",
-    `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
+  const customerSubject = isEnglish
+    ? "Your appointment request could not be confirmed | Timea Skincare"
+    : "Rezervácia – Timea Skincare";
+
+  const customerText = isEnglish
+    ? [
+        `Hello ${booking.name},`,
+        "",
+        "unfortunately, the requested appointment time could not be confirmed.",
+        "Please choose another time using the booking form, or contact the salon.",
+        "",
+        ...customerAppointmentLines(booking),
+        "",
+        "Timea Skincare",
+        siteConfig.phone,
+      ].join("\n")
+    : [
+        `Dobrý deň, ${booking.name},`,
+        "",
+        "mrzí ma to, ale vybraný termín sa mi nepodarilo potvrdiť.",
+        "Ozvem sa ti, prípadne si môžeš zvoliť iný čas cez rezervačný formulár.",
+        "",
+        ...appointmentSummaryLines(booking),
+        "",
+        "Timea Skincare",
+        siteConfig.phone,
+      ].join("\n");
+
+  const customerHtml = isEnglish
+    ? emailLayout(
+        "Your appointment request could not be confirmed",
+        `<p>Hello ${escapeHtml(booking.name)},</p>
+     <p>unfortunately, the requested appointment time <strong>could not be confirmed</strong>. Please choose another time using the booking form, or contact the salon.</p>
+     ${summaryHtml(customerAppointmentLines(booking))}
+     <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
+      )
+    : emailLayout(
+        "Rezervácia – Timea Skincare",
+        `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
      <p>mrzí ma to, ale vybraný termín sa mi <strong>nepodarilo potvrdiť</strong>. Ozvem sa ti, prípadne si môžeš zvoliť iný čas cez rezervačný formulár.</p>
      ${summaryHtml(appointmentSummaryLines(booking))}
      <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
-  );
+      );
 
   await Promise.all([
-    sendEmail(booking.email, "Rezervácia – Timea Skincare", customerText, {
+    sendEmail(booking.email, customerSubject, customerText, {
       html: customerHtml,
     }),
     sendEmail(

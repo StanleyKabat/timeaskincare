@@ -78,4 +78,21 @@ describe("calendar generation – Europe/Bratislava", () => {
     expect(link).toContain("dates=20260706T100000%2F20260706T111500");
     expect(link).toContain("ctz=Europe%2FBratislava");
   });
+
+  it("uses English summary/description for English bookings, timezone unchanged", () => {
+    expect(eventTitle(makeBooking(), "en")).toBe("Timea Skincare appointment");
+
+    const ics = buildIcsFile(makeBooking({ locale: "en" }), { locale: "en" })!;
+    expect(ics).toContain("SUMMARY:Timea Skincare appointment");
+    expect(ics).toContain("Confirmed appointment at Timea Skincare.");
+    expect(ics).toContain("Basic skincare treatment");
+    // Timezone/local-time behaviour must stay identical to the Slovak output.
+    expect(ics).toContain("DTSTART;TZID=Europe/Bratislava:20260706T100000");
+    expect(ics).toContain("DTEND;TZID=Europe/Bratislava:20260706T111500");
+
+    const link = buildGoogleCalendarLink(makeBooking({ locale: "en" }), { locale: "en" })!;
+    expect(link).toContain("text=Timea+Skincare+appointment");
+    expect(link).toContain("dates=20260706T100000%2F20260706T111500");
+    expect(link).toContain("ctz=Europe%2FBratislava");
+  });
 });
