@@ -1,17 +1,19 @@
 import crypto from "node:crypto";
 
 import { siteConfig } from "@/data/site";
-import { bookingConfig, zonedDateTimeToUtcMs } from "@/lib/booking";
+import { bookingConfig } from "@/lib/booking";
 import type { BookingRequest } from "@/lib/booking-integrations";
 
 /** Fallback length used when a booking has no resolved service duration. */
 export const FALLBACK_DURATION_MINUTES = 60;
 
+const TIME_ZONE = bookingConfig.timeZone; // "Europe/Bratislava"
+
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-/** Formats a UTC timestamp as an iCalendar/Google UTC stamp: YYYYMMDDTHHMMSSZ. */
+/** Formats a UTC timestamp as an iCalendar UTC stamp: YYYYMMDDTHHMMSSZ (used for DTSTAMP). */
 function formatUtcStamp(ms: number) {
   const date = new Date(ms);
   return (
@@ -20,16 +22,36 @@ function formatUtcStamp(ms: number) {
   );
 }
 
-function getEventTimes(booking: BookingRequest) {
+/**
+ * Local wall-clock stamps (no "Z") for the appointment. These are interpreted
+ * as Europe/Bratislava time via TZID (.ics) and ctz (Google), so DST is handled
+ * by the calendar client and there is no accidental UTC/server-timezone shift.
+ */
+function getLocalStamps(booking: BookingRequest) {
   const duration =
     booking.durationMinutes > 0 ? booking.durationMinutes : FALLBACK_DURATION_MINUTES;
-  const startMs = zonedDateTimeToUtcMs(booking.date, booking.time, bookingConfig.timeZone);
 
-  if (startMs === null) {
+  const [year, month, day] = booking.date.split("-").map(Number);
+  const [hour, minute] = booking.time.split(":").map(Number);
+
+  if (![year, month, day, hour, minute].every((value) => Number.isFinite(value))) {
     return null;
   }
 
-  return { startMs, endMs: startMs + duration * 60_000 };
+  const startStamp = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+
+  const endTotalMinutes = hour * 60 + minute + duration;
+  const dayCarry = Math.floor(endTotalMinutes / 1440);
+  const endMinutesOfDay = endTotalMinutes - dayCarry * 1440;
+  const endHour = Math.floor(endMinutesOfDay / 60);
+  const endMinute = endMinutesOfDay % 60;
+  // Only used to roll the date forward if an appointment crosses midnight.
+  const endDate = new Date(Date.UTC(year, month - 1, day + dayCarry));
+  const endStamp =
+    `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}` +
+    `T${pad(endHour)}${pad(endMinute)}00`;
+
+  return { startStamp, endStamp };
 }
 
 export function eventTitle(booking: BookingRequest) {
@@ -51,20 +73,25 @@ function eventDescription(booking: BookingRequest) {
     .join("\n");
 }
 
-/** Google Calendar "add event" template URL. */
+/**
+ * Google Calendar "add event" template URL.
+ * Uses local wall-clock times (no "Z") together with ctz=Europe/Bratislava.
+ * Mixing UTC "Z" times with ctz makes Google double-apply the offset, which is
+ * what previously shifted the event by an hour.
+ */
 export function buildGoogleCalendarLink(booking: BookingRequest): string | null {
-  const times = getEventTimes(booking);
-  if (!times) {
+  const stamps = getLocalStamps(booking);
+  if (!stamps) {
     return null;
   }
 
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: eventTitle(booking),
-    dates: `${formatUtcStamp(times.startMs)}/${formatUtcStamp(times.endMs)}`,
+    dates: `${stamps.startStamp}/${stamps.endStamp}`,
     details: eventDescription(booking),
     location: siteConfig.address,
-    ctz: bookingConfig.timeZone,
+    ctz: TIME_ZONE,
   });
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
@@ -78,14 +105,36 @@ function escapeIcs(value: string) {
     .replace(/\r?\n/g, "\\n");
 }
 
-/** Builds a valid single-event .ics file for the confirmed appointment. */
+// EU DST rules for Europe/Bratislava (CET/CEST) so the pinned local times
+// resolve to the correct absolute instant in every calendar client.
+const VTIMEZONE = [
+  "BEGIN:VTIMEZONE",
+  `TZID:${TIME_ZONE}`,
+  "BEGIN:DAYLIGHT",
+  "TZOFFSETFROM:+0100",
+  "TZOFFSETTO:+0200",
+  "TZNAME:CEST",
+  "DTSTART:19700329T020000",
+  "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU",
+  "END:DAYLIGHT",
+  "BEGIN:STANDARD",
+  "TZOFFSETFROM:+0200",
+  "TZOFFSETTO:+0100",
+  "TZNAME:CET",
+  "DTSTART:19701025T030000",
+  "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU",
+  "END:STANDARD",
+  "END:VTIMEZONE",
+];
+
+/** Builds a valid single-event .ics file pinned to Europe/Bratislava. */
 export function buildIcsFile(booking: BookingRequest): string | null {
-  const times = getEventTimes(booking);
-  if (!times) {
+  const stamps = getLocalStamps(booking);
+  if (!stamps) {
     return null;
   }
 
-  const uid = `${formatUtcStamp(times.startMs)}-${crypto.randomUUID()}@timeaskincare.sk`;
+  const uid = `${stamps.startStamp}-${crypto.randomUUID()}@timeaskincare.sk`;
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -93,11 +142,12 @@ export function buildIcsFile(booking: BookingRequest): string | null {
     "PRODID:-//Timea Skincare//Rezervacia//SK",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    ...VTIMEZONE,
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${formatUtcStamp(Date.now())}`,
-    `DTSTART:${formatUtcStamp(times.startMs)}`,
-    `DTEND:${formatUtcStamp(times.endMs)}`,
+    `DTSTART;TZID=${TIME_ZONE}:${stamps.startStamp}`,
+    `DTEND;TZID=${TIME_ZONE}:${stamps.endStamp}`,
     `SUMMARY:${escapeIcs(eventTitle(booking))}`,
     `LOCATION:${escapeIcs(siteConfig.address)}`,
     `DESCRIPTION:${escapeIcs(eventDescription(booking))}`,
