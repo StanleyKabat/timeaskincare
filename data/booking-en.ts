@@ -16,6 +16,9 @@ export const bookingServiceNamesEn: Record<string, string> = {
   "Farbenie mihalníc": "Lash tinting",
   "Laminácia mihalníc": "Lash lift / lash lamination",
   "Laminácia obočia + laminácia mihalníc": "Brow + lash lamination package",
+  "Depilácia hornej pery": "Upper lip waxing",
+  "Depilácia brady": "Chin waxing",
+  "Depilácia hornej pery + brady": "Upper lip + chin waxing",
   "Masáž tváre a dekoltu k základnému alebo kompletnému ošetreniu":
     "Face and décolleté massage add-on",
   "Darčekový poukaz": "Gift voucher",

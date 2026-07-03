@@ -671,7 +671,7 @@ export function BookingForm({
                 <option value="">{t.voucherTypePlaceholder}</option>
                 {giftVoucherTreatments.map((item) => (
                   <option key={item.name} value={item.name}>
-                    {item.name} - {item.amount} €
+                    {displayServiceName(item.name)} - {item.amount} €
                   </option>
                 ))}
               </select>
