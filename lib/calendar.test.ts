@@ -61,4 +61,21 @@ describe("calendar generation – Europe/Bratislava", () => {
     // fallback 60 min -> 11:00
     expect(ics).toContain("DTEND;TZID=Europe/Bratislava:20260706T110000");
   });
+
+  it("includes the salon address in customer calendar output by default", () => {
+    const ics = buildIcsFile(makeBooking())!;
+    const link = buildGoogleCalendarLink(makeBooking())!;
+    expect(ics).toContain(`LOCATION:${siteConfig.address.replace(/,/g, "\\,")}`);
+    expect(link).toContain(`location=${encodeURIComponent(siteConfig.address)}`);
+  });
+
+  it("omits the salon address from owner calendar output", () => {
+    const ics = buildIcsFile(makeBooking(), { includeLocation: false })!;
+    const link = buildGoogleCalendarLink(makeBooking(), { includeLocation: false })!;
+    expect(ics).not.toContain("LOCATION:");
+    expect(link).not.toContain("location=");
+    expect(ics).toContain("DTSTART;TZID=Europe/Bratislava:20260706T100000");
+    expect(link).toContain("dates=20260706T100000%2F20260706T111500");
+    expect(link).toContain("ctz=Europe%2FBratislava");
+  });
 });

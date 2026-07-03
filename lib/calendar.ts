@@ -7,6 +7,11 @@ import type { BookingRequest } from "@/lib/booking-integrations";
 /** Fallback length used when a booking has no resolved service duration. */
 export const FALLBACK_DURATION_MINUTES = 60;
 
+export type CalendarOptions = {
+  /** When false, the calendar event omits the salon address (owner calendar). */
+  includeLocation?: boolean;
+};
+
 const TIME_ZONE = bookingConfig.timeZone; // "Europe/Bratislava"
 
 function pad(value: number) {
@@ -79,20 +84,27 @@ function eventDescription(booking: BookingRequest) {
  * Mixing UTC "Z" times with ctz makes Google double-apply the offset, which is
  * what previously shifted the event by an hour.
  */
-export function buildGoogleCalendarLink(booking: BookingRequest): string | null {
+export function buildGoogleCalendarLink(
+  booking: BookingRequest,
+  options: CalendarOptions = {},
+): string | null {
   const stamps = getLocalStamps(booking);
   if (!stamps) {
     return null;
   }
 
+  const includeLocation = options.includeLocation !== false;
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: eventTitle(booking),
     dates: `${stamps.startStamp}/${stamps.endStamp}`,
     details: eventDescription(booking),
-    location: siteConfig.address,
     ctz: TIME_ZONE,
   });
+
+  if (includeLocation) {
+    params.set("location", siteConfig.address);
+  }
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -128,12 +140,16 @@ const VTIMEZONE = [
 ];
 
 /** Builds a valid single-event .ics file pinned to Europe/Bratislava. */
-export function buildIcsFile(booking: BookingRequest): string | null {
+export function buildIcsFile(
+  booking: BookingRequest,
+  options: CalendarOptions = {},
+): string | null {
   const stamps = getLocalStamps(booking);
   if (!stamps) {
     return null;
   }
 
+  const includeLocation = options.includeLocation !== false;
   const uid = `${stamps.startStamp}-${crypto.randomUUID()}@timeaskincare.sk`;
 
   const lines = [
@@ -149,7 +165,7 @@ export function buildIcsFile(booking: BookingRequest): string | null {
     `DTSTART;TZID=${TIME_ZONE}:${stamps.startStamp}`,
     `DTEND;TZID=${TIME_ZONE}:${stamps.endStamp}`,
     `SUMMARY:${escapeIcs(eventTitle(booking))}`,
-    `LOCATION:${escapeIcs(siteConfig.address)}`,
+    ...(includeLocation ? [`LOCATION:${escapeIcs(siteConfig.address)}`] : []),
     `DESCRIPTION:${escapeIcs(eventDescription(booking))}`,
     "END:VEVENT",
     "END:VCALENDAR",

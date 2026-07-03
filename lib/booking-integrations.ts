@@ -492,8 +492,11 @@ function summaryHtml(lines: string[]) {
     .join("")}</div>`;
 }
 
-function icsAttachment(booking: BookingRequest): EmailAttachment[] | undefined {
-  const ics = buildIcsFile(booking);
+function icsAttachment(
+  booking: BookingRequest,
+  options?: Parameters<typeof buildIcsFile>[1],
+): EmailAttachment[] | undefined {
+  const ics = buildIcsFile(booking, options);
   if (!ics) {
     return undefined;
   }
@@ -575,8 +578,10 @@ async function sendReservationRequestEmails(
 
 /** Sends the confirmed-booking e-mails (customer + owner) with .ics + Google link. */
 export async function confirmReservation(booking: BookingRequest) {
-  const attachments = icsAttachment(booking);
-  const calendarLink = buildGoogleCalendarLink(booking);
+  const customerAttachments = icsAttachment(booking, { includeLocation: true });
+  const ownerAttachments = icsAttachment(booking, { includeLocation: false });
+  const customerCalendarLink = buildGoogleCalendarLink(booking, { includeLocation: true });
+  const ownerCalendarLink = buildGoogleCalendarLink(booking, { includeLocation: false });
 
   const customerText = [
     `Dobrý deň, ${booking.name},`,
@@ -586,7 +591,7 @@ export async function confirmReservation(booking: BookingRequest) {
     ...appointmentSummaryLines(booking),
     `Adresa: ${siteConfig.address}`,
     "",
-    calendarLink ? `Pridať do kalendára: ${calendarLink}` : "",
+    customerCalendarLink ? `Pridať do kalendára: ${customerCalendarLink}` : "",
     "",
     "Timea Skincare",
     siteConfig.phone,
@@ -600,7 +605,7 @@ export async function confirmReservation(booking: BookingRequest) {
     `<p>Dobrý deň, ${escapeHtml(booking.name)},</p>
      <p>tvoj termín je <strong>potvrdený</strong>. Teším sa na tvoju návštevu.</p>
      ${summaryHtml([...appointmentSummaryLines(booking), `Adresa: ${siteConfig.address}`])}
-     ${calendarLink ? `<p style="margin:0 0 16px;">${emailButton(calendarLink, "Pridať do Google kalendára")}</p>` : ""}
+     ${customerCalendarLink ? `<p style="margin:0 0 16px;">${emailButton(customerCalendarLink, "Pridať do Google kalendára")}</p>` : ""}
      <p style="font-size:13px;color:#8b8d88;margin:0 0 16px;">V prílohe je aj súbor .ics, ktorý pridá termín do akéhokoľvek kalendára.</p>
      <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}<br/>${escapeHtml(siteConfig.email)}</p>`,
   );
@@ -609,7 +614,7 @@ export async function confirmReservation(booking: BookingRequest) {
     "Potvrdená rezervácia:",
     "",
     ...customerSummaryLines(booking),
-    calendarLink ? `Pridať do kalendára: ${calendarLink}` : "",
+    ownerCalendarLink ? `Pridať do kalendára: ${ownerCalendarLink}` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -618,17 +623,17 @@ export async function confirmReservation(booking: BookingRequest) {
     "Potvrdená rezervácia",
     `<p>Táto rezervácia bola <strong>potvrdená</strong>.</p>
      ${summaryHtml(customerSummaryLines(booking))}
-     ${calendarLink ? `<p style="margin:0;">${emailButton(calendarLink, "Pridať do Google kalendára")}</p>` : ""}`,
+     ${ownerCalendarLink ? `<p style="margin:0;">${emailButton(ownerCalendarLink, "Pridať do Google kalendára")}</p>` : ""}`,
   );
 
   await Promise.all([
     sendEmail(booking.email, "Rezervácia potvrdená – Timea Skincare", customerText, {
       html: customerHtml,
-      attachments,
+      attachments: customerAttachments,
     }),
     sendEmail(siteConfig.email, `Potvrdená rezervácia – ${booking.name}`, ownerText, {
       html: ownerHtml,
-      attachments,
+      attachments: ownerAttachments,
     }),
   ]);
 }
