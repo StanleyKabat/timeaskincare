@@ -29,6 +29,8 @@ type HomePageProps = {
   serviceCards: { title: string; description: string }[];
   galleryItems: SalonPhoto[];
   reviewItems: { service: string; text: string }[];
+  /** Attribution under each review preview (locale-specific; defaults to Slovak). */
+  reviewAttribution?: string;
   location: string;
   instagramUrl: string;
   hrefs: {
@@ -51,6 +53,7 @@ export function HomePage({
   serviceCards,
   galleryItems,
   reviewItems,
+  reviewAttribution,
   location,
   instagramUrl,
   hrefs,
@@ -285,7 +288,11 @@ export function HomePage({
                 staggerIndex={index}
                 className="min-w-0"
               >
-                <ReviewCard service={review.service} text={review.text} />
+                <ReviewCard
+                  service={review.service}
+                  text={review.text}
+                  attribution={reviewAttribution}
+                />
               </ScrollReveal>
             ))}
           </div>

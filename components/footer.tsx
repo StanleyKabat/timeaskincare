@@ -1,11 +1,24 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 
-import { navigation, siteConfig } from "@/data/site";
+import { navigation, navigationEn, siteConfig } from "@/data/site";
+import { getLocaleFromPathname } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 export function Footer() {
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname ?? "/");
+  const navItems = locale === "en" ? navigationEn : navigation;
+  const dictionary = getDictionary(locale);
+
+  // Privacy/legal page stays Slovak until /en/privacy-policy exists.
+  const privacyHref = "/ochrana-osobnych-udajov";
+
   return (
     <footer className="border-t border-[var(--color-line)] bg-[var(--color-surface)]">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
@@ -25,15 +38,15 @@ export function Footer() {
             </p>
           </div>
           <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--color-stone)]">
-            Jemná a profesionálna starostlivosť o pleť v Novej Bani.
+            {dictionary.footer.tagline}
           </p>
         </div>
         <div>
           <p className="text-sm font-semibold text-[var(--color-charcoal)]">
-            Navigácia
+            {dictionary.footer.navHeading}
           </p>
           <div className="mt-3 grid gap-2">
-            {navigation.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -43,16 +56,16 @@ export function Footer() {
               </Link>
             ))}
             <Link
-              href="/ochrana-osobnych-udajov"
+              href={privacyHref}
               className="text-sm text-[var(--color-stone)] hover:text-[var(--color-powder)]"
             >
-              Ochrana osobných údajov
+              {dictionary.nav.privacy}
             </Link>
           </div>
         </div>
         <div>
           <p className="text-sm font-semibold text-[var(--color-charcoal)]">
-            Kontakt
+            {dictionary.footer.contactHeading}
           </p>
           <div className="mt-3 grid gap-3 text-sm text-[var(--color-stone)]">
             <p className="flex gap-2.5">
@@ -76,7 +89,7 @@ export function Footer() {
           </div>
 
           <p className="mt-5 text-sm font-semibold text-[var(--color-charcoal)]">
-            Sociálne siete
+            {dictionary.footer.socialHeading}
           </p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             <a
@@ -103,7 +116,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[var(--color-line)] px-4 py-4 text-center text-xs text-[var(--color-stone)]">
-        © {new Date().getFullYear()} {siteConfig.name}. Všetky práva vyhradené.
+        © {new Date().getFullYear()} {siteConfig.name}. {dictionary.footer.rights}
       </div>
     </footer>
   );

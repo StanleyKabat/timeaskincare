@@ -83,7 +83,7 @@ export const en: Dictionary = {
       title: "Kind words from clients",
       text: "Genuine feedback from clients who valued precise work, a friendly approach and the calm atmosphere of the salon.",
       allButton: "View all reviews",
-      note: "Client reviews are currently shown in Slovak.",
+      note: "Reviews are translated from Slovak for easier understanding.",
     },
     cta: {
       heading: "Would you like to book a visit?",

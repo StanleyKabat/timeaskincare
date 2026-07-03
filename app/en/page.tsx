@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { HomePage } from "@/components/pages/home-page";
-import { reviews } from "@/data/reviews";
+import { enReviews } from "@/data/reviews-en";
 import { homeGalleryPreview, heroSalonPhoto } from "@/data/gallery";
 import { siteConfig } from "@/data/site";
 import { en } from "@/messages/en";
@@ -61,15 +61,16 @@ export default function EnglishHome() {
       heroImageSrc={heroSalonPhoto.src}
       serviceCards={enServiceCards}
       galleryItems={homeGalleryPreview}
-      reviewItems={reviews.slice(0, 2)}
+      reviewItems={enReviews.slice(0, 2)}
+      reviewAttribution="Timea Skincare client"
       location={siteConfig.location}
       instagramUrl={siteConfig.instagram}
       hrefs={{
         book: "/kontakt#rezervacia",
-        services: "/sluzby",
-        gallery: "/galeria",
+        services: "/en/services",
+        gallery: "/en/gallery",
         reviews: "/en/reviews",
-        aboutCta: "/kontakt#rezervacia",
+        aboutCta: "/en/contact",
       }}
     />
   );
