@@ -6,8 +6,10 @@ import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { navigation, siteConfig } from "@/data/site";
+import { navigation, navigationEn, siteConfig } from "@/data/site";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { getLocaleFromPathname } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { cn } from "@/lib/utils";
 
 function Brand({
@@ -131,12 +133,19 @@ export function Header() {
 
   const headerHidden = isHidden && !isOpen;
 
+  const locale = getLocaleFromPathname(pathname ?? "/");
+  const navItems = locale === "en" ? navigationEn : navigation;
+  const dictionary = getDictionary(locale);
+
   const isActive = (href: string) => {
     if (href.startsWith("/#")) {
       return pathname === "/" && activeSection === href.slice(2);
     }
     if (href === "/") {
       return pathname === "/" && activeSection === null;
+    }
+    if (href === "/en") {
+      return pathname === "/en" && activeSection === null;
     }
     return pathname.startsWith(href);
   };
@@ -154,7 +163,7 @@ export function Header() {
           className="col-start-2 hidden items-center justify-center gap-1 lg:flex xl:gap-1.5"
           aria-label="Hlavná navigácia"
         >
-          {navigation.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <Link
@@ -188,7 +197,7 @@ export function Header() {
             onClick={() => setIsOpen(false)}
           >
             <CalendarDays size={15} aria-hidden="true" className="text-[var(--color-powder)]" />
-            Online rezervácia
+            {dictionary.header.booking}
           </Link>
           <a
             href={siteConfig.instagram}
@@ -240,7 +249,7 @@ export function Header() {
             </div>
 
             <nav className="grid gap-1 pb-0.5" aria-label="Mobilná navigácia">
-              {navigation.map((item, index) => (
+              {navItems.map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -264,15 +273,15 @@ export function Header() {
               <Link
                 href="/kontakt#rezervacia"
                 className="mobile-menu-item mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[rgba(250,248,246,0.5)] bg-[linear-gradient(135deg,#d979a8_0%,#f6dce7_100%)] px-4 py-2.5 text-[15px] font-semibold text-[#242629] shadow-[0_14px_34px_rgba(217,121,168,0.4)] transition duration-300 hover:brightness-105 active:scale-[0.99]"
-                style={{ animationDelay: `${navigation.length * 70}ms` }}
+                style={{ animationDelay: `${navItems.length * 70}ms` }}
                 onClick={() => setIsOpen(false)}
               >
                 <CalendarDays size={18} aria-hidden="true" />
-                Online rezervácia
+                {dictionary.header.booking}
               </Link>
               <div
                 className="mobile-menu-item mt-2 flex items-center justify-center gap-3"
-                style={{ animationDelay: `${(navigation.length + 1) * 70}ms` }}
+                style={{ animationDelay: `${(navItems.length + 1) * 70}ms` }}
               >
                 <LanguageSwitcher variant="mobile" onNavigate={() => setIsOpen(false)} />
                 <a

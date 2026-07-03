@@ -26,6 +26,18 @@ export const navigation = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
+// English navigation. Pages not yet translated point to their Slovak
+// equivalents (which exist) so there are no broken links; they are switched to
+// English routes as those pages are added in later phases.
+export const navigationEn = [
+  { label: "Home", href: "/en" },
+  { label: "Services", href: "/en/services" },
+  { label: "About me", href: "/en#o-salone" },
+  { label: "Gallery", href: "/galeria" },
+  { label: "Pricing", href: "/cennik" },
+  { label: "Contact", href: "/kontakt" },
+];
+
 export const serviceGroups = [
   {
     title: "Kozmetické ošetrenia",
