@@ -56,7 +56,7 @@ export default function EnglishReviewsPage() {
                 <ButtonLink href="/en/services" variant="secondary">
                   View services
                 </ButtonLink>
-                <ButtonLink href="/kontakt#rezervacia">Book an appointment</ButtonLink>
+                <ButtonLink href="/en/contact#booking">Book an appointment</ButtonLink>
               </div>
             </div>
           </ScrollReveal>

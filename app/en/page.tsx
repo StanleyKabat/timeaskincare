@@ -67,7 +67,7 @@ export default function EnglishHome() {
       instagramUrl={siteConfig.instagram}
       instagramAriaLabel={en.social.instagram}
       hrefs={{
-        book: "/kontakt#rezervacia",
+        book: "/en/contact#booking",
         services: "/en/services",
         gallery: "/en/gallery",
         reviews: "/en/reviews",

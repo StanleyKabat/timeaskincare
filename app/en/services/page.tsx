@@ -12,8 +12,9 @@ import {
   enServicesIntro,
 } from "@/data/services-en";
 
-// Same canonical Slovak service name the booking form expects for vouchers.
-const GIFT_VOUCHER_HREF = "/kontakt?service=Dar%C4%8Dekov%C3%BD%20poukaz#rezervacia";
+// Stays on the English contact page; keeps the canonical Slovak service name
+// (as a query param) that the booking form expects for vouchers.
+const GIFT_VOUCHER_HREF = "/en/contact?service=Dar%C4%8Dekov%C3%BD%20poukaz#booking";
 
 function isGiftVoucher(canonicalName: string) {
   return canonicalName.toLocaleLowerCase("sk-SK").includes("darčekový poukaz");
@@ -63,7 +64,7 @@ export default function EnglishServicesPage() {
       groups={groups}
       includesLabel={enServicesIncludesLabel}
       cta={enServicesCta}
-      bookHref="/kontakt#rezervacia"
+      bookHref="/en/contact#booking"
     />
   );
 }

@@ -143,6 +143,7 @@ export function Header() {
   const navItems = locale === "en" ? navigationEn : navigation;
   const dictionary = getDictionary(locale);
   const homeHref = locale === "en" ? "/en" : "/";
+  const bookingHref = locale === "en" ? "/en/contact#booking" : "/kontakt#rezervacia";
 
   const isActive = (href: string) => {
     if (href.startsWith("/#")) {
@@ -204,7 +205,7 @@ export function Header() {
         <div className="col-start-3 flex items-center justify-end gap-1.5 sm:gap-2">
           <LanguageSwitcher onNavigate={() => setIsOpen(false)} />
           <Link
-            href="/kontakt#rezervacia"
+            href={bookingHref}
             className="hidden min-h-9 items-center gap-2 rounded-full border border-[rgba(226,138,180,0.36)] px-4 py-1.5 text-[14px] font-medium text-[var(--color-charcoal)] transition hover:border-[var(--color-powder)] hover:bg-[var(--color-blush)] md:inline-flex xl:min-h-10 xl:px-5 xl:text-[15px]"
             onClick={() => setIsOpen(false)}
           >
@@ -289,7 +290,7 @@ export function Header() {
                 </Link>
               ))}
               <Link
-                href="/kontakt#rezervacia"
+                href={bookingHref}
                 className="mobile-menu-item mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[rgba(250,248,246,0.5)] bg-[linear-gradient(135deg,#d979a8_0%,#f6dce7_100%)] px-4 py-2.5 text-[15px] font-semibold text-[#242629] shadow-[0_14px_34px_rgba(217,121,168,0.4)] transition duration-300 hover:brightness-105 active:scale-[0.99]"
                 style={{ animationDelay: `${navItems.length * 70}ms` }}
                 onClick={() => setIsOpen(false)}
