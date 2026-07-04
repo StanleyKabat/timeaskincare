@@ -31,10 +31,20 @@ export function ScrollReveal({ children, className = "", staggerIndex = 0 }: Scr
     setCanAnimate(true);
     setVisible(isAlreadyInView);
 
+    // Reveal once, then stop observing. Toggling visibility back off when an
+    // element leaves the viewport caused constant style/paint churn on every
+    // scroll (in both directions), which made scrolling feel janky. Revealing a
+    // single time keeps the exact same entrance animation without any per-scroll
+    // work afterwards.
+    if (isAlreadyInView) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          setVisible(entry.isIntersecting);
+          if (entry.isIntersecting) {
+            setVisible(true);
+            observer.unobserve(entry.target);
+          }
         }
       },
       { root: null, rootMargin: "0px 0px -12% 0px", threshold: 0.04 }
