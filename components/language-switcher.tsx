@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { isLocaleEnabled } from "@/lib/i18n/config";
+import { getLocaleFromPathname, isLocaleEnabled } from "@/lib/i18n/config";
 import { getAlternate } from "@/lib/i18n/routes";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 
@@ -30,7 +30,11 @@ export function LanguageSwitcher({
     return null;
   }
 
-  const { languageSwitcher } = getDictionary(locale);
+  // Label/aria come from the CURRENT page's dictionary, which describes the
+  // language the control switches TO (sk page -> "EN", en page -> "SK").
+  // The target `locale`/`href` above still drive the route and enabled check.
+  const currentLocale = getLocaleFromPathname(pathname);
+  const { languageSwitcher } = getDictionary(currentLocale);
 
   if (variant === "mobile") {
     return (
