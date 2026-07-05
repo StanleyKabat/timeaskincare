@@ -3,11 +3,13 @@ import crypto from "node:crypto";
 import { toEnglishServiceNames } from "@/data/booking-en";
 import { bookableServices, siteConfig } from "@/data/site";
 import {
+  allDayEventBusyIntervalForDate,
   bookingConfig,
   getDateWindowUtc,
   getSlotsForDate,
   isWithinBookingRules,
   type BusyInterval,
+  type GoogleAllDayEvent,
 } from "@/lib/booking";
 import { createBookingToken } from "@/lib/booking-token";
 import { buildGoogleCalendarLink, buildIcsFile } from "@/lib/calendar";
@@ -41,6 +43,22 @@ type GoogleBusyItem = {
   start?: string;
   end?: string;
 };
+
+type GoogleCalendarEvent = GoogleAllDayEvent & {
+  id?: string;
+};
+
+/**
+ * Opt-in, non-PII server log for debugging calendar availability. Enable with
+ * CALENDAR_DEBUG=1. Never logs customer data or event summaries; only dates,
+ * the configured calendar id, transparency flags and interval counts.
+ */
+function calendarDebug(label: string, data: Record<string, unknown>) {
+  if (process.env.CALENDAR_DEBUG !== "1" && process.env.CALENDAR_DEBUG !== "true") {
+    return;
+  }
+  console.log(`[calendar] ${label}`, JSON.stringify(data));
+}
 
 type GoogleEvent = {
   id: string;
@@ -265,13 +283,115 @@ export async function getBusyIntervalsForDate(date: string): Promise<BusyInterva
     );
 }
 
+/**
+ * Additive fallback to FreeBusy for ALL-DAY events only.
+ *
+ * FreeBusy does not reliably return all-day busy events (a single-day absence
+ * that is not explicitly "Busy" is invisible to it), so whole-day absences
+ * could stay bookable. We list events for the selected day directly and turn
+ * non-transparent all-day events into a workday-long busy interval.
+ *
+ * This never degrades existing behavior: any error results in an empty list, so
+ * availability simply falls back to FreeBusy-only. Timed events are ignored here
+ * (they keep coming from FreeBusy).
+ *
+ * NOTE FOR TIMEA: an all-day absence in Google Calendar must be marked as
+ * "Busy" (not "Free") for it to block booking. All-day events explicitly set to
+ * "Free" (e.g. notes/reminders) are intentionally left bookable.
+ */
+export async function getAllDayBusyIntervalsForDate(
+  date: string,
+): Promise<BusyInterval[]> {
+  if (!hasGoogleCalendarConfig()) {
+    return [];
+  }
+
+  const window = getDateWindowUtc(date);
+  if (!window) {
+    return [];
+  }
+
+  try {
+    const accessToken = await getGoogleAccessToken();
+    // Widen the query by a day on each side so all-day events on the day's
+    // boundaries are always returned; the per-event date-coverage check decides
+    // what actually blocks `date`.
+    const dayMs = 24 * 60 * 60 * 1000;
+    const timeMin = new Date(window.start.getTime() - dayMs).toISOString();
+    const timeMax = new Date(window.end.getTime() + dayMs).toISOString();
+
+    const url = new URL(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+        googleConfig.calendarId!,
+      )}/events`,
+    );
+    url.searchParams.set("timeMin", timeMin);
+    url.searchParams.set("timeMax", timeMax);
+    url.searchParams.set("singleEvents", "true");
+    url.searchParams.set("orderBy", "startTime");
+    url.searchParams.set("maxResults", "50");
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      calendarDebug("events.list failed", { status: response.status });
+      return [];
+    }
+
+    const data = (await response.json()) as { items?: GoogleCalendarEvent[] };
+    const items = data.items ?? [];
+    const intervals: BusyInterval[] = [];
+
+    for (const event of items) {
+      // Only all-day events (start.date). Timed events stay with FreeBusy.
+      if (!event.start?.date) {
+        continue;
+      }
+
+      const interval = allDayEventBusyIntervalForDate(event, date);
+      if (interval) {
+        intervals.push(interval);
+      }
+
+      calendarDebug("all-day event", {
+        startDate: event.start?.date ?? null,
+        endDate: event.end?.date ?? null,
+        transparency: event.transparency ?? "(default busy)",
+        blocks: Boolean(interval),
+      });
+    }
+
+    return intervals;
+  } catch (error) {
+    // Non-fatal: fall back to FreeBusy-only availability.
+    calendarDebug("events.list error", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return [];
+  }
+}
+
 export async function getAvailableSlotsFromCalendar(
   date: string,
   durationMinutes: number,
 ) {
-  const busyIntervals = await getBusyIntervalsForDate(date);
+  const [busyIntervals, allDayIntervals] = await Promise.all([
+    getBusyIntervalsForDate(date),
+    getAllDayBusyIntervalsForDate(date),
+  ]);
 
-  return getSlotsForDate(date, durationMinutes, busyIntervals);
+  const mergedIntervals = [...busyIntervals, ...allDayIntervals];
+
+  calendarDebug("slots", {
+    date,
+    calendarId: googleConfig.calendarId ?? null,
+    freeBusyCount: busyIntervals.length,
+    allDayCount: allDayIntervals.length,
+  });
+
+  return getSlotsForDate(date, durationMinutes, mergedIntervals);
 }
 
 function bookingText(booking: BookingRequest) {

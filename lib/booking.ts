@@ -199,6 +199,72 @@ export type BusyInterval = {
   end: Date;
 };
 
+/** Minimal shape of a Google Calendar all-day event (only fields we inspect). */
+export type GoogleAllDayEvent = {
+  start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
+  /** "transparent" = Free; "opaque"/undefined = Busy (Google's default). */
+  transparency?: string;
+};
+
+/**
+ * Converts an all-day Google Calendar event into a busy interval that covers the
+ * booking workday (openingHour–closingHour, Europe/Bratislava) for `date`.
+ *
+ * Why this exists: the FreeBusy API does not reliably expose all-day events
+ * (e.g. a single-day absence that is not explicitly marked "Busy"), so slots for
+ * whole-day absences could stay bookable. This runs on top of FreeBusy for
+ * all-day events only; timed events keep coming from FreeBusy unchanged.
+ *
+ * Returns null (does NOT block) when:
+ * - the event is not all-day (`start.date` missing → it's a timed event),
+ * - the event is explicitly Free (`transparency === "transparent"`) — this
+ *   preserves intentional all-day notes/reminders that must not block booking,
+ * - `date` is outside the event's covered range.
+ *
+ * Google's all-day `end.date` is EXCLUSIVE:
+ * - start.date 2026-07-06, end.date 2026-07-07 → blocks only 2026-07-06,
+ * - start.date 2026-07-06, end.date 2026-07-13 → blocks 2026-07-06 … 2026-07-12.
+ *
+ * All-day dates are compared as local `YYYY-MM-DD` calendar strings (lexical
+ * ISO compare), never as UTC timestamps, to avoid off-by-one-day shifts.
+ */
+export function allDayEventBusyIntervalForDate(
+  event: GoogleAllDayEvent,
+  date: string,
+  config = bookingConfig,
+): BusyInterval | null {
+  const startDate = event.start?.date;
+  if (!startDate) {
+    return null; // Timed event (start.dateTime) — handled by FreeBusy.
+  }
+
+  if (event.transparency === "transparent") {
+    return null; // Explicitly Free (e.g. an all-day note) — must not block.
+  }
+
+  // end.date is exclusive. Guard against missing/degenerate end dates by
+  // treating them as a single-day event (start.date .. start.date + 1).
+  const rawEnd = event.end?.date;
+  const exclusiveEnd = rawEnd && rawEnd > startDate ? rawEnd : addDaysToISO(startDate, 1);
+
+  // Covered iff startDate <= date < exclusiveEnd (ISO date strings sort lexically).
+  if (date < startDate || date >= exclusiveEnd) {
+    return null;
+  }
+
+  const openTime = `${String(config.openingHour).padStart(2, "0")}:00`;
+  const closeTime = `${String(config.closingHour).padStart(2, "0")}:00`;
+  const startMs = zonedDateTimeToUtcMs(date, openTime, config.timeZone);
+  const endMs = zonedDateTimeToUtcMs(date, closeTime, config.timeZone);
+
+  if (startMs === null || endMs === null) {
+    return null;
+  }
+
+  return { start: new Date(startMs), end: new Date(endMs) };
+}
+
 function intervalsOverlap(
   startA: number,
   endA: number,
