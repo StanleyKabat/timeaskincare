@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
+import { fireAdsConversion, trackEvent } from "@/lib/consent";
 import { toEnglishServiceName } from "@/data/booking-en";
 import {
   bookableServices,
@@ -303,6 +304,17 @@ export function BookingForm({
   const [copiedField, setCopiedField] = useState("");
   const [voucherRequestStatus, setVoucherRequestStatus] =
     useState<VoucherRequestStatus>("idle");
+  // Fires the GA4 "booking_form_start" event once per mount, on first interaction.
+  const bookingStartTrackedRef = useRef(false);
+
+  function handleBookingFormStart() {
+    if (bookingStartTrackedRef.current) return;
+    bookingStartTrackedRef.current = true;
+    trackEvent("booking_form_start", {
+      locale,
+      event_source: anchorId,
+    });
+  }
 
   function copyPaymentText(field: string, text: string) {
     void navigator.clipboard
@@ -336,6 +348,15 @@ export function BookingForm({
         throw new Error("request");
       }
       setVoucherRequestStatus("sent");
+      const voucherValue = Number(payment.amount);
+      trackEvent("voucher_request_submit", {
+        locale,
+        booking_type: "voucher",
+        ...(Number.isFinite(voucherValue) ? { value: voucherValue, currency: "EUR" } : {}),
+      });
+      fireAdsConversion("voucher", {
+        ...(Number.isFinite(voucherValue) ? { value: voucherValue, currency: "EUR" } : {}),
+      });
     } catch {
       setVoucherRequestStatus("error");
     }
@@ -552,6 +573,12 @@ export function BookingForm({
         }
 
         setVoucherPayment({ ...baseDetails, qrDataUrl: data.qrDataUrl, error: "" });
+        const qrValue = Number(amount);
+        trackEvent("voucher_qr_generated", {
+          locale,
+          booking_type: "voucher",
+          ...(Number.isFinite(qrValue) ? { value: qrValue, currency: "EUR" } : {}),
+        });
       } catch {
         // The QR image failed, but the manual bank-transfer details below are
         // enough to complete the payment, so we still show the payment panel.
@@ -644,6 +671,11 @@ export function BookingForm({
       setAvailableSlots([]);
 
       setSubmitInfo(t.successInfo);
+      trackEvent("booking_request_submit", {
+        locale,
+        booking_type: "appointment",
+      });
+      fireAdsConversion("booking");
     } catch (error) {
       // Network-level failure: offer the e-mail fallback so the request is not lost.
       if (error instanceof TypeError) {
@@ -662,6 +694,8 @@ export function BookingForm({
     <form
       id={anchorId}
       onSubmit={handleSubmit}
+      onFocusCapture={handleBookingFormStart}
+      onChangeCapture={handleBookingFormStart}
       className="w-full min-w-0 scroll-mt-28 rounded-lg border border-[var(--color-line)] border-t-[rgba(226,138,180,0.58)] bg-[var(--color-surface)] p-4 shadow-[0_22px_55px_rgba(0,0,0,0.14)] sm:p-6"
     >
       <div className="grid min-w-0 gap-4 sm:gap-5">

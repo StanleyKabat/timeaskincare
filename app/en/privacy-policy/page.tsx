@@ -58,7 +58,7 @@ export default function EnglishPrivacyPolicyPage() {
         },
         {
           heading: "Cookies",
-          body: "This website does not use analytics or marketing cookies and does not track visitors. The website's own code does not store any cookies. The Contact subpage contains a Google Maps map that loads only after the user clicks. When the map loads, Google may process technical data according to its own policies. Fonts and other files are loaded directly from our domain.",
+          body: "Necessary cookies enable the basic functionality of the website and store your cookie choice. They do not require your consent and do not track your behavior. With your separate consent, we may also use analytics cookies (Google Analytics 4), which help us understand how the website is used, and marketing cookies (measuring ad performance and remarketing via Google Ads). Optional analytics and marketing cookies are not loaded before consent is given — by default they are disabled via Google Consent Mode v2. You can change your consent at any time using the “Cookie settings” link in the footer. We do not send any personal data from the booking form (name, email, phone, note text, or recipient name) to Google Analytics or Google Ads. The Contact subpage contains a Google Maps map that loads only after the user clicks. When the map loads, Google may process technical data according to its own policies. Fonts and other files are loaded directly from our domain.",
         },
         {
           heading: "Data retention period",

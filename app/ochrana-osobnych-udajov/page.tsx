@@ -49,7 +49,7 @@ export default function SlovakPrivacyPolicyPage() {
         },
         {
           heading: "Cookies",
-          body: "Táto webstránka nepoužíva analytické ani marketingové cookies a nesleduje návštevníkov. Vlastný kód stránky neukladá žiadne cookies. Na podstránke Kontakt sa nachádza mapa Google Maps, ktorá sa načíta až po kliknutí používateľa. Pri načítaní mapy môže spoločnosť Google spracúvať technické údaje podľa svojich pravidiel. Písma a ostatné súbory sa načítavajú priamo z našej domény.",
+          body: "Nevyhnutné cookies zabezpečujú základné fungovanie webu a uloženie tvojej voľby cookies. Na tento účel nepotrebujeme tvoj súhlas a nesledujú tvoje správanie. So samostatným súhlasom môžeme používať aj analytické cookies (Google Analytics 4), ktoré nám pomáhajú pochopiť, ako sa web používa, a marketingové cookies (meranie úspešnosti reklám a remarketing cez Google Ads). Voliteľné analytické a marketingové cookies sa nenačítajú pred udelením súhlasu – predvolene sú cez Google Consent Mode v2 zakázané. Svoj súhlas môžeš kedykoľvek zmeniť cez odkaz „Nastavenia cookies“ v pätičke. Do Google Analytics ani Google Ads neposielame žiadne osobné údaje z rezervačného formulára (meno, e-mail, telefón, text poznámky ani meno obdarovaného). Na podstránke Kontakt sa nachádza mapa Google Maps, ktorá sa načíta až po kliknutí používateľa. Pri načítaní mapy môže spoločnosť Google spracúvať technické údaje podľa svojich pravidiel. Písma a ostatné súbory sa načítavajú priamo z našej domény.",
         },
         {
           heading: "Doba uchovávania údajov",

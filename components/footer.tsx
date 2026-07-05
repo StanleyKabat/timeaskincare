@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 
+import { useConsent } from "@/components/consent/consent-provider";
 import { navigation, navigationEn, siteConfig } from "@/data/site";
+import { trackEvent } from "@/lib/consent";
 import { getLocaleFromPathname } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 
@@ -15,6 +17,7 @@ export function Footer() {
   const locale = getLocaleFromPathname(pathname ?? "/");
   const navItems = locale === "en" ? navigationEn : navigation;
   const dictionary = getDictionary(locale);
+  const { openSettings } = useConsent();
 
   const privacyHref = locale === "en" ? "/en/privacy-policy" : "/ochrana-osobnych-udajov";
 
@@ -60,6 +63,13 @@ export function Footer() {
             >
               {dictionary.nav.privacy}
             </Link>
+            <button
+              type="button"
+              onClick={openSettings}
+              className="text-left text-sm text-[var(--color-stone)] transition hover:text-[var(--color-powder)]"
+            >
+              {dictionary.cookies.footerLink}
+            </button>
           </div>
         </div>
         <div>
@@ -73,6 +83,7 @@ export function Footer() {
             </p>
             <a
               href={siteConfig.phoneHref}
+              onClick={() => trackEvent("phone_click", { locale, event_source: "footer" })}
               className="flex min-h-10 items-center gap-2.5 transition hover:text-[var(--color-powder)]"
             >
               <Phone className="shrink-0 text-[var(--color-powder)]" size={16} aria-hidden="true" />
@@ -80,6 +91,7 @@ export function Footer() {
             </a>
             <a
               href={siteConfig.emailHref}
+              onClick={() => trackEvent("email_click", { locale, event_source: "footer" })}
               className="flex min-h-10 items-center gap-2.5 transition hover:text-[var(--color-powder)]"
             >
               <Mail className="shrink-0 text-[var(--color-powder)]" size={16} aria-hidden="true" />

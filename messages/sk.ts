@@ -96,6 +96,29 @@ export const sk = {
       bookButton: "Rezervovať",
     },
   },
+  cookies: {
+    bannerText:
+      "Používame cookies na základné fungovanie webu, analytiku a zlepšenie reklám. Svoj súhlas môžeš kedykoľvek zmeniť.",
+    rejectOptional: "Odmietnuť voliteľné",
+    settings: "Nastavenia",
+    acceptAll: "Prijať všetko",
+    bannerAriaLabel: "Súhlas s cookies",
+    modalTitle: "Nastavenia cookies",
+    modalIntro:
+      "Vyber si, ktoré cookies môžeme používať. Nevyhnutné cookies sú vždy zapnuté.",
+    save: "Uložiť nastavenia",
+    close: "Zavrieť",
+    alwaysOn: "Vždy zapnuté",
+    necessaryTitle: "Nevyhnutné cookies",
+    necessaryText: "Potrebné pre základné fungovanie webu a uloženie tvojej voľby cookies.",
+    analyticsTitle: "Analytické cookies",
+    analyticsText:
+      "Pomáhajú nám pochopiť, ako návštevníci používajú web, aby sme ho vedeli zlepšovať.",
+    marketingTitle: "Marketingové cookies",
+    marketingText: "Pomáhajú nám merať úspešnosť reklám a zobrazovať relevantnejšie reklamy.",
+    footerLink: "Nastavenia cookies",
+    toggleAriaLabel: "Prepnúť",
+  },
 } as const;
 
 /**

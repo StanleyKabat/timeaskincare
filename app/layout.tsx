@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Great_Vibes, Inter } from "next/font/google";
 import { headers } from "next/headers";
+import Script from "next/script";
 
+import { CookieConsent } from "@/components/consent/cookie-consent";
+import { ConsentProvider } from "@/components/consent/consent-provider";
+import { GoogleTags } from "@/components/consent/google-tags";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { HtmlLang } from "@/components/html-lang";
@@ -132,16 +136,38 @@ export default async function RootLayout({
   return (
     <html lang={lang} className={`${inter.variable} ${cormorant.variable} ${greatVibes.variable}`}>
       <body>
+        {/* Google Consent Mode v2: default everything to denied before any tag. */}
+        <Script id="consent-default" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('consent', 'default', {
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              analytics_storage: 'denied',
+              wait_for_update: 500
+            });
+            gtag('set', 'ads_data_redaction', true);
+            gtag('set', 'url_passthrough', true);
+            gtag('js', new Date());
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(localBusinessJsonLd),
           }}
         />
-        <HtmlLang />
-        <Header />
-        <main className="pt-[58px] lg:pt-[68px]">{children}</main>
-        <Footer />
+        <ConsentProvider>
+          <HtmlLang />
+          <Header />
+          <main className="pt-[58px] lg:pt-[68px]">{children}</main>
+          <Footer />
+          <CookieConsent />
+          <GoogleTags />
+        </ConsentProvider>
       </body>
     </html>
   );
