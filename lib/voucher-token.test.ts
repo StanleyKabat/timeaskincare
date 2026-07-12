@@ -1,6 +1,11 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { generateVoucherPdf, getVoucherCode, type VoucherRequest } from "./voucher";
+import {
+  generateVoucherPdf,
+  getVoucherCode,
+  getVoucherGiftDetailLines,
+  type VoucherRequest,
+} from "./voucher";
 import { createVoucherToken, verifyVoucherToken } from "./voucher-token";
 
 const serviceVoucher: VoucherRequest = {
@@ -59,5 +64,22 @@ describe("voucher tokens", () => {
     expect(Buffer.from(valuePdf).subarray(0, 4).toString()).toBe("%PDF");
     expect(servicePdf.length).toBeGreaterThan(1_000);
     expect(valuePdf.length).toBeGreaterThan(1_000);
+  });
+
+  it("hides service prices in gift details but keeps value voucher amounts", () => {
+    const serviceDetails = getVoucherGiftDetailLines(serviceVoucher, "sk");
+    expect(serviceDetails).toContain("Vybrané ošetrenia:");
+    expect(serviceDetails.join(" ")).not.toMatch(/€|hodnot/i);
+
+    const valueDetails = getVoucherGiftDetailLines(
+      {
+        ...serviceVoucher,
+        voucherType: "value",
+        services: [],
+        amount: 70,
+      },
+      "en",
+    );
+    expect(valueDetails).toEqual(["Voucher value: 70 €"]);
   });
 });

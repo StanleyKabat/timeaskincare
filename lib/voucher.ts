@@ -189,21 +189,28 @@ function voucherTypeLabel(voucher: VoucherRequest, locale: VoucherLocale): strin
   if (voucher.voucherType === "value") {
     return locale === "en" ? "Value voucher" : "Poukaz v hodnote";
   }
-  return locale === "en" ? "Voucher for a treatment" : "Poukaz na ošetrenie";
+  if (locale === "en") {
+    return voucher.services.length > 1
+      ? "Voucher for treatments"
+      : "Voucher for a treatment";
+  }
+  return voucher.services.length > 1 ? "Poukaz na ošetrenia" : "Poukaz na ošetrenie";
 }
 
-function voucherSelectionLines(voucher: VoucherRequest, locale: VoucherLocale): string[] {
-  const amount = formatAmount(getVoucherAmount(voucher));
+export function getVoucherGiftDetailLines(
+  voucher: VoucherRequest,
+  locale: VoucherLocale,
+): string[] {
   if (voucher.voucherType === "value") {
+    const amount = formatAmount(getVoucherAmount(voucher));
     return [locale === "en" ? `Voucher value: ${amount}` : `Hodnota poukazu: ${amount}`];
   }
 
   const services =
     locale === "en" ? voucher.services.map(toEnglishServiceName) : voucher.services;
   return [
-    locale === "en" ? "Services:" : "Služby:",
+    locale === "en" ? "Selected treatments:" : "Vybrané ošetrenia:",
     ...services.map((service) => `- ${service}`),
-    locale === "en" ? `Total value: ${amount}` : `Celková hodnota: ${amount}`,
   ];
 }
 
@@ -245,7 +252,7 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
   ];
   const voucherLinesEn = [
     `Voucher type: ${voucherTypeLabel(voucher, "en")}`,
-    ...voucherSelectionLines(voucher, "en"),
+    ...getVoucherGiftDetailLines(voucher, "en"),
     `From: ${voucher.from}`,
     `For: ${voucher.forName}`,
     `Voucher code: ${code}`,
@@ -253,7 +260,7 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
   ];
   const voucherLinesSk = [
     `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
-    ...voucherSelectionLines(voucher, "sk"),
+    ...getVoucherGiftDetailLines(voucher, "sk"),
     `Od: ${voucher.from}`,
     `Pre: ${voucher.forName}`,
     `Kód poukazu: ${code}`,
@@ -324,7 +331,7 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
     `E-mail: ${voucher.email}`,
     `Telefón: ${voucher.phone}`,
     `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
-    ...voucherSelectionLines(voucher, "sk"),
+    ...getVoucherGiftDetailLines(voucher, "sk"),
     `Suma spolu: ${amount}`,
     `Od: ${voucher.from}`,
     `Pre: ${voucher.forName}`,
@@ -483,7 +490,6 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
           : isPlural
             ? "Gift Voucher for Treatments"
             : "Gift Voucher for a Treatment",
-        totalValue: "Total value",
         forLabel: "For",
         fromLabel: "From",
         issued: "Issued",
@@ -503,7 +509,6 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
           : isPlural
             ? "Darčekový poukaz na ošetrenia"
             : "Darčekový poukaz na ošetrenie",
-        totalValue: "Celková hodnota",
         forLabel: "Pre",
         fromLabel: "Od",
         issued: "Vystavené",
@@ -564,14 +569,6 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
         PDF_COLORS.white,
       );
     });
-    drawCentered(
-      page,
-      `${strings.totalValue}: ${amount}`,
-      175,
-      font,
-      15,
-      PDF_COLORS.powder,
-    );
   } else {
     const columns = [serviceLabels.slice(0, 7), serviceLabels.slice(7)];
     columns.forEach((services, columnIndex) => {
@@ -587,14 +584,6 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
         });
       });
     });
-    drawCentered(
-      page,
-      `${strings.totalValue}: ${amount}`,
-      155,
-      font,
-      14,
-      PDF_COLORS.powder,
-    );
   }
 
   // Subtle divider.
@@ -696,8 +685,8 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
   const isEnglish = voucher.locale === "en";
   const code = getVoucherCode(voucher);
   const amount = formatAmount(getVoucherAmount(voucher));
-  const selectionLinesEn = voucherSelectionLines(voucher, "en");
-  const selectionLinesSk = voucherSelectionLines(voucher, "sk");
+  const selectionLinesEn = getVoucherGiftDetailLines(voucher, "en");
+  const selectionLinesSk = getVoucherGiftDetailLines(voucher, "sk");
 
   const pdfBytes = await generateVoucherPdf(voucher);
   const attachment: EmailAttachment = {

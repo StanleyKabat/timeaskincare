@@ -54,8 +54,7 @@ const bookingText = {
     valueVoucherDescription: "Zvoľ sumu a obdarovaná osoba si vyberie službu sama.",
     customAmountLabel: "Vlastná suma",
     customAmountPlaceholder: "30 – 300",
-    selectedServicesLabel: "Vybrané služby",
-    totalValueLabel: "Celková hodnota",
+    selectedServicesLabel: "Vybrané ošetrenia",
     selectedValueLabel: "Hodnota poukazu",
     valueVoucherRule:
       "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť.",
@@ -160,8 +159,7 @@ const bookingText = {
     valueVoucherDescription: "Choose an amount and the recipient can choose the service herself.",
     customAmountLabel: "Custom amount",
     customAmountPlaceholder: "30 – 300",
-    selectedServicesLabel: "Selected services",
-    totalValueLabel: "Total value",
+    selectedServicesLabel: "Selected treatments",
     selectedValueLabel: "Voucher value",
     valueVoucherRule:
       "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash.",
@@ -440,11 +438,6 @@ export function BookingForm({
         .filter((service): service is (typeof giftVoucherTreatments)[number] => Boolean(service)),
     [selectedVoucherServices],
   );
-  const voucherServicesTotal = useMemo(
-    () => selectedVoucherServiceItems.reduce((total, service) => total + service.amount, 0),
-    [selectedVoucherServiceItems],
-  );
-
   useEffect(() => {
     if (isGiftVoucherFlow || !selectedDate || totalDurationMinutes <= 0) {
       return;
@@ -970,9 +963,6 @@ export function BookingForm({
                         <span className="text-[var(--color-charcoal)]">
                           {displayServiceName(item.name)}
                         </span>
-                        <span className="shrink-0 font-semibold text-[var(--color-powder)]">
-                          {item.amount} €
-                        </span>
                       </button>
                     );
                   })}
@@ -985,15 +975,10 @@ export function BookingForm({
                   {selectedVoucherServiceItems.length > 0 ? (
                     <ul className="mt-2 grid gap-1 text-[var(--color-stone)]">
                       {selectedVoucherServiceItems.map((service) => (
-                        <li key={service.name}>
-                          {displayServiceName(service.name)} — {service.amount} €
-                        </li>
+                        <li key={service.name}>{displayServiceName(service.name)}</li>
                       ))}
                     </ul>
                   ) : null}
-                  <p className="mt-2 font-semibold text-[var(--color-powder)]">
-                    {t.totalValueLabel}: {voucherServicesTotal} €
-                  </p>
                 </div>
               </fieldset>
             ) : null}
