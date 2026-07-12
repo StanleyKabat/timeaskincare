@@ -19,6 +19,11 @@ import {
   resolveVoucherSelection,
   type VoucherType,
 } from "@/lib/voucher-selection";
+import {
+  formatVoucherDate,
+  getNewVoucherValidUntil,
+  getVoucherValidUntil,
+} from "@/lib/voucher-validity";
 
 export type VoucherLocale = "sk" | "en";
 
@@ -39,6 +44,8 @@ export type VoucherRequest = {
   locale?: VoucherLocale;
   /** Issued-at (ms). Anchors the deterministic voucher code + issue date. */
   iat?: number;
+  /** Signed calendar expiry for new vouchers; absent on legacy 12-month tokens. */
+  validUntil?: number;
 };
 
 const TIMEZONE = "Europe/Bratislava";
@@ -111,6 +118,7 @@ export function validateVoucherRequest(input: unknown): VoucherRequest {
     throw new Error("Doplň, pre koho je darčeková poukážka.");
   }
 
+  const iat = Date.now();
   return {
     name,
     email,
@@ -122,7 +130,8 @@ export function validateVoucherRequest(input: unknown): VoucherRequest {
     forName,
     note,
     locale,
-    iat: Date.now(),
+    iat,
+    validUntil: getNewVoucherValidUntil(iat),
   };
 }
 
@@ -138,12 +147,7 @@ function voucherDateYmd(iat: number): string {
 }
 
 function issueDateHuman(iat: number, locale: VoucherLocale): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "sk-SK", {
-    timeZone: TIMEZONE,
-    day: "numeric",
-    month: locale === "en" ? "long" : "numeric",
-    year: "numeric",
-  }).format(new Date(iat));
+  return formatVoucherDate(iat, locale);
 }
 
 /**
@@ -528,6 +532,10 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   const amount = formatAmount(getVoucherAmount(voucher));
   const code = getVoucherCode(voucher);
   const iat = typeof voucher.iat === "number" ? voucher.iat : Date.now();
+  const validUntil = formatVoucherDate(
+    getVoucherValidUntil(voucher),
+    voucher.locale ?? "sk",
+  );
   const serviceLabels = displayVoucherServices(voucher);
   const isValueVoucher = voucher.voucherType === "value";
   const isPlural = serviceLabels.length > 1;
@@ -541,8 +549,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
         fromLabel: "From",
         issued: "Issued",
         codeLabel: "Voucher code",
-        validityLabel: "Validity",
-        validityValue: "12 months from the date of issue",
+        validityLabel: "Valid until",
         note: "One-time redemption by arranging an appointment at Timea Skincare.",
         valueRule: [
           "The voucher can be used for services at Timea Skincare.",
@@ -558,8 +565,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
         fromLabel: "Od",
         issued: "Vystavené",
         codeLabel: "Kód poukazu",
-        validityLabel: "Platnosť",
-        validityValue: "12 mesiacov od vystavenia",
+        validityLabel: "Platnosť do",
         note: "Jednorazové uplatnenie po dohode termínu v salóne Timea Skincare.",
         valueRule: [
           "Poukaz je možné využiť na služby v salóne Timea Skincare.",
@@ -720,7 +726,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   );
   drawCentered(
     page,
-    `${strings.validityLabel}: ${strings.validityValue}`,
+    `${strings.validityLabel}: ${validUntil}`,
     77,
     font,
     9.5,
@@ -777,6 +783,9 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
   const isEnglish = voucher.locale === "en";
   const code = getVoucherCode(voucher);
   const amount = formatAmount(getVoucherAmount(voucher));
+  const validUntilTimestamp = getVoucherValidUntil(voucher);
+  const validUntilEn = formatVoucherDate(validUntilTimestamp, "en");
+  const validUntilSk = formatVoucherDate(validUntilTimestamp, "sk");
   const selectionLinesEn = getVoucherGiftDetailLines(voucher, "en");
   const selectionLinesSk = getVoucherGiftDetailLines(voucher, "sk");
 
@@ -807,7 +816,7 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
           ? "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash."
           : "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
         "The voucher is intended for one-time redemption.",
-        "Voucher validity: 12 months from the date of issue.",
+        `Voucher validity: 4 calendar months from issue, until ${validUntilEn}.`,
         "",
         "Timea Skincare",
         siteConfig.phone,
@@ -827,7 +836,7 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
           ? "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť."
           : "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
         "Poukaz je určený na jednorazové uplatnenie.",
-        "Platnosť poukazu: 12 mesiacov od vystavenia.",
+        `Platnosť poukazu: 4 kalendárne mesiace od vystavenia, do ${validUntilSk}.`,
         "",
         "Timea Skincare",
         siteConfig.phone,
@@ -858,7 +867,7 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
            voucher.voucherType === "value"
              ? "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash."
              : "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
-         )} One-time redemption. Voucher validity: 12 months from the date of issue.</p>
+         )} One-time redemption. Voucher validity: 4 calendar months from issue, until ${escapeHtml(validUntilEn)}.</p>
          <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
       )
     : emailLayout(
@@ -870,7 +879,7 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
            voucher.voucherType === "value"
              ? "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť."
              : "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
-         )} Jednorazové uplatnenie. Platnosť poukazu: 12 mesiacov od vystavenia.</p>
+         )} Jednorazové uplatnenie. Platnosť poukazu: 4 kalendárne mesiace od vystavenia, do ${escapeHtml(validUntilSk)}.</p>
          <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
       );
 

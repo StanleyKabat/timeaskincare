@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 
 import type { VoucherRequest } from "@/lib/voucher";
 import { resolveVoucherSelection } from "@/lib/voucher-selection";
+import { getNewVoucherValidUntil } from "@/lib/voucher-validity";
 
 /**
  * Stateless, signed gift-voucher tokens.
@@ -37,6 +38,7 @@ function sign(data: string) {
 }
 
 export function createVoucherToken(voucher: VoucherRequest): string {
+  const iat = typeof voucher.iat === "number" ? voucher.iat : Date.now();
   const payload = JSON.stringify({
     kind: "voucher",
     name: voucher.name,
@@ -50,7 +52,11 @@ export function createVoucherToken(voucher: VoucherRequest): string {
     note: voucher.note ?? "",
     locale: voucher.locale === "en" ? "en" : "sk",
     // Issued-at is the anchor for the deterministic voucher code and date.
-    iat: typeof voucher.iat === "number" ? voucher.iat : Date.now(),
+    iat,
+    validUntil:
+      typeof voucher.validUntil === "number"
+        ? voucher.validUntil
+        : getNewVoucherValidUntil(iat),
   });
 
   const data = Buffer.from(payload, "utf8").toString("base64url");
@@ -118,6 +124,10 @@ export function verifyVoucherToken(token: unknown): VoucherRequest | null {
       note: typeof parsed.note === "string" ? parsed.note : "",
       locale: parsed.locale === "en" ? "en" : "sk",
       iat: parsed.iat,
+      validUntil:
+        typeof parsed.validUntil === "number" && Number.isFinite(parsed.validUntil)
+          ? parsed.validUntil
+          : undefined,
     };
   } catch {
     return null;

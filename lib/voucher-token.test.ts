@@ -24,6 +24,7 @@ const serviceVoucher: VoucherRequest = {
   note: "Všetko najlepšie",
   locale: "sk",
   iat: Date.parse("2026-07-12T10:00:00.000Z"),
+  validUntil: Date.parse("2026-11-12T12:00:00.000Z"),
 };
 
 beforeAll(() => {
