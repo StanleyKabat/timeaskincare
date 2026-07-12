@@ -382,12 +382,22 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
 // Palette for the dark, elegant voucher design (light text on a warm dark bg).
 const PDF_COLORS = {
   bgDark: rgb(0.07, 0.062, 0.056),
-  glow: rgb(0.62, 0.56, 0.5),
+  glow: rgb(0.62, 0.58, 0.54),
+  warmGlow: rgb(0.48, 0.39, 0.33),
+  coolGlow: rgb(0.52, 0.52, 0.5),
   white: rgb(0.98, 0.97, 0.95),
   soft: rgb(0.87, 0.84, 0.8),
   muted: rgb(0.72, 0.69, 0.65),
   powder: rgb(0.92, 0.66, 0.79),
 };
+
+// Exact aspect ratio of the supplied Canva reference (1116.75 × 528 pt).
+const VOUCHER_PAGE = {
+  width: 1116.75,
+  height: 528,
+  contentWidth: 820,
+  footerMargin: 58,
+} as const;
 
 // Unit four-point star (sparkle), centered at (0,0), spanning -1..1. Scaled to
 // the desired radius. Vertically/horizontally symmetric, so SVG y-flip is moot.
@@ -411,26 +421,50 @@ function drawSparkle(
   });
 }
 
-/** Warm radial glow on a dark base, recreated with stacked translucent ellipses. */
+/** Soft layered Canva-like background, recreated with translucent ellipses. */
 function drawVoucherBackground(page: PDFPage, width: number, height: number) {
   page.drawRectangle({ x: 0, y: 0, width, height, color: PDF_COLORS.bgDark });
 
-  const cx = width / 2;
-  const cy = height * 0.62;
-  const steps = 46;
-  const rxMax = width * 0.74;
-  const ryMax = height * 0.64;
-
-  for (let i = 0; i < steps; i += 1) {
-    const frac = i / steps;
-    page.drawEllipse({
-      x: cx,
-      y: cy,
-      xScale: rxMax * (1 - frac * 0.96),
-      yScale: ryMax * (1 - frac * 0.96),
+  const glows = [
+    {
+      x: width * 0.28,
+      y: height * 0.86,
+      xScale: width * 0.72,
+      yScale: height * 0.45,
+      color: PDF_COLORS.coolGlow,
+      opacity: 0.024,
+    },
+    {
+      x: width * 0.2,
+      y: height * 0.36,
+      xScale: width * 0.54,
+      yScale: height * 0.62,
+      color: PDF_COLORS.warmGlow,
+      opacity: 0.022,
+    },
+    {
+      x: width * 0.57,
+      y: height * 0.58,
+      xScale: width * 0.65,
+      yScale: height * 0.7,
       color: PDF_COLORS.glow,
-      opacity: 0.03,
-    });
+      opacity: 0.014,
+    },
+  ];
+
+  for (const glow of glows) {
+    const steps = 42;
+    for (let i = 0; i < steps; i += 1) {
+      const frac = i / steps;
+      page.drawEllipse({
+        x: glow.x,
+        y: glow.y,
+        xScale: glow.xScale * (1 - frac * 0.96),
+        yScale: glow.yScale * (1 - frac * 0.96),
+        color: glow.color,
+        opacity: glow.opacity,
+      });
+    }
   }
 }
 
@@ -465,6 +499,21 @@ function fitSize(
   return size;
 }
 
+function fitWithEllipsis(text: string, font: PDFFont, size: number, maxWidth: number) {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) {
+    return text;
+  }
+
+  let fitted = text;
+  while (
+    fitted.length > 1 &&
+    font.widthOfTextAtSize(`${fitted.trimEnd()}…`, size) > maxWidth
+  ) {
+    fitted = fitted.slice(0, -1);
+  }
+  return `${fitted.trimEnd()}…`;
+}
+
 /** Instagram handle from the stored profile URL, e.g. "@timea.skincare". */
 function instagramHandle(): string | null {
   const raw = siteConfig.instagram;
@@ -485,11 +534,9 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
 
   const strings = isEnglish
     ? {
-        title: isValueVoucher
-          ? "Gift Voucher Value"
-          : isPlural
-            ? "Gift Voucher for Treatments"
-            : "Gift Voucher for a Treatment",
+        title: "Gift Voucher",
+        subtitle: isValueVoucher ? "value" : "for",
+        treatmentType: isPlural ? "treatments" : "a treatment",
         forLabel: "For",
         fromLabel: "From",
         issued: "Issued",
@@ -504,11 +551,9 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
         ],
       }
     : {
-        title: isValueVoucher
-          ? "Darčekový poukaz v hodnote"
-          : isPlural
-            ? "Darčekový poukaz na ošetrenia"
-            : "Darčekový poukaz na ošetrenie",
+        title: "Darčekový poukaz",
+        subtitle: isValueVoucher ? "v hodnote" : "na",
+        treatmentType: isPlural ? "ošetrenia" : "ošetrenie",
         forLabel: "Pre",
         fromLabel: "Od",
         issued: "Vystavené",
@@ -532,52 +577,84 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
     subset: true,
   });
 
-  // A5 landscape (kept from the previous design; light and email-friendly).
-  const width = 595.28;
-  const height = 419.53;
+  const { width, height, contentWidth, footerMargin } = VOUCHER_PAGE;
   const page = doc.addPage([width, height]);
 
   drawVoucherBackground(page, width, height);
 
-  // Decorative white sparkles scattered around the layout (like the reference).
-  drawSparkle(page, 58, height - 74, 24, 0.95);
-  drawSparkle(page, 104, height - 116, 9, 0.8);
-  drawSparkle(page, width - 60, height - 96, 20, 0.95);
-  drawSparkle(page, width - 34, height - 150, 10, 0.75);
-  drawSparkle(page, width - 48, height * 0.46, 13, 0.85);
-  drawSparkle(page, width * 0.28, 138, 16, 0.9);
-  drawSparkle(page, width * 0.64, 158, 11, 0.8);
-  drawSparkle(page, width * 0.5, 66, 9, 0.75);
+  // Decorations are restricted to edge zones outside the 820 pt text column.
+  const sparkles = [
+    [48, 469, 29, 0.96],
+    [101, 472, 10, 0.82],
+    [70, 399, 17, 0.9],
+    [width - 47, 471, 23, 0.95],
+    [width - 94, 405, 28, 0.94],
+    [width - 43, 360, 12, 0.78],
+    [57, 278, 13, 0.7],
+    [width - 56, 278, 14, 0.72],
+  ] as const;
+  sparkles.forEach(([x, y, radius, opacity]) =>
+    drawSparkle(page, x, y, radius, opacity),
+  );
 
-  // Voucher-type title.
-  const titleSize = fitSize(strings.title, fontBold, 32, width - 96, 19);
-  drawCentered(page, strings.title, height - 78, fontBold, titleSize, PDF_COLORS.white);
+  page.drawRectangle({
+    x: 9,
+    y: 9,
+    width: width - 18,
+    height: height - 18,
+    borderColor: PDF_COLORS.soft,
+    borderWidth: 0.6,
+    opacity: 0.18,
+  });
+
+  // Reference-style title stack: large title, separate preposition, then type.
+  const titleSize = fitSize(strings.title, fontBold, 74, contentWidth, 54);
+  drawCentered(page, strings.title, 423, fontBold, titleSize, PDF_COLORS.white);
+  drawCentered(page, strings.subtitle, 382, fontBold, 25, PDF_COLORS.soft);
 
   if (isValueVoucher) {
-    drawCentered(page, amount, 242, fontBold, 42, PDF_COLORS.powder);
-  } else if (serviceLabels.length <= 6) {
-    const lineGap = serviceLabels.length <= 3 ? 25 : 20;
-    const startY = 285;
+    drawCentered(page, amount, 274, fontBold, 70, PDF_COLORS.white);
+    strings.valueRule.forEach((line, index) => {
+      drawCentered(page, line, 222 - index * 15, font, 10, PDF_COLORS.muted);
+    });
+  } else {
+    drawCentered(page, strings.treatmentType, 340, fontBold, 29, PDF_COLORS.soft);
+  }
+
+  if (!isValueVoucher && serviceLabels.length === 1) {
+    const service = serviceLabels[0];
+    const serviceSize = fitSize(service, fontBold, 32, contentWidth - 80, 18);
+    drawCentered(page, service, 274, fontBold, serviceSize, PDF_COLORS.white);
+  } else if (!isValueVoucher && serviceLabels.length <= 5) {
+    const lineGap = serviceLabels.length <= 3 ? 28 : 22;
+    const startY = serviceLabels.length <= 3 ? 304 : 312;
     serviceLabels.forEach((service, index) => {
-      const serviceSize = fitSize(service, fontBold, 17, width - 150, 10);
+      const label = `• ${service}`;
+      const serviceSize = fitSize(label, fontBold, 21, contentWidth - 100, 13);
       drawCentered(
         page,
-        serviceLabels.length > 1 ? `• ${service}` : service,
+        label,
         startY - index * lineGap,
         fontBold,
         serviceSize,
         PDF_COLORS.white,
       );
     });
-  } else {
-    const columns = [serviceLabels.slice(0, 7), serviceLabels.slice(7)];
+  } else if (!isValueVoucher) {
+    const firstColumnLength = Math.ceil(serviceLabels.length / 2);
+    const columns = [
+      serviceLabels.slice(0, firstColumnLength),
+      serviceLabels.slice(firstColumnLength),
+    ];
+    const columnWidth = 355;
+    const columnX = [width / 2 - 385, width / 2 + 30];
     columns.forEach((services, columnIndex) => {
       services.forEach((service, rowIndex) => {
-        const maxWidth = 220;
-        const serviceSize = fitSize(`• ${service}`, font, 10.5, maxWidth, 7.5);
-        page.drawText(`• ${service}`, {
-          x: columnIndex === 0 ? 58 : width / 2 + 12,
-          y: 285 - rowIndex * 18,
+        const label = `• ${service}`;
+        const serviceSize = fitSize(label, font, 16, columnWidth, 10);
+        page.drawText(label, {
+          x: columnX[columnIndex],
+          y: 307 - rowIndex * 18,
           size: serviceSize,
           font,
           color: PDF_COLORS.white,
@@ -586,26 +663,45 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
     });
   }
 
-  // Subtle divider.
+  // Everything below this divider is a protected, decoration-free info zone.
   page.drawLine({
-    start: { x: width * 0.3, y: 148 },
-    end: { x: width * 0.7, y: 148 },
+    start: { x: width / 2 - 190, y: 176 },
+    end: { x: width / 2 + 190, y: 176 },
     thickness: 0.8,
     color: PDF_COLORS.muted,
-    opacity: 0.5,
+    opacity: 0.42,
   });
 
   // Recipient / giver and optional dedication.
-  drawCentered(page, `${strings.forLabel}: ${voucher.forName}`, 128, font, 12, PDF_COLORS.white);
-  drawCentered(page, `${strings.fromLabel}: ${voucher.from}`, 111, font, 12, PDF_COLORS.white);
+  drawCentered(
+    page,
+    `${strings.forLabel}: ${voucher.forName}`,
+    151,
+    font,
+    13,
+    PDF_COLORS.white,
+  );
+  drawCentered(
+    page,
+    `${strings.fromLabel}: ${voucher.from}`,
+    131,
+    font,
+    13,
+    PDF_COLORS.white,
+  );
   if (voucher.note) {
-    const dedication = `“${voucher.note}”`;
+    const dedication = fitWithEllipsis(
+      `“${voucher.note}”`,
+      font,
+      9,
+      contentWidth,
+    );
     drawCentered(
       page,
       dedication,
-      96,
+      113,
       font,
-      fitSize(dedication, font, 9, width - 150, 6.5),
+      9,
       PDF_COLORS.soft,
     );
   }
@@ -617,46 +713,42 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
       iat,
       voucher.locale ?? "sk",
     )}`,
-    84,
+    93,
     font,
-    9.5,
+    10,
     PDF_COLORS.soft,
   );
   drawCentered(
     page,
     `${strings.validityLabel}: ${strings.validityValue}`,
-    70,
+    77,
     font,
     9.5,
     PDF_COLORS.soft,
   );
-  drawCentered(page, strings.note, 57, font, 8, PDF_COLORS.muted);
-  if (isValueVoucher) {
-    strings.valueRule.forEach((line, index) => {
-      drawCentered(page, line, 190 - index * 11, font, 7.8, PDF_COLORS.muted);
-    });
-  }
+  const redeemNote = fitWithEllipsis(strings.note, font, 8.5, contentWidth);
+  drawCentered(page, redeemNote, 61, font, 8.5, PDF_COLORS.muted);
 
   // Footer: contact bottom-left, address bottom-right.
   const handle = instagramHandle();
-  const leftX = 42;
+  const leftX = footerMargin;
   if (handle) {
-    page.drawText(handle, { x: leftX, y: 32, size: 8, font, color: PDF_COLORS.soft });
+    page.drawText(handle, { x: leftX, y: 34, size: 9, font, color: PDF_COLORS.soft });
   }
   page.drawText(siteConfig.phone, {
     x: leftX,
-    y: handle ? 20 : 26,
-    size: 8,
+    y: handle ? 19 : 27,
+    size: 9,
     font,
     color: PDF_COLORS.soft,
   });
 
-  const rightMargin = 42;
-  const addrSize = 8;
+  const rightMargin = footerMargin;
+  const addrSize = 9;
   const addrWidth = font.widthOfTextAtSize(siteConfig.address, addrSize);
   page.drawText(siteConfig.address, {
     x: width - rightMargin - addrWidth,
-    y: 32,
+    y: 34,
     size: addrSize,
     font,
     color: PDF_COLORS.soft,
@@ -665,7 +757,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   const siteWidth = font.widthOfTextAtSize(siteText, addrSize);
   page.drawText(siteText, {
     x: width - rightMargin - siteWidth,
-    y: 20,
+    y: 19,
     size: addrSize,
     font,
     color: PDF_COLORS.muted,
