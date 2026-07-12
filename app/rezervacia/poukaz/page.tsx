@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import {
+  displayVoucherServices,
   formatAmount,
   getVoucherAmount,
   getVoucherCode,
@@ -23,7 +24,7 @@ type SearchParams = {
 function VoucherCard({ voucher }: { voucher: VoucherRequest }) {
   let amount = "";
   try {
-    amount = formatAmount(getVoucherAmount(voucher.treatment));
+    amount = formatAmount(getVoucherAmount(voucher));
   } catch {
     amount = "-";
   }
@@ -32,7 +33,16 @@ function VoucherCard({ voucher }: { voucher: VoucherRequest }) {
     ["Meno", voucher.name],
     ["E-mail", voucher.email],
     ["Telefón", voucher.phone],
-    ["Typ ošetrenia", voucher.treatment],
+    [
+      "Typ poukazu",
+      voucher.voucherType === "services" ? "Poukaz na ošetrenie" : "Poukaz v hodnote",
+    ],
+    [
+      voucher.voucherType === "services" ? "Služby" : "Hodnota poukazu",
+      voucher.voucherType === "services"
+        ? displayVoucherServices({ ...voucher, locale: "sk" }).join(", ")
+        : amount,
+    ],
     ["Suma", amount],
     ["Od koho", voucher.from],
     ["Pre koho", voucher.forName],

@@ -4,7 +4,7 @@ import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
 import { toEnglishServiceName } from "@/data/booking-en";
-import { giftVoucherPaymentConfig, giftVoucherTreatments, siteConfig } from "@/data/site";
+import { giftVoucherPaymentConfig, siteConfig } from "@/data/site";
 import {
   emailButton,
   emailLayout,
@@ -15,6 +15,10 @@ import {
 } from "@/lib/booking-integrations";
 import { createVoucherToken } from "@/lib/voucher-token";
 import { PT_SERIF_BOLD_BASE64, PT_SERIF_REGULAR_BASE64 } from "@/lib/voucher-font";
+import {
+  resolveVoucherSelection,
+  type VoucherType,
+} from "@/lib/voucher-selection";
 
 export type VoucherLocale = "sk" | "en";
 
@@ -22,8 +26,11 @@ export type VoucherRequest = {
   name: string;
   email: string;
   phone: string;
-  /** Canonical Slovak treatment name (internal, never translated). */
-  treatment: string;
+  voucherType: VoucherType;
+  /** Canonical Slovak service names (internal, never translated). */
+  services: string[];
+  /** Server-derived service total or server-validated whole-euro value. */
+  amount: number;
   /** Giver name. */
   from: string;
   /** Recipient name. */
@@ -46,13 +53,16 @@ function requireEmailConfigured() {
   }
 }
 
-/** Looks up the canonical voucher amount server-side; never trusts the client. */
-export function getVoucherAmount(treatment: string): number {
-  const match = giftVoucherTreatments.find((item) => item.name === treatment);
-  if (!match) {
-    throw new Error("Neplatný typ ošetrenia pre poukážku.");
+/**
+ * Returns the amount captured by server-side validation and signed into the
+ * owner token. Keeping it in the signed payload makes retries deterministic
+ * even if salon prices change after the order.
+ */
+export function getVoucherAmount(voucher: VoucherRequest): number {
+  if (!Number.isFinite(voucher.amount) || voucher.amount <= 0) {
+    throw new Error("Neplatná suma darčekového poukazu.");
   }
-  return match.amount;
+  return voucher.amount;
 }
 
 export function formatAmount(amount: number): string {
@@ -63,8 +73,8 @@ export function formatAmount(amount: number): string {
 
 /**
  * Validates a fresh voucher request from the browser. The amount is NOT taken
- * from the client — only the canonical treatment name is trusted, and the
- * amount is derived from it here.
+ * from the client for service vouchers; canonical prices are applied here.
+ * Value vouchers are constrained to whole euros between the configured limits.
  */
 export function validateVoucherRequest(input: unknown): VoucherRequest {
   if (!input || typeof input !== "object") {
@@ -76,10 +86,10 @@ export function validateVoucherRequest(input: unknown): VoucherRequest {
   const name = cleanText(String(data.name || ""), 120);
   const email = cleanText(String(data.email || ""), 180);
   const phone = cleanText(String(data.phone || ""), 40);
-  const treatment = cleanText(String(data.treatment || ""), 160);
   const from = cleanText(String(data.from || ""), 80);
   const forName = cleanText(String(data.for ?? data.forName ?? ""), 80);
   const note = cleanText(String(data.note || ""), 600);
+  const selection = resolveVoucherSelection(data);
 
   if (!name) {
     throw new Error("Doplň meno a priezvisko.");
@@ -91,10 +101,6 @@ export function validateVoucherRequest(input: unknown): VoucherRequest {
 
   if (!/^[+0-9 ()-]{7,20}$/.test(phone)) {
     throw new Error("Doplň platný telefón.");
-  }
-
-  if (!giftVoucherTreatments.some((item) => item.name === treatment)) {
-    throw new Error("Vyber typ ošetrenia pre darčekový poukaz.");
   }
 
   if (!from) {
@@ -109,7 +115,9 @@ export function validateVoucherRequest(input: unknown): VoucherRequest {
     name,
     email,
     phone,
-    treatment,
+    voucherType: selection.voucherType,
+    services: selection.services,
+    amount: selection.amount,
     from,
     forName,
     note,
@@ -150,7 +158,9 @@ export function getVoucherCode(voucher: VoucherRequest): string {
     .update(
       [
         voucher.email.trim().toLowerCase(),
-        voucher.treatment,
+        voucher.voucherType,
+        voucher.services.join("|"),
+        String(getVoucherAmount(voucher)),
         voucher.from,
         voucher.forName,
         String(iat),
@@ -163,14 +173,38 @@ export function getVoucherCode(voucher: VoucherRequest): string {
 
 /** Bank-transfer reference. Matches the /api/booking/voucher-qr message. */
 export function getVoucherPaymentMessage(voucher: VoucherRequest): string {
-  return `${giftVoucherPaymentConfig.notePrefix} - ${voucher.treatment} - od ${voucher.from} pre ${voucher.forName}`;
+  return voucher.voucherType === "services"
+    ? `${giftVoucherPaymentConfig.notePrefix} - ošetrenia - od ${voucher.from} pre ${voucher.forName}`
+    : `${giftVoucherPaymentConfig.notePrefix} - hodnota ${getVoucherAmount(voucher)} EUR - od ${voucher.from} pre ${voucher.forName}`;
 }
 
-/** Treatment name shown to the customer (English display name for EN locale). */
-function displayTreatment(voucher: VoucherRequest): string {
+/** Service names shown to the customer (localized for EN). */
+export function displayVoucherServices(voucher: VoucherRequest): string[] {
   return voucher.locale === "en"
-    ? toEnglishServiceName(voucher.treatment)
-    : voucher.treatment;
+    ? voucher.services.map(toEnglishServiceName)
+    : voucher.services;
+}
+
+function voucherTypeLabel(voucher: VoucherRequest, locale: VoucherLocale): string {
+  if (voucher.voucherType === "value") {
+    return locale === "en" ? "Value voucher" : "Poukaz v hodnote";
+  }
+  return locale === "en" ? "Voucher for a treatment" : "Poukaz na ošetrenie";
+}
+
+function voucherSelectionLines(voucher: VoucherRequest, locale: VoucherLocale): string[] {
+  const amount = formatAmount(getVoucherAmount(voucher));
+  if (voucher.voucherType === "value") {
+    return [locale === "en" ? `Voucher value: ${amount}` : `Hodnota poukazu: ${amount}`];
+  }
+
+  const services =
+    locale === "en" ? voucher.services.map(toEnglishServiceName) : voucher.services;
+  return [
+    locale === "en" ? "Services:" : "Služby:",
+    ...services.map((service) => `- ${service}`),
+    locale === "en" ? `Total value: ${amount}` : `Celková hodnota: ${amount}`,
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -188,10 +222,9 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
   requireEmailConfigured();
 
   const isEnglish = voucher.locale === "en";
-  const amount = formatAmount(getVoucherAmount(voucher.treatment));
+  const amount = formatAmount(getVoucherAmount(voucher));
   const message = getVoucherPaymentMessage(voucher);
   const code = getVoucherCode(voucher);
-  const treatmentLabel = displayTreatment(voucher);
   const token = createVoucherToken(voucher);
   const confirmUrl = `${baseUrl}/rezervacia/poukaz?token=${encodeURIComponent(token)}`;
 
@@ -211,14 +244,16 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
     `Správa pre prijímateľa: ${message}`,
   ];
   const voucherLinesEn = [
-    `Voucher: ${treatmentLabel}`,
+    `Voucher type: ${voucherTypeLabel(voucher, "en")}`,
+    ...voucherSelectionLines(voucher, "en"),
     `From: ${voucher.from}`,
     `For: ${voucher.forName}`,
     `Voucher code: ${code}`,
     `Contact: ${voucher.name}, ${voucher.email}, ${voucher.phone}`,
   ];
   const voucherLinesSk = [
-    `Poukaz: ${treatmentLabel}`,
+    `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
+    ...voucherSelectionLines(voucher, "sk"),
     `Od: ${voucher.from}`,
     `Pre: ${voucher.forName}`,
     `Kód poukazu: ${code}`,
@@ -288,8 +323,9 @@ export async function sendVoucherRequestEmails(voucher: VoucherRequest, baseUrl:
     `Meno: ${voucher.name}`,
     `E-mail: ${voucher.email}`,
     `Telefón: ${voucher.phone}`,
-    `Typ ošetrenia: ${voucher.treatment}`,
-    `Suma: ${amount}`,
+    `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
+    ...voucherSelectionLines(voucher, "sk"),
+    `Suma spolu: ${amount}`,
     `Od: ${voucher.from}`,
     `Pre: ${voucher.forName}`,
     `Správa pre prijímateľa: ${message}`,
@@ -433,35 +469,53 @@ function instagramHandle(): string | null {
 /** Builds the branded, localized dark PDF gift voucher. Returns raw PDF bytes. */
 export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8Array> {
   const isEnglish = voucher.locale === "en";
-  const amount = formatAmount(getVoucherAmount(voucher.treatment));
+  const amount = formatAmount(getVoucherAmount(voucher));
   const code = getVoucherCode(voucher);
   const iat = typeof voucher.iat === "number" ? voucher.iat : Date.now();
-  const treatmentLabel = displayTreatment(voucher);
+  const serviceLabels = displayVoucherServices(voucher);
+  const isValueVoucher = voucher.voucherType === "value";
+  const isPlural = serviceLabels.length > 1;
 
   const strings = isEnglish
     ? {
-        title: "Gift Voucher",
-        onFor: "for",
-        value: "Value",
+        title: isValueVoucher
+          ? "Gift Voucher Value"
+          : isPlural
+            ? "Gift Voucher for Treatments"
+            : "Gift Voucher for a Treatment",
+        totalValue: "Total value",
         forLabel: "For",
         fromLabel: "From",
         issued: "Issued",
         codeLabel: "Voucher code",
         validityLabel: "Validity",
         validityValue: "12 months from the date of issue",
-        note: "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
+        note: "One-time redemption by arranging an appointment at Timea Skincare.",
+        valueRule: [
+          "The voucher can be used for services at Timea Skincare.",
+          "If the selected service costs more than the voucher value, the difference can be paid.",
+          "The voucher cannot be exchanged for cash.",
+        ],
       }
     : {
-        title: "Darčekový poukaz",
-        onFor: "na",
-        value: "Hodnota",
+        title: isValueVoucher
+          ? "Darčekový poukaz v hodnote"
+          : isPlural
+            ? "Darčekový poukaz na ošetrenia"
+            : "Darčekový poukaz na ošetrenie",
+        totalValue: "Celková hodnota",
         forLabel: "Pre",
         fromLabel: "Od",
         issued: "Vystavené",
         codeLabel: "Kód poukazu",
         validityLabel: "Platnosť",
         validityValue: "12 mesiacov od vystavenia",
-        note: "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
+        note: "Jednorazové uplatnenie po dohode termínu v salóne Timea Skincare.",
+        valueRule: [
+          "Poukaz je možné využiť na služby v salóne Timea Skincare.",
+          "Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť.",
+          "Poukaz nie je možné zameniť za hotovosť.",
+        ],
       };
 
   const doc = await PDFDocument.create();
@@ -490,28 +544,82 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   drawSparkle(page, width * 0.64, 158, 11, 0.8);
   drawSparkle(page, width * 0.5, 66, 9, 0.75);
 
-  // Title + "na"/"for".
-  const titleSize = fitSize(strings.title, fontBold, 40, width - 96, 22);
+  // Voucher-type title.
+  const titleSize = fitSize(strings.title, fontBold, 32, width - 96, 19);
   drawCentered(page, strings.title, height - 78, fontBold, titleSize, PDF_COLORS.white);
-  drawCentered(page, strings.onFor, height - 106, font, 15, PDF_COLORS.soft);
 
-  // Main center: treatment + value.
-  const treatmentSize = fitSize(treatmentLabel, fontBold, 24, width - 140, 13);
-  drawCentered(page, treatmentLabel, 250, fontBold, treatmentSize, PDF_COLORS.white);
-  drawCentered(page, `${strings.value}: ${amount}`, 220, font, 16, PDF_COLORS.powder);
+  if (isValueVoucher) {
+    drawCentered(page, amount, 242, fontBold, 42, PDF_COLORS.powder);
+  } else if (serviceLabels.length <= 6) {
+    const lineGap = serviceLabels.length <= 3 ? 25 : 20;
+    const startY = 285;
+    serviceLabels.forEach((service, index) => {
+      const serviceSize = fitSize(service, fontBold, 17, width - 150, 10);
+      drawCentered(
+        page,
+        serviceLabels.length > 1 ? `• ${service}` : service,
+        startY - index * lineGap,
+        fontBold,
+        serviceSize,
+        PDF_COLORS.white,
+      );
+    });
+    drawCentered(
+      page,
+      `${strings.totalValue}: ${amount}`,
+      175,
+      font,
+      15,
+      PDF_COLORS.powder,
+    );
+  } else {
+    const columns = [serviceLabels.slice(0, 7), serviceLabels.slice(7)];
+    columns.forEach((services, columnIndex) => {
+      services.forEach((service, rowIndex) => {
+        const maxWidth = 220;
+        const serviceSize = fitSize(`• ${service}`, font, 10.5, maxWidth, 7.5);
+        page.drawText(`• ${service}`, {
+          x: columnIndex === 0 ? 58 : width / 2 + 12,
+          y: 285 - rowIndex * 18,
+          size: serviceSize,
+          font,
+          color: PDF_COLORS.white,
+        });
+      });
+    });
+    drawCentered(
+      page,
+      `${strings.totalValue}: ${amount}`,
+      155,
+      font,
+      14,
+      PDF_COLORS.powder,
+    );
+  }
 
   // Subtle divider.
   page.drawLine({
-    start: { x: width * 0.3, y: 202 },
-    end: { x: width * 0.7, y: 202 },
+    start: { x: width * 0.3, y: 148 },
+    end: { x: width * 0.7, y: 148 },
     thickness: 0.8,
     color: PDF_COLORS.muted,
     opacity: 0.5,
   });
 
-  // Recipient / giver.
-  drawCentered(page, `${strings.forLabel}: ${voucher.forName}`, 178, font, 14, PDF_COLORS.white);
-  drawCentered(page, `${strings.fromLabel}: ${voucher.from}`, 158, font, 14, PDF_COLORS.white);
+  // Recipient / giver and optional dedication.
+  drawCentered(page, `${strings.forLabel}: ${voucher.forName}`, 128, font, 12, PDF_COLORS.white);
+  drawCentered(page, `${strings.fromLabel}: ${voucher.from}`, 111, font, 12, PDF_COLORS.white);
+  if (voucher.note) {
+    const dedication = `“${voucher.note}”`;
+    drawCentered(
+      page,
+      dedication,
+      96,
+      font,
+      fitSize(dedication, font, 9, width - 150, 6.5),
+      PDF_COLORS.soft,
+    );
+  }
 
   // Info block: code · issued · validity · redeem note.
   drawCentered(
@@ -520,7 +628,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
       iat,
       voucher.locale ?? "sk",
     )}`,
-    124,
+    84,
     font,
     9.5,
     PDF_COLORS.soft,
@@ -528,33 +636,38 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   drawCentered(
     page,
     `${strings.validityLabel}: ${strings.validityValue}`,
-    109,
+    70,
     font,
     9.5,
     PDF_COLORS.soft,
   );
-  drawCentered(page, strings.note, 94, font, 9, PDF_COLORS.muted);
+  drawCentered(page, strings.note, 57, font, 8, PDF_COLORS.muted);
+  if (isValueVoucher) {
+    strings.valueRule.forEach((line, index) => {
+      drawCentered(page, line, 190 - index * 11, font, 7.8, PDF_COLORS.muted);
+    });
+  }
 
   // Footer: contact bottom-left, address bottom-right.
   const handle = instagramHandle();
   const leftX = 42;
   if (handle) {
-    page.drawText(handle, { x: leftX, y: 44, size: 9, font, color: PDF_COLORS.soft });
+    page.drawText(handle, { x: leftX, y: 32, size: 8, font, color: PDF_COLORS.soft });
   }
   page.drawText(siteConfig.phone, {
     x: leftX,
-    y: handle ? 30 : 37,
-    size: 9,
+    y: handle ? 20 : 26,
+    size: 8,
     font,
     color: PDF_COLORS.soft,
   });
 
   const rightMargin = 42;
-  const addrSize = 9;
+  const addrSize = 8;
   const addrWidth = font.widthOfTextAtSize(siteConfig.address, addrSize);
   page.drawText(siteConfig.address, {
     x: width - rightMargin - addrWidth,
-    y: 44,
+    y: 32,
     size: addrSize,
     font,
     color: PDF_COLORS.soft,
@@ -563,7 +676,7 @@ export async function generateVoucherPdf(voucher: VoucherRequest): Promise<Uint8
   const siteWidth = font.widthOfTextAtSize(siteText, addrSize);
   page.drawText(siteText, {
     x: width - rightMargin - siteWidth,
-    y: 30,
+    y: 20,
     size: addrSize,
     font,
     color: PDF_COLORS.muted,
@@ -582,8 +695,9 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
 
   const isEnglish = voucher.locale === "en";
   const code = getVoucherCode(voucher);
-  const amount = formatAmount(getVoucherAmount(voucher.treatment));
-  const treatmentLabel = displayTreatment(voucher);
+  const amount = formatAmount(getVoucherAmount(voucher));
+  const selectionLinesEn = voucherSelectionLines(voucher, "en");
+  const selectionLinesSk = voucherSelectionLines(voucher, "sk");
 
   const pdfBytes = await generateVoucherPdf(voucher);
   const attachment: EmailAttachment = {
@@ -602,13 +716,16 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
         "",
         "your payment has been verified — thank you. Your gift voucher is attached to this email as a PDF.",
         "",
-        `Voucher: ${treatmentLabel}`,
-        `Value: ${amount}`,
+        `Voucher type: ${voucherTypeLabel(voucher, "en")}`,
+        ...selectionLinesEn,
         `For: ${voucher.forName}`,
         `From: ${voucher.from}`,
         `Voucher code: ${code}`,
         "",
-        "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
+        voucher.voucherType === "value"
+          ? "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash."
+          : "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
+        "The voucher is intended for one-time redemption.",
         "Voucher validity: 12 months from the date of issue.",
         "",
         "Timea Skincare",
@@ -619,13 +736,16 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
         "",
         "tvoju platbu som overila — ďakujem. Darčekový poukaz nájdeš v prílohe tohto e-mailu vo formáte PDF.",
         "",
-        `Poukaz: ${treatmentLabel}`,
-        `Hodnota: ${amount}`,
+        `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
+        ...selectionLinesSk,
         `Pre: ${voucher.forName}`,
         `Od: ${voucher.from}`,
         `Kód poukazu: ${code}`,
         "",
-        "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
+        voucher.voucherType === "value"
+          ? "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť."
+          : "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
+        "Poukaz je určený na jednorazové uplatnenie.",
         "Platnosť poukazu: 12 mesiacov od vystavenia.",
         "",
         "Timea Skincare",
@@ -633,15 +753,15 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
       ].join("\n");
 
   const detailLinesEn = [
-    `Voucher: ${treatmentLabel}`,
-    `Value: ${amount}`,
+    `Voucher type: ${voucherTypeLabel(voucher, "en")}`,
+    ...selectionLinesEn,
     `For: ${voucher.forName}`,
     `From: ${voucher.from}`,
     `Voucher code: ${code}`,
   ];
   const detailLinesSk = [
-    `Poukaz: ${treatmentLabel}`,
-    `Hodnota: ${amount}`,
+    `Typ poukazu: ${voucherTypeLabel(voucher, "sk")}`,
+    ...selectionLinesSk,
     `Pre: ${voucher.forName}`,
     `Od: ${voucher.from}`,
     `Kód poukazu: ${code}`,
@@ -653,7 +773,11 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
         `<p>Hello ${escapeHtml(voucher.name)},</p>
          <p>your payment has been verified — thank you. Your gift voucher is attached to this email as a <strong>PDF</strong>.</p>
          ${summaryHtml(detailLinesEn)}
-         <p style="font-size:13px;color:#8b8d88;margin:0 0 8px;">The voucher can be redeemed by arranging an appointment at Timea Skincare. Voucher validity: 12 months from the date of issue.</p>
+         <p style="font-size:13px;color:#8b8d88;margin:0 0 8px;">${escapeHtml(
+           voucher.voucherType === "value"
+             ? "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash."
+             : "The voucher can be redeemed by arranging an appointment at Timea Skincare.",
+         )} One-time redemption. Voucher validity: 12 months from the date of issue.</p>
          <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
       )
     : emailLayout(
@@ -661,7 +785,11 @@ export async function sendVoucherPdfEmails(voucher: VoucherRequest) {
         `<p>Dobrý deň, ${escapeHtml(voucher.name)},</p>
          <p>tvoju platbu som overila — ďakujem. Darčekový poukaz nájdeš v prílohe tohto e-mailu vo formáte <strong>PDF</strong>.</p>
          ${summaryHtml(detailLinesSk)}
-         <p style="font-size:13px;color:#8b8d88;margin:0 0 8px;">Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare. Platnosť poukazu: 12 mesiacov od vystavenia.</p>
+         <p style="font-size:13px;color:#8b8d88;margin:0 0 8px;">${escapeHtml(
+           voucher.voucherType === "value"
+             ? "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť."
+             : "Poukaz je možné uplatniť po dohode termínu v salóne Timea Skincare.",
+         )} Jednorazové uplatnenie. Platnosť poukazu: 12 mesiacov od vystavenia.</p>
          <p style="margin:0;">Timea Skincare<br/>${escapeHtml(siteConfig.phone)}</p>`,
       );
 

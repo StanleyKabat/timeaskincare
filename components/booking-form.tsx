@@ -15,6 +15,11 @@ import {
 import { formatDuration, getLocalTodayISO, getSlotsForDate } from "@/lib/booking";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
+import {
+  voucherValueLimits,
+  voucherValuePresets,
+  type VoucherType,
+} from "@/lib/voucher-selection";
 
 const GIFT_VOUCHER_SERVICE_NAME = "Darčekový poukaz";
 
@@ -39,11 +44,21 @@ const bookingText = {
     voucherTitle: "Obdarovanie",
     normalTitle: "Požiadať o termín",
     voucherIntro:
-      "Vyber typ ošetrenia na poukážku a doplň údaje o darcovi a obdarovanom.",
+      "Vyber, či chceš darovať konkrétne služby alebo hodnotu v eurách.",
     normalIntro:
       "Vyber jednu alebo viac služieb, dátum a vyhovujúci čas. Odošleš nezáväznú požiadavku o termín, ktorú salón potvrdí osobne.",
-    voucherTypeLabel: "Typ ošetrenia na poukážku",
-    voucherTypePlaceholder: "Vyber typ ošetrenia",
+    voucherChoiceHeading: "Čo chceš darovať?",
+    servicesVoucherLabel: "Poukaz na ošetrenie",
+    servicesVoucherDescription: "Vyber jednu alebo viac služieb, ktoré chceš darovať.",
+    valueVoucherLabel: "Poukaz v hodnote",
+    valueVoucherDescription: "Zvoľ sumu a obdarovaná osoba si vyberie službu sama.",
+    customAmountLabel: "Vlastná suma",
+    customAmountPlaceholder: "30 – 300",
+    selectedServicesLabel: "Vybrané služby",
+    totalValueLabel: "Celková hodnota",
+    selectedValueLabel: "Hodnota poukazu",
+    valueVoucherRule:
+      "Poukaz je možné využiť na služby v salóne Timea Skincare. Ak je cena služby vyššia ako hodnota poukazu, rozdiel je možné doplatiť. Poukaz nie je možné zameniť za hotovosť.",
     voucherFromLabel: "Od koho je poukážka",
     voucherForLabel: "Pre koho je poukážka",
     voucherFromPlaceholder: "Napr. Martina",
@@ -68,6 +83,8 @@ const bookingText = {
       "Najprv vyber jednu alebo viac služieb a dátum, následne sa zobrazia možné časy.",
     noteLabel: "Poznámka",
     notePlaceholder: "Voliteľné: alergie, preferencia, otázka k termínu...",
+    voucherNoteLabel: "Venovanie",
+    voucherNotePlaceholder: "Voliteľná krátka správa pre obdarovanú osobu...",
     voucherNoSlotNotice:
       "Pri darčekovej poukážke sa termín teraz nevyberá. Po výbere typu ošetrenia sa zobrazí QR kód a platobné údaje.",
     consentText:
@@ -86,7 +103,9 @@ const bookingText = {
       "Spojenie sa nepodarilo nadviazať, preto sa otvoril e-mail s predvyplnenou žiadosťou. Text sme skopírovali aj do schránky.",
     errPickService: "Najprv vyber jednu alebo viac služieb.",
     errPhone: "Zadaj prosím telefón v správnom formáte.",
-    errVoucherType: "Vyber typ ošetrenia pre darčekový poukaz.",
+    errVoucherType: "Vyber typ darčekového poukazu.",
+    errVoucherServices: "Vyber jednu alebo viac služieb pre darčekový poukaz.",
+    errVoucherValue: "Zadaj celú sumu od 30 € do 300 €.",
     errVoucherFrom: "Doplň, od koho je darčeková poukážka.",
     errVoucherFor: "Doplň, pre koho je darčeková poukážka.",
     errVoucherUnavailable: "Vybraný typ ošetrenia nie je dostupný pre poukážku.",
@@ -131,11 +150,21 @@ const bookingText = {
     voucherTitle: "Gift someone",
     normalTitle: "Request an appointment",
     voucherIntro:
-      "Choose the treatment for the voucher and fill in the giver and recipient details.",
+      "Choose whether you want to gift specific services or a value in euros.",
     normalIntro:
       "Choose one or more services, a date and a suitable time. You send a non-binding appointment request, which the salon confirms personally.",
-    voucherTypeLabel: "Treatment for the voucher",
-    voucherTypePlaceholder: "Choose a treatment",
+    voucherChoiceHeading: "What would you like to gift?",
+    servicesVoucherLabel: "Voucher for a treatment",
+    servicesVoucherDescription: "Choose one or more services you want to gift.",
+    valueVoucherLabel: "Value voucher",
+    valueVoucherDescription: "Choose an amount and the recipient can choose the service herself.",
+    customAmountLabel: "Custom amount",
+    customAmountPlaceholder: "30 – 300",
+    selectedServicesLabel: "Selected services",
+    totalValueLabel: "Total value",
+    selectedValueLabel: "Voucher value",
+    valueVoucherRule:
+      "The voucher can be used for services at Timea Skincare. If the selected service costs more than the voucher value, the difference can be paid. The voucher cannot be exchanged for cash.",
     voucherFromLabel: "Voucher from",
     voucherForLabel: "Voucher for",
     voucherFromPlaceholder: "E.g. Martina",
@@ -160,6 +189,8 @@ const bookingText = {
       "First choose one or more services and a date, then the possible times will appear.",
     noteLabel: "Note",
     notePlaceholder: "Optional: allergies, preferences, a question about the appointment...",
+    voucherNoteLabel: "Message",
+    voucherNotePlaceholder: "Optional short dedication for the recipient...",
     voucherNoSlotNotice:
       "For a gift voucher no appointment time is selected now. After you choose the treatment, a QR code and payment details will appear.",
     consentText:
@@ -178,7 +209,9 @@ const bookingText = {
       "The connection could not be established, so an email with a pre-filled request was opened. We also copied the text to your clipboard.",
     errPickService: "First choose one or more services.",
     errPhone: "Please enter the phone number in a valid format.",
-    errVoucherType: "Choose the treatment type for the gift voucher.",
+    errVoucherType: "Choose a gift voucher type.",
+    errVoucherServices: "Choose one or more services for the gift voucher.",
+    errVoucherValue: "Enter a whole amount from €30 to €300.",
     errVoucherFrom: "Please fill in who the gift voucher is from.",
     errVoucherFor: "Please fill in who the gift voucher is for.",
     errVoucherUnavailable: "The selected treatment type is not available for a voucher.",
@@ -251,12 +284,14 @@ type VoucherPayment = {
   message: string;
   error: string;
   // Customer + voucher data captured at QR generation, needed for the
-  // "I have sent the payment" request (canonical Slovak treatment kept).
+  // "I have sent the payment" request.
   name: string;
   email: string;
   phone: string;
   note: string;
-  treatment: string;
+  voucherType: VoucherType;
+  services: string[];
+  valueAmount?: number;
   from: string;
   forName: string;
 };
@@ -289,7 +324,10 @@ export function BookingForm({
 
     return [preselectedServiceName];
   });
-  const [selectedVoucherTreatment, setSelectedVoucherTreatment] = useState("");
+  const [voucherType, setVoucherType] = useState<VoucherType | "">("");
+  const [selectedVoucherServices, setSelectedVoucherServices] = useState<string[]>([]);
+  const [voucherValue, setVoucherValue] = useState<number | null>(null);
+  const [customVoucherValue, setCustomVoucherValue] = useState("");
   const [voucherFrom, setVoucherFrom] = useState("");
   const [voucherFor, setVoucherFor] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -337,7 +375,9 @@ export function BookingForm({
           email: payment.email,
           phone: payment.phone,
           note: payment.note,
-          treatment: payment.treatment,
+          voucherType: payment.voucherType,
+          services: payment.services,
+          valueAmount: payment.valueAmount,
           from: payment.from,
           for: payment.forName,
           locale,
@@ -393,6 +433,17 @@ export function BookingForm({
     () => bookableServices.find((service) => service.name === GIFT_VOUCHER_SERVICE_NAME),
     [],
   );
+  const selectedVoucherServiceItems = useMemo(
+    () =>
+      selectedVoucherServices
+        .map((name) => giftVoucherTreatments.find((service) => service.name === name))
+        .filter((service): service is (typeof giftVoucherTreatments)[number] => Boolean(service)),
+    [selectedVoucherServices],
+  );
+  const voucherServicesTotal = useMemo(
+    () => selectedVoucherServiceItems.reduce((total, service) => total + service.amount, 0),
+    [selectedVoucherServiceItems],
+  );
 
   useEffect(() => {
     if (isGiftVoucherFlow || !selectedDate || totalDurationMinutes <= 0) {
@@ -447,7 +498,10 @@ export function BookingForm({
   function toggleService(serviceName: string) {
     setSelectedTime("");
     setSelectedDate("");
-    setSelectedVoucherTreatment("");
+    setVoucherType("");
+    setSelectedVoucherServices([]);
+    setVoucherValue(null);
+    setCustomVoucherValue("");
     setVoucherFrom("");
     setVoucherFor("");
     setVoucherPayment(null);
@@ -483,7 +537,6 @@ export function BookingForm({
     const phone = String(formData.get("phone") || "");
     const note = String(formData.get("note") || "");
     const company = String(formData.get("company") || "");
-    const voucherTreatment = String(formData.get("voucherTreatment") || "");
     const voucherFromName = String(formData.get("voucherFrom") || "").trim();
     const voucherForName = String(formData.get("voucherFor") || "").trim();
     const date = String(formData.get("date") || "");
@@ -502,8 +555,29 @@ export function BookingForm({
     }
 
     if (isGiftVoucherFlow) {
-      if (!voucherTreatment) {
+      if (!voucherType) {
         setSubmitError(t.errVoucherType);
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (voucherType === "services" && selectedVoucherServices.length === 0) {
+        setSubmitError(t.errVoucherServices);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const selectedValue =
+        voucherType === "value" && customVoucherValue
+          ? Number(customVoucherValue)
+          : voucherValue;
+      if (
+        voucherType === "value" &&
+        (!Number.isSafeInteger(selectedValue) ||
+          Number(selectedValue) < voucherValueLimits.min ||
+          Number(selectedValue) > voucherValueLimits.max)
+      ) {
+        setSubmitError(t.errVoucherValue);
         setIsSubmitting(false);
         return;
       }
@@ -520,38 +594,16 @@ export function BookingForm({
         return;
       }
 
-      const selectedTreatment = giftVoucherTreatments.find(
-        (item) => item.name === voucherTreatment,
-      );
-
-      if (!selectedTreatment) {
-        setSubmitError(t.errVoucherUnavailable);
-        setIsSubmitting(false);
-        return;
-      }
-
       if (giftVoucherPaymentConfig.iban.includes("[DOPLNIŤ_IBAN]")) {
         setSubmitError(t.errIban);
         setIsSubmitting(false);
         return;
       }
 
-      const amount = selectedTreatment.amount.toFixed(2);
-      const paymentMessage = `${giftVoucherPaymentConfig.notePrefix} - ${voucherTreatment} - od ${voucherFromName} pre ${voucherForName}`;
-      const baseDetails = {
-        iban: giftVoucherPaymentConfig.iban,
-        accountName: giftVoucherPaymentConfig.accountName,
-        amount,
-        currency: giftVoucherPaymentConfig.currency,
-        message: paymentMessage,
-        name,
-        email,
-        phone,
-        note,
-        treatment: voucherTreatment,
-        from: voucherFromName,
-        forName: voucherForName,
-      };
+      const selectionPayload =
+        voucherType === "services"
+          ? { voucherType, services: selectedVoucherServices }
+          : { voucherType, valueAmount: selectedValue };
 
       // A freshly generated QR starts a new payment-sent request cycle.
       setVoucherRequestStatus("idle");
@@ -561,28 +613,60 @@ export function BookingForm({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            treatment: voucherTreatment,
+            ...selectionPayload,
             from: voucherFromName,
             for: voucherForName,
           }),
         });
-        const data = (await response.json()) as { ok?: boolean; qrDataUrl?: string };
+        const data = (await response.json()) as {
+          ok?: boolean;
+          qrDataUrl?: string;
+          iban?: string;
+          accountName?: string;
+          amount?: string;
+          currency?: string;
+          message?: string;
+          error?: string;
+        };
 
-        if (!response.ok || !data.ok || !data.qrDataUrl) {
-          throw new Error("qr");
+        if (
+          !response.ok ||
+          !data.ok ||
+          !data.iban ||
+          !data.accountName ||
+          !data.amount ||
+          !data.currency ||
+          !data.message
+        ) {
+          throw new Error(locale === "en" ? t.errVoucherUnavailable : data.error || t.errVoucherUnavailable);
         }
 
-        setVoucherPayment({ ...baseDetails, qrDataUrl: data.qrDataUrl, error: "" });
-        const qrValue = Number(amount);
+        setVoucherPayment({
+          qrDataUrl: data.qrDataUrl ?? "",
+          iban: data.iban,
+          accountName: data.accountName,
+          amount: data.amount,
+          currency: data.currency,
+          message: data.message,
+          error: data.qrDataUrl ? "" : t.qrError,
+          name,
+          email,
+          phone,
+          note,
+          voucherType,
+          services: voucherType === "services" ? selectedVoucherServices : [],
+          valueAmount: voucherType === "value" ? Number(selectedValue) : undefined,
+          from: voucherFromName,
+          forName: voucherForName,
+        });
+        const qrValue = Number(data.amount);
         trackEvent("voucher_qr_generated", {
           locale,
           booking_type: "voucher",
           ...(Number.isFinite(qrValue) ? { value: qrValue, currency: "EUR" } : {}),
         });
-      } catch {
-        // The QR image failed, but the manual bank-transfer details below are
-        // enough to complete the payment, so we still show the payment panel.
-        setVoucherPayment({ ...baseDetails, qrDataUrl: "", error: t.qrError });
+      } catch (error) {
+        setSubmitError(error instanceof Error ? error.message : t.errVoucherUnavailable);
       } finally {
         setIsSubmitting(false);
       }
@@ -818,23 +902,164 @@ export function BookingForm({
 
         {isGiftVoucherFlow ? (
           <>
-            <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--color-charcoal)]">
-              {t.voucherTypeLabel}
-              <select
-                className="min-h-11 w-full min-w-0 rounded-lg border border-[var(--color-line)] px-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
-                name="voucherTreatment"
-                value={selectedVoucherTreatment}
-                onChange={(event) => setSelectedVoucherTreatment(event.target.value)}
-                required
-              >
-                <option value="">{t.voucherTypePlaceholder}</option>
-                {giftVoucherTreatments.map((item) => (
-                  <option key={item.name} value={item.name}>
-                    {displayServiceName(item.name)} - {item.amount} €
-                  </option>
+            <fieldset className="grid min-w-0 gap-3">
+              <legend className="text-base font-semibold text-[var(--color-charcoal)]">
+                {t.voucherChoiceHeading}
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    ["services", t.servicesVoucherLabel, t.servicesVoucherDescription],
+                    ["value", t.valueVoucherLabel, t.valueVoucherDescription],
+                  ] as const
+                ).map(([type, label, description]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => {
+                      setVoucherType(type);
+                      setVoucherPayment(null);
+                      setVoucherRequestStatus("idle");
+                    }}
+                    className={cn(
+                      "rounded-xl border p-4 text-left transition",
+                      voucherType === type
+                        ? "border-[rgba(226,138,180,0.55)] bg-[rgba(226,138,180,0.08)]"
+                        : "border-[var(--color-line)] hover:border-[rgba(226,138,180,0.38)]",
+                    )}
+                  >
+                    <span className="block text-sm font-semibold text-[var(--color-charcoal)]">
+                      {label}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[var(--color-stone)]">
+                      {description}
+                    </span>
+                  </button>
                 ))}
-              </select>
-            </label>
+              </div>
+            </fieldset>
+
+            {voucherType === "services" ? (
+              <fieldset className="grid min-w-0 gap-3">
+                <legend className="text-sm font-medium text-[var(--color-charcoal)]">
+                  {t.servicesVoucherDescription}
+                </legend>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {giftVoucherTreatments.map((item) => {
+                    const isSelected = selectedVoucherServices.includes(item.name);
+                    return (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVoucherServices((current) =>
+                            current.includes(item.name)
+                              ? current.filter((service) => service !== item.name)
+                              : [...current, item.name],
+                          );
+                          setVoucherPayment(null);
+                          setVoucherRequestStatus("idle");
+                        }}
+                        className={cn(
+                          "flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition",
+                          isSelected
+                            ? "border-[rgba(226,138,180,0.5)] bg-[rgba(226,138,180,0.055)]"
+                            : "border-[var(--color-line)] hover:border-[rgba(226,138,180,0.38)]",
+                        )}
+                      >
+                        <span className="text-[var(--color-charcoal)]">
+                          {displayServiceName(item.name)}
+                        </span>
+                        <span className="shrink-0 font-semibold text-[var(--color-powder)]">
+                          {item.amount} €
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="rounded-xl border border-[var(--color-line)] bg-[rgba(255,255,255,0.02)] p-4 text-sm">
+                  <p className="font-semibold text-[var(--color-charcoal)]">
+                    {t.selectedServicesLabel}:{" "}
+                    {formatSelectedServicesLabel(selectedVoucherServices.length, locale)}
+                  </p>
+                  {selectedVoucherServiceItems.length > 0 ? (
+                    <ul className="mt-2 grid gap-1 text-[var(--color-stone)]">
+                      {selectedVoucherServiceItems.map((service) => (
+                        <li key={service.name}>
+                          {displayServiceName(service.name)} — {service.amount} €
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <p className="mt-2 font-semibold text-[var(--color-powder)]">
+                    {t.totalValueLabel}: {voucherServicesTotal} €
+                  </p>
+                </div>
+              </fieldset>
+            ) : null}
+
+            {voucherType === "value" ? (
+              <fieldset className="grid min-w-0 gap-3">
+                <legend className="text-sm font-medium text-[var(--color-charcoal)]">
+                  {t.valueVoucherDescription}
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {voucherValuePresets.map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => {
+                        setVoucherValue(amount);
+                        setCustomVoucherValue("");
+                        setVoucherPayment(null);
+                        setVoucherRequestStatus("idle");
+                      }}
+                      className={cn(
+                        "min-h-10 rounded-full border px-4 py-2 text-sm font-semibold transition",
+                        voucherValue === amount && !customVoucherValue
+                          ? "border-[var(--color-powder)] bg-[rgba(226,138,180,0.12)] text-[var(--color-powder)]"
+                          : "border-[var(--color-line)] text-[var(--color-charcoal)] hover:border-[var(--color-powder)]",
+                      )}
+                    >
+                      {amount} €
+                    </button>
+                  ))}
+                </div>
+                <label className="grid gap-2 text-sm font-medium text-[var(--color-charcoal)]">
+                  {t.customAmountLabel}
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={voucherValueLimits.min}
+                      max={voucherValueLimits.max}
+                      step={1}
+                      value={customVoucherValue}
+                      onChange={(event) => {
+                        setCustomVoucherValue(event.target.value);
+                        setVoucherValue(null);
+                        setVoucherPayment(null);
+                        setVoucherRequestStatus("idle");
+                      }}
+                      placeholder={t.customAmountPlaceholder}
+                      className="min-h-11 w-full rounded-lg border border-[var(--color-line)] px-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
+                    />
+                    <span className="font-semibold text-[var(--color-charcoal)]">€</span>
+                  </span>
+                </label>
+                <div className="rounded-xl border border-[var(--color-line)] bg-[rgba(255,255,255,0.02)] p-4 text-sm">
+                  <p className="font-semibold text-[var(--color-powder)]">
+                    {t.selectedValueLabel}:{" "}
+                    {customVoucherValue || voucherValue
+                      ? `${customVoucherValue || voucherValue} €`
+                      : "—"}
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--color-stone)]">
+                    {t.valueVoucherRule}
+                  </p>
+                </div>
+              </fieldset>
+            ) : null}
 
             <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:gap-5">
               <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--color-charcoal)]">
@@ -989,16 +1214,14 @@ export function BookingForm({
           </p>
         )}
 
-        {!isGiftVoucherFlow ? (
-          <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--color-charcoal)]">
-            {t.noteLabel}
-            <textarea
-              className="min-h-24 w-full min-w-0 rounded-lg border border-[var(--color-line)] px-3 py-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
-              name="note"
-              placeholder={t.notePlaceholder}
-            />
-          </label>
-        ) : null}
+        <label className="grid min-w-0 gap-2 text-sm font-medium text-[var(--color-charcoal)]">
+          {isGiftVoucherFlow ? t.voucherNoteLabel : t.noteLabel}
+          <textarea
+            className="min-h-24 w-full min-w-0 rounded-lg border border-[var(--color-line)] px-3 py-3 text-sm outline-none transition focus:border-[var(--color-powder)] sm:px-4"
+            name="note"
+            placeholder={isGiftVoucherFlow ? t.voucherNotePlaceholder : t.notePlaceholder}
+          />
+        </label>
 
         <label className="flex gap-3 text-sm leading-6 text-[var(--color-stone)]">
           <input
@@ -1060,6 +1283,18 @@ export function BookingForm({
             )}
 
             <dl className="grid gap-2 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 text-sm">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+                <dt className="font-semibold text-[var(--color-charcoal)]">
+                  {voucherPayment.voucherType === "services"
+                    ? t.selectedServicesLabel
+                    : t.selectedValueLabel}
+                </dt>
+                <dd className="break-words text-[var(--color-stone)] sm:max-w-[65%] sm:text-right">
+                  {voucherPayment.voucherType === "services"
+                    ? voucherPayment.services.map(displayServiceName).join(", ")
+                    : `${voucherPayment.amount} ${voucherPayment.currency}`}
+                </dd>
+              </div>
               <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
                 <dt className="font-semibold text-[var(--color-charcoal)]">{t.ibanLabel}</dt>
                 <dd className="break-all text-[var(--color-stone)] sm:text-right">

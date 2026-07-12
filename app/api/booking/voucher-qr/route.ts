@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { CurrencyCode, encode, PaymentOptions } from "bysquare/pay";
 import QRCode from "qrcode";
 
-import { giftVoucherPaymentConfig, giftVoucherTreatments } from "@/data/site";
+import { giftVoucherPaymentConfig } from "@/data/site";
+import { resolveVoucherSelection } from "@/lib/voucher-selection";
 
 export const runtime = "nodejs";
 
@@ -11,25 +12,19 @@ export const runtime = "nodejs";
  * transfer. Generation is server-side only (no browser payment/QR API calls).
  * The IBAN is a public receiving account, not a secret.
  *
- * The amount is derived server-side from the canonical treatment name so it
- * cannot be tampered with by the client.
+ * The amount is derived/validated server-side so it cannot be tampered with by
+ * the client.
  */
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      treatment?: unknown;
-      from?: unknown;
-      for?: unknown;
-    };
+    const body = (await request.json()) as Record<string, unknown>;
 
-    const treatmentName = String(body.treatment ?? "").trim();
     const from = String(body.from ?? "").trim();
     const forWhom = String(body.for ?? "").trim();
-
-    const treatment = giftVoucherTreatments.find((item) => item.name === treatmentName);
-    if (!treatment) {
+    const selection = resolveVoucherSelection(body);
+    if (!from || !forWhom || from.length > 80 || forWhom.length > 80) {
       return NextResponse.json(
-        { ok: false, error: "Neplatný typ ošetrenia pre poukážku." },
+        { ok: false, error: "Doplň, od koho a pre koho je darčeková poukážka." },
         { status: 400 },
       );
     }
@@ -41,28 +36,37 @@ export async function POST(request: Request) {
       );
     }
 
-    const amount = treatment.amount;
-    const message = `${giftVoucherPaymentConfig.notePrefix} - ${treatmentName} - od ${from} pre ${forWhom}`;
+    const amount = selection.amount;
+    const message =
+      selection.voucherType === "services"
+        ? `${giftVoucherPaymentConfig.notePrefix} - ošetrenia - od ${from} pre ${forWhom}`
+        : `${giftVoucherPaymentConfig.notePrefix} - hodnota ${amount} EUR - od ${from} pre ${forWhom}`;
 
     // PAY by square payload (compatible with Slovak banking apps).
-    const qrString = encode({
-      payments: [
-        {
-          type: PaymentOptions.PaymentOrder,
-          amount,
-          currencyCode: CurrencyCode.EUR,
-          paymentNote: message,
-          beneficiary: { name: giftVoucherPaymentConfig.accountName },
-          bankAccounts: [{ iban: giftVoucherPaymentConfig.iban }],
-        },
-      ],
-    });
+    let qrDataUrl = "";
+    try {
+      const qrString = encode({
+        payments: [
+          {
+            type: PaymentOptions.PaymentOrder,
+            amount,
+            currencyCode: CurrencyCode.EUR,
+            paymentNote: message,
+            beneficiary: { name: giftVoucherPaymentConfig.accountName },
+            bankAccounts: [{ iban: giftVoucherPaymentConfig.iban }],
+          },
+        ],
+      });
 
-    const qrDataUrl = await QRCode.toDataURL(qrString, {
-      errorCorrectionLevel: "M",
-      margin: 2,
-      width: 512,
-    });
+      qrDataUrl = await QRCode.toDataURL(qrString, {
+        errorCorrectionLevel: "M",
+        margin: 2,
+        width: 512,
+      });
+    } catch {
+      // Keep the validated manual bank-transfer details available if only QR
+      // rendering fails.
+    }
 
     return NextResponse.json({
       ok: true,
@@ -80,7 +84,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error ? error.message : "Nepodarilo sa vytvoriť QR platbu.",
       },
-      { status: 500 },
+      { status: 400 },
     );
   }
 }

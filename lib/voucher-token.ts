@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 import type { VoucherRequest } from "@/lib/voucher";
+import { resolveVoucherSelection } from "@/lib/voucher-selection";
 
 /**
  * Stateless, signed gift-voucher tokens.
@@ -41,7 +42,9 @@ export function createVoucherToken(voucher: VoucherRequest): string {
     name: voucher.name,
     email: voucher.email,
     phone: voucher.phone,
-    treatment: voucher.treatment,
+    voucherType: voucher.voucherType,
+    services: voucher.services,
+    amount: voucher.amount,
     from: voucher.from,
     forName: voucher.forName,
     note: voucher.note ?? "",
@@ -83,17 +86,33 @@ export function verifyVoucherToken(token: unknown): VoucherRequest | null {
       parsed.kind !== "voucher" ||
       typeof parsed.name !== "string" ||
       typeof parsed.email !== "string" ||
-      typeof parsed.treatment !== "string" ||
       typeof parsed.iat !== "number"
     ) {
       return null;
     }
 
+    // Legacy single-treatment links remain valid; new links carry the explicit
+    // voucher type and selection. Both paths are revalidated server-side.
+    const selection = resolveVoucherSelection(
+      parsed.voucherType === "services" || parsed.voucherType === "value"
+        ? {
+            voucherType: parsed.voucherType,
+            services: parsed.services,
+            valueAmount: parsed.amount,
+          }
+        : {
+            voucherType: "services",
+            services: typeof parsed.treatment === "string" ? [parsed.treatment] : [],
+          },
+    );
+
     return {
       name: parsed.name,
       email: parsed.email,
       phone: typeof parsed.phone === "string" ? parsed.phone : "",
-      treatment: parsed.treatment,
+      voucherType: selection.voucherType,
+      services: selection.services,
+      amount: selection.amount,
       from: typeof parsed.from === "string" ? parsed.from : "",
       forName: typeof parsed.forName === "string" ? parsed.forName : "",
       note: typeof parsed.note === "string" ? parsed.note : "",
