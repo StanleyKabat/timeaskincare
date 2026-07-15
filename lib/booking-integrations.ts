@@ -521,6 +521,11 @@ export async function getAvailableSlotsFromCalendar(
   durationMinutes: number,
 ) {
   const calendarIds = getBusyCalendarIds();
+  calendarDebug("slots request", {
+    date,
+    durationMinutes,
+    calendarIds,
+  });
   if (!hasGoogleAvailabilityConfig()) {
     calendarDebug("slots unavailable", {
       date,
@@ -531,11 +536,26 @@ export async function getAvailableSlotsFromCalendar(
     throw new CalendarUnavailableError();
   }
 
-  const accessToken = await getGoogleAccessToken(true);
-  const [busyIntervals, allDayIntervals] = await Promise.all([
-    getBusyIntervalsForDate(date, accessToken),
-    getAllDayBusyIntervalsForDate(date, accessToken),
-  ]);
+  let busyIntervals: BusyInterval[];
+  let allDayIntervals: BusyInterval[];
+  try {
+    const accessToken = await getGoogleAccessToken(true);
+    [busyIntervals, allDayIntervals] = await Promise.all([
+      getBusyIntervalsForDate(date, accessToken),
+      getAllDayBusyIntervalsForDate(date, accessToken),
+    ]);
+  } catch (error) {
+    calendarDebug("slots unavailable", {
+      date,
+      durationMinutes,
+      calendarIds,
+      source: "none",
+    });
+    if (error instanceof CalendarUnavailableError) {
+      throw error;
+    }
+    throw new CalendarUnavailableError();
+  }
 
   const mergedIntervals = mergeBusyIntervals([
     ...busyIntervals,
