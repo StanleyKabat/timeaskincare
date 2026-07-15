@@ -12,7 +12,7 @@ import {
   giftVoucherTreatments,
   siteConfig,
 } from "@/data/site";
-import { formatDuration, getLocalTodayISO, getSlotsForDate } from "@/lib/booking";
+import { formatDuration, getLocalTodayISO } from "@/lib/booking";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 import {
@@ -113,6 +113,8 @@ const bookingText = {
     errSend: "Požiadavku sa nepodarilo odoslať.",
     errSlotsLoad: "Nepodarilo sa načítať dostupné časy.",
     errSlotsLoadGeneric: "Dostupné časy sa nepodarilo načítať.",
+    calendarUnavailable:
+      "Dostupnosť termínov sa momentálne nedá načítať. Skús to prosím neskôr alebo kontaktuj salón.",
     calendarNotConnected:
       "Kalendár ešte nie je napojený, preto sú časy zatiaľ orientačné.",
     qrHeading: "Platba darčekovej poukážky",
@@ -218,6 +220,8 @@ const bookingText = {
     errSend: "The request could not be sent.",
     errSlotsLoad: "Available times could not be loaded.",
     errSlotsLoadGeneric: "Available times could not be loaded.",
+    calendarUnavailable:
+      "Appointment availability cannot be loaded right now. Please try again later or contact the salon.",
     calendarNotConnected:
       "The calendar is not connected yet, so the times are approximate for now.",
     qrHeading: "Gift voucher payment",
@@ -456,14 +460,19 @@ export function BookingForm({
         });
         const response = await fetch(`/api/booking/slots?${params.toString()}`, {
           signal: controller.signal,
+          cache: "no-store",
         });
         const data = (await response.json()) as {
           slots?: string[];
           calendarConfigured?: boolean;
+          calendarUnavailable?: boolean;
           error?: string;
         };
 
         if (!response.ok) {
+          if (data.calendarUnavailable) {
+            throw new Error(t.calendarUnavailable);
+          }
           throw new Error(locale === "en" ? t.errSlotsLoad : data.error || t.errSlotsLoad);
         }
 
@@ -474,7 +483,7 @@ export function BookingForm({
           return;
         }
 
-        setAvailableSlots(getSlotsForDate(selectedDate, totalDurationMinutes));
+        setAvailableSlots([]);
         setSlotInfo(error instanceof Error ? error.message : t.errSlotsLoadGeneric);
       } finally {
         if (!controller.signal.aborted) {
@@ -1173,6 +1182,10 @@ export function BookingForm({
                         </label>
                       ))}
                     </div>
+                  ) : slotInfo ? (
+                    <p className="rounded-lg border border-red-300/40 bg-red-500/5 px-4 py-3 text-sm leading-6 text-red-300">
+                      {slotInfo}
+                    </p>
                   ) : (
                     <p className="rounded-lg border border-[var(--color-line)] px-4 py-3 text-sm leading-6 text-[var(--color-stone)]">
                       {t.slotsNone}
@@ -1188,7 +1201,7 @@ export function BookingForm({
                   {t.slotsPickDate}
                 </p>
               )}
-              {slotInfo ? (
+              {slotInfo && availableSlots.length > 0 ? (
                 <p className="text-xs leading-5 text-[var(--color-stone)]">{slotInfo}</p>
               ) : null}
             </fieldset>

@@ -44,9 +44,23 @@ type GoogleBusyItem = {
   end?: string;
 };
 
+type GoogleCalendarFreeBusy = {
+  busy?: GoogleBusyItem[];
+  errors?: Array<{ reason?: string }>;
+};
+
 type GoogleCalendarEvent = GoogleAllDayEvent & {
   id?: string;
 };
+
+export class CalendarUnavailableError extends Error {
+  readonly code = "CALENDAR_UNAVAILABLE";
+
+  constructor() {
+    super("Dostupnosť termínov sa momentálne nedá načítať.");
+    this.name = "CalendarUnavailableError";
+  }
+}
 
 /**
  * Opt-in, non-PII server log for debugging calendar availability. Enable with
@@ -69,16 +83,34 @@ const googleConfig = {
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+  busyCalendarIds: process.env.GOOGLE_BUSY_CALENDAR_IDS,
   calendarId: process.env.GOOGLE_CALENDAR_ID,
 };
 
-function hasGoogleCalendarConfig() {
+export function parseBusyCalendarIds(value?: string, fallback?: string): string[] {
+  const ids = (value || fallback || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return [...new Set(ids)];
+}
+
+function getBusyCalendarIds() {
+  return parseBusyCalendarIds(googleConfig.busyCalendarIds, googleConfig.calendarId);
+}
+
+function hasGoogleCredentials() {
   return Boolean(
-    googleConfig.clientId &&
-      googleConfig.clientSecret &&
-      googleConfig.refreshToken &&
-      googleConfig.calendarId,
+    googleConfig.clientId && googleConfig.clientSecret && googleConfig.refreshToken,
   );
+}
+
+function hasGoogleCalendarConfig() {
+  return Boolean(hasGoogleCredentials() && googleConfig.calendarId);
+}
+
+function hasGoogleAvailabilityConfig() {
+  return Boolean(hasGoogleCredentials() && getBusyCalendarIds().length > 0);
 }
 
 type SmsProviderConfig = {
@@ -114,7 +146,7 @@ function getOwnerPhone() {
 
 export function getBookingIntegrationStatus() {
   return {
-    calendarConfigured: hasGoogleCalendarConfig(),
+    calendarConfigured: hasGoogleAvailabilityConfig(),
     emailConfigured: Boolean(process.env.RESEND_API_KEY && process.env.BOOKING_FROM_EMAIL),
     smsConfigured: hasSmsConfig(),
   };
@@ -208,79 +240,152 @@ function validateBookingRequest(input: unknown): BookingRequest {
   };
 }
 
-async function getGoogleAccessToken() {
-  if (!hasGoogleCalendarConfig()) {
+async function getGoogleAccessToken(forAvailability = false) {
+  if (!hasGoogleCredentials()) {
+    calendarDebug("oauth configuration", {
+      configured: false,
+      hasClientId: Boolean(googleConfig.clientId),
+      hasClientSecret: Boolean(googleConfig.clientSecret),
+      hasRefreshToken: Boolean(googleConfig.refreshToken),
+    });
+    if (forAvailability) {
+      throw new CalendarUnavailableError();
+    }
     throw new Error("Google kalendár ešte nie je nakonfigurovaný.");
   }
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      client_id: googleConfig.clientId!,
-      client_secret: googleConfig.clientSecret!,
-      refresh_token: googleConfig.refreshToken!,
-      grant_type: "refresh_token",
-    }),
-  });
-
-  if (!response.ok) {
+  let response: Response;
+  try {
+    response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: googleConfig.clientId!,
+        client_secret: googleConfig.clientSecret!,
+        refresh_token: googleConfig.refreshToken!,
+        grant_type: "refresh_token",
+      }),
+      cache: "no-store",
+    });
+  } catch {
+    calendarDebug("oauth response", { status: null, ok: false });
+    if (forAvailability) {
+      throw new CalendarUnavailableError();
+    }
     throw new Error("Nepodarilo sa prihlásiť do Google kalendára.");
   }
 
-  const data = (await response.json()) as { access_token?: string };
+  calendarDebug("oauth response", { status: response.status, ok: response.ok });
+  if (!response.ok) {
+    if (forAvailability) {
+      throw new CalendarUnavailableError();
+    }
+    throw new Error("Nepodarilo sa prihlásiť do Google kalendára.");
+  }
+
+  let data: { access_token?: string };
+  try {
+    data = (await response.json()) as { access_token?: string };
+  } catch {
+    if (forAvailability) {
+      throw new CalendarUnavailableError();
+    }
+    throw new Error("Google nevrátil prístupový token.");
+  }
   if (!data.access_token) {
+    if (forAvailability) {
+      throw new CalendarUnavailableError();
+    }
     throw new Error("Google nevrátil prístupový token.");
   }
 
   return data.access_token;
 }
 
-export async function getBusyIntervalsForDate(date: string): Promise<BusyInterval[]> {
-  if (!hasGoogleCalendarConfig()) {
-    return [];
+export async function getBusyIntervalsForDate(
+  date: string,
+  existingAccessToken?: string,
+): Promise<BusyInterval[]> {
+  const calendarIds = getBusyCalendarIds();
+  if (!hasGoogleAvailabilityConfig()) {
+    calendarDebug("availability configuration", {
+      configured: false,
+      calendarIds,
+    });
+    throw new CalendarUnavailableError();
   }
 
   const window = getDateWindowUtc(date);
   if (!window) {
-    return [];
+    throw new CalendarUnavailableError();
   }
 
-  const accessToken = await getGoogleAccessToken();
-  const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      timeMin: window.start.toISOString(),
-      timeMax: window.end.toISOString(),
-      timeZone: bookingConfig.timeZone,
-      items: [{ id: googleConfig.calendarId }],
-    }),
-  });
+  const accessToken = existingAccessToken ?? (await getGoogleAccessToken(true));
+  let response: Response;
+  try {
+    response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        timeMin: window.start.toISOString(),
+        timeMax: window.end.toISOString(),
+        timeZone: bookingConfig.timeZone,
+        items: calendarIds.map((id) => ({ id })),
+      }),
+      cache: "no-store",
+    });
+  } catch {
+    calendarDebug("freebusy response", { status: null, ok: false });
+    throw new CalendarUnavailableError();
+  }
 
+  calendarDebug("freebusy response", { status: response.status, ok: response.ok });
   if (!response.ok) {
-    throw new Error("Nepodarilo sa načítať obsadené časy z Google kalendára.");
+    throw new CalendarUnavailableError();
   }
 
-  const data = (await response.json()) as {
-    calendars?: Record<string, { busy?: GoogleBusyItem[] }>;
-  };
+  let data: { calendars?: Record<string, GoogleCalendarFreeBusy> };
+  try {
+    data = (await response.json()) as {
+      calendars?: Record<string, GoogleCalendarFreeBusy>;
+    };
+  } catch {
+    throw new CalendarUnavailableError();
+  }
+  const intervals: BusyInterval[] = [];
 
-  const busy = data.calendars?.[googleConfig.calendarId!]?.busy ?? [];
-  return busy
-    .map((item) => ({
-      start: new Date(item.start || ""),
-      end: new Date(item.end || ""),
-    }))
-    .filter(
-      (item) =>
-        Number.isFinite(item.start.getTime()) && Number.isFinite(item.end.getTime()),
+  for (const calendarId of calendarIds) {
+    const calendar = data.calendars?.[calendarId];
+    const errors = calendar?.errors ?? [];
+    calendarDebug("freebusy calendar", {
+      calendarId,
+      busyCount: calendar?.busy?.length ?? 0,
+      errorCount: errors.length,
+    });
+    if (!calendar || errors.length > 0) {
+      throw new CalendarUnavailableError();
+    }
+
+    intervals.push(
+      ...(calendar.busy ?? [])
+        .map((item) => ({
+          start: new Date(item.start || ""),
+          end: new Date(item.end || ""),
+        }))
+        .filter(
+          (item) =>
+            Number.isFinite(item.start.getTime()) &&
+            Number.isFinite(item.end.getTime()),
+        ),
     );
+  }
+
+  return intervals;
 }
 
 /**
@@ -291,9 +396,8 @@ export async function getBusyIntervalsForDate(date: string): Promise<BusyInterva
  * could stay bookable. We list events for the selected day directly and turn
  * non-transparent all-day events into a workday-long busy interval.
  *
- * This never degrades existing behavior: any error results in an empty list, so
- * availability simply falls back to FreeBusy-only. Timed events are ignored here
- * (they keep coming from FreeBusy).
+ * Timed events are ignored here (they keep coming from FreeBusy). Any calendar
+ * API failure propagates so availability fails closed.
  *
  * NOTE FOR TIMEA: an all-day absence in Google Calendar must be marked as
  * "Busy" (not "Free") for it to block booking. All-day events explicitly set to
@@ -301,97 +405,156 @@ export async function getBusyIntervalsForDate(date: string): Promise<BusyInterva
  */
 export async function getAllDayBusyIntervalsForDate(
   date: string,
+  existingAccessToken?: string,
 ): Promise<BusyInterval[]> {
-  if (!hasGoogleCalendarConfig()) {
-    return [];
+  const calendarIds = getBusyCalendarIds();
+  if (!hasGoogleAvailabilityConfig()) {
+    throw new CalendarUnavailableError();
   }
 
   const window = getDateWindowUtc(date);
   if (!window) {
-    return [];
+    throw new CalendarUnavailableError();
   }
 
-  try {
-    const accessToken = await getGoogleAccessToken();
-    // Widen the query by a day on each side so all-day events on the day's
-    // boundaries are always returned; the per-event date-coverage check decides
-    // what actually blocks `date`.
-    const dayMs = 24 * 60 * 60 * 1000;
-    const timeMin = new Date(window.start.getTime() - dayMs).toISOString();
-    const timeMax = new Date(window.end.getTime() + dayMs).toISOString();
+  const accessToken = existingAccessToken ?? (await getGoogleAccessToken(true));
+  // Widen the query by a day on each side so all-day events on the day's
+  // boundaries are always returned; the per-event date-coverage check decides
+  // what actually blocks `date`.
+  const dayMs = 24 * 60 * 60 * 1000;
+  const timeMin = new Date(window.start.getTime() - dayMs).toISOString();
+  const timeMax = new Date(window.end.getTime() + dayMs).toISOString();
 
-    const url = new URL(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-        googleConfig.calendarId!,
-      )}/events`,
-    );
-    url.searchParams.set("timeMin", timeMin);
-    url.searchParams.set("timeMax", timeMax);
-    url.searchParams.set("singleEvents", "true");
-    url.searchParams.set("orderBy", "startTime");
-    url.searchParams.set("maxResults", "50");
+  const perCalendar = await Promise.all(
+    calendarIds.map(async (calendarId) => {
+      try {
+        const url = new URL(
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+          calendarId,
+          )}/events`,
+        );
+        url.searchParams.set("timeMin", timeMin);
+        url.searchParams.set("timeMax", timeMax);
+        url.searchParams.set("singleEvents", "true");
+        url.searchParams.set("orderBy", "startTime");
+        url.searchParams.set("maxResults", "50");
 
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        });
 
-    if (!response.ok) {
-      calendarDebug("events.list failed", { status: response.status });
-      return [];
-    }
+        calendarDebug("events.list response", {
+          calendarId,
+          status: response.status,
+          ok: response.ok,
+        });
+        if (!response.ok) {
+          throw new CalendarUnavailableError();
+        }
 
-    const data = (await response.json()) as { items?: GoogleCalendarEvent[] };
-    const items = data.items ?? [];
-    const intervals: BusyInterval[] = [];
+        const data = (await response.json()) as { items?: GoogleCalendarEvent[] };
+        const items = data.items ?? [];
+        const intervals: BusyInterval[] = [];
 
-    for (const event of items) {
-      // Only all-day events (start.date). Timed events stay with FreeBusy.
-      if (!event.start?.date) {
-        continue;
+        for (const event of items) {
+          const interval = allDayEventBusyIntervalForDate(event, date);
+          if (interval) {
+            intervals.push(interval);
+          }
+
+          calendarDebug("events.list event", {
+            calendarId,
+            allDay: Boolean(event.start?.date),
+            transparency: event.transparency ?? "(default busy)",
+            blocks: Boolean(interval),
+          });
+        }
+
+        calendarDebug("events.list calendar", {
+          calendarId,
+          allDayBusyCount: intervals.length,
+        });
+        return intervals;
+      } catch (error) {
+        calendarDebug("events.list error", {
+          calendarId,
+          unavailable: true,
+        });
+        if (error instanceof CalendarUnavailableError) {
+          throw error;
+        }
+        throw new CalendarUnavailableError();
       }
+    }),
+  );
 
-      const interval = allDayEventBusyIntervalForDate(event, date);
-      if (interval) {
-        intervals.push(interval);
-      }
+  return perCalendar.flat();
+}
 
-      calendarDebug("all-day event", {
-        startDate: event.start?.date ?? null,
-        endDate: event.end?.date ?? null,
-        transparency: event.transparency ?? "(default busy)",
-        blocks: Boolean(interval),
-      });
+function mergeBusyIntervals(intervals: BusyInterval[]): BusyInterval[] {
+  const sorted = intervals
+    .filter(
+      (interval) =>
+        Number.isFinite(interval.start.getTime()) &&
+        Number.isFinite(interval.end.getTime()) &&
+        interval.end > interval.start,
+    )
+    .sort((a, b) => a.start.getTime() - b.start.getTime());
+  const merged: BusyInterval[] = [];
+
+  for (const interval of sorted) {
+    const previous = merged.at(-1);
+    if (previous && interval.start.getTime() <= previous.end.getTime()) {
+      previous.end = new Date(
+        Math.max(previous.end.getTime(), interval.end.getTime()),
+      );
+    } else {
+      merged.push({ start: new Date(interval.start), end: new Date(interval.end) });
     }
-
-    return intervals;
-  } catch (error) {
-    // Non-fatal: fall back to FreeBusy-only availability.
-    calendarDebug("events.list error", {
-      message: error instanceof Error ? error.message : "unknown",
-    });
-    return [];
   }
+  return merged;
 }
 
 export async function getAvailableSlotsFromCalendar(
   date: string,
   durationMinutes: number,
 ) {
+  const calendarIds = getBusyCalendarIds();
+  if (!hasGoogleAvailabilityConfig()) {
+    calendarDebug("slots unavailable", {
+      date,
+      durationMinutes,
+      calendarIds,
+      source: "none",
+    });
+    throw new CalendarUnavailableError();
+  }
+
+  const accessToken = await getGoogleAccessToken(true);
   const [busyIntervals, allDayIntervals] = await Promise.all([
-    getBusyIntervalsForDate(date),
-    getAllDayBusyIntervalsForDate(date),
+    getBusyIntervalsForDate(date, accessToken),
+    getAllDayBusyIntervalsForDate(date, accessToken),
   ]);
 
-  const mergedIntervals = [...busyIntervals, ...allDayIntervals];
+  const mergedIntervals = mergeBusyIntervals([
+    ...busyIntervals,
+    ...allDayIntervals,
+  ]);
+  const slots = getSlotsForDate(date, durationMinutes, mergedIntervals);
 
   calendarDebug("slots", {
     date,
-    calendarId: googleConfig.calendarId ?? null,
+    durationMinutes,
+    calendarIds,
     freeBusyCount: busyIntervals.length,
     allDayCount: allDayIntervals.length,
+    mergedBusyCount: mergedIntervals.length,
+    slotCount: slots.length,
+    source: "google-calendar",
   });
 
-  return getSlotsForDate(date, durationMinutes, mergedIntervals);
+  return slots;
 }
 
 function bookingText(booking: BookingRequest) {
@@ -584,11 +747,12 @@ export async function submitReservation(input: unknown, origin?: string) {
   // Availability re-check only. Phase 1: a pending request no longer writes to
   // Google Calendar. The confirmed event is created later, when Timea confirms
   // the request (see confirmReservation), so the slot is not held prematurely.
-  if (hasGoogleCalendarConfig()) {
-    const slots = await getAvailableSlotsFromCalendar(booking.date, booking.durationMinutes);
-    if (!slots.includes(booking.time)) {
-      throw new Error("Vybraný čas už nie je dostupný. Prosím, vyber iný čas.");
-    }
+  const slots = await getAvailableSlotsFromCalendar(
+    booking.date,
+    booking.durationMinutes,
+  );
+  if (!slots.includes(booking.time)) {
+    throw new Error("Vybraný čas už nie je dostupný. Prosím, vyber iný čas.");
   }
 
   const sms = await sendReservationNotifications(booking);
