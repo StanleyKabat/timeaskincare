@@ -277,13 +277,29 @@ async function getGoogleAccessToken(forAvailability = false) {
     throw new Error("Nepodarilo sa prihlásiť do Google kalendára.");
   }
 
-  calendarDebug("oauth response", { status: response.status, ok: response.ok });
   if (!response.ok) {
+    // Google's OAuth error code (e.g. "invalid_grant", "invalid_client") is a
+    // documented non-PII enum; logging it pinpoints whether the refresh token
+    // or the client credentials need to be renewed.
+    let oauthError: string | undefined;
+    try {
+      const body = (await response.json()) as { error?: string };
+      oauthError = typeof body.error === "string" ? body.error : undefined;
+    } catch {
+      // Ignore body parse issues; status alone is still logged below.
+    }
+    calendarDebug("oauth response", {
+      status: response.status,
+      ok: false,
+      error: oauthError ?? null,
+    });
     if (forAvailability) {
       throw new CalendarUnavailableError();
     }
     throw new Error("Nepodarilo sa prihlásiť do Google kalendára.");
   }
+
+  calendarDebug("oauth response", { status: response.status, ok: true });
 
   let data: { access_token?: string };
   try {
