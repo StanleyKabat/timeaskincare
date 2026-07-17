@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { confirmReservation, declineReservation } from "@/lib/booking-integrations";
+import {
+  BookingTimeMismatchError,
+  confirmReservation,
+  declineReservation,
+} from "@/lib/booking-integrations";
 import { verifyBookingToken } from "@/lib/booking-token";
 import { getRequestOrigin } from "@/lib/site-url";
 
@@ -42,7 +46,10 @@ export async function POST(request: Request) {
     }
 
     return redirectTo("invalid");
-  } catch {
+  } catch (error) {
+    if (error instanceof BookingTimeMismatchError) {
+      return redirectTo("time-mismatch");
+    }
     return redirectTo("error");
   }
 }

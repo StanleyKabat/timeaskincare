@@ -66,7 +66,10 @@ describe("calendar generation – Europe/Bratislava", () => {
     const ics = buildIcsFile(makeBooking())!;
     const link = buildGoogleCalendarLink(makeBooking())!;
     expect(ics).toContain(`LOCATION:${siteConfig.address.replace(/,/g, "\\,")}`);
-    expect(link).toContain(`location=${encodeURIComponent(siteConfig.address)}`);
+    // URLSearchParams encodes spaces as "+" (application/x-www-form-urlencoded).
+    expect(decodeURIComponent(link.replace(/\+/g, "%20"))).toContain(
+      `location=${siteConfig.address}`,
+    );
   });
 
   it("omits the salon address from owner calendar output", () => {

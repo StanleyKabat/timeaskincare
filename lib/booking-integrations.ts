@@ -8,11 +8,17 @@ import {
   getDateWindowUtc,
   getSlotsForDate,
   isWithinBookingRules,
+  zonedDateTimeToUtcMs,
   type BusyInterval,
   type GoogleAllDayEvent,
 } from "@/lib/booking";
 import { createBookingToken } from "@/lib/booking-token";
-import { buildGoogleCalendarLink, buildIcsFile } from "@/lib/calendar";
+import {
+  buildConfirmedCalendarDateTimes,
+  buildGoogleCalendarLink,
+  buildIcsFile,
+  getBookingWallClock,
+} from "@/lib/calendar";
 import { getSiteUrl } from "@/lib/site-url";
 
 export type BookingLocale = "sk" | "en";
@@ -63,6 +69,39 @@ export class CalendarUnavailableError extends Error {
 }
 
 /**
+ * Raised during confirmation when the booking time from the signed token does
+ * not match the calendar event that would be (or was) created. Confirmation is
+ * aborted BEFORE any customer e-mail is sent, so a shifted time can never be
+ * silently confirmed.
+ */
+export class BookingTimeMismatchError extends Error {
+  readonly code = "BOOKING_TIME_MISMATCH";
+
+  constructor() {
+    super(
+      "Čas rezervácie sa nezhoduje s pôvodnou požiadavkou. Rezervácia nebola potvrdená. Skontroluj údaje a kontaktuj zákazníčku.",
+    );
+    this.name = "BookingTimeMismatchError";
+  }
+}
+
+/**
+ * Opt-in, non-PII time-flow log for diagnosing booking-time issues. Enable
+ * with BOOKING_TIME_DEBUG=1. Logs only date/time/duration/locale values and a
+ * short bookingKey hash prefix for request↔confirmation correlation — never
+ * names, e-mails, phones, notes, tokens or event descriptions.
+ */
+function bookingTimeDebug(stage: string, data: Record<string, unknown>) {
+  if (
+    process.env.BOOKING_TIME_DEBUG !== "1" &&
+    process.env.BOOKING_TIME_DEBUG !== "true"
+  ) {
+    return;
+  }
+  console.log(`[booking-time] ${stage}`, JSON.stringify(data));
+}
+
+/**
  * Opt-in, non-PII server log for debugging calendar availability. Enable with
  * CALENDAR_DEBUG=1. Never logs customer data or event summaries; only dates,
  * the configured calendar id, transparency flags and interval counts.
@@ -77,6 +116,7 @@ function calendarDebug(label: string, data: Record<string, unknown>) {
 type GoogleEvent = {
   id: string;
   htmlLink?: string;
+  start?: { dateTime?: string };
 };
 
 const googleConfig = {
@@ -672,31 +712,88 @@ async function findConfirmedEventByKey(
 }
 
 /**
+ * The exact UTC instant the booking's local wall-clock start resolves to in
+ * Europe/Bratislava. Used only to VERIFY calendar event starts, never to build
+ * payloads (payloads stay local wall-clock + timeZone).
+ */
+function expectedStartUtcMs(booking: BookingRequest): number | null {
+  return zonedDateTimeToUtcMs(booking.date, booking.time, bookingConfig.timeZone);
+}
+
+/**
+ * Invariant guard: a Google Calendar event's start must resolve to the same
+ * instant as the booking time signed into the token. `dateTime` comes back
+ * from Google with an explicit offset (e.g. 2026-07-20T09:00:00+02:00), so
+ * Date.parse gives the exact instant without any server-timezone influence.
+ */
+function assertEventStartMatchesBooking(
+  booking: BookingRequest,
+  eventStartDateTime: string | undefined,
+  stage: string,
+  bookingKey: string,
+) {
+  if (eventStartMatchesBooking(booking, eventStartDateTime)) {
+    return;
+  }
+
+  const expected = expectedStartUtcMs(booking);
+  bookingTimeDebug(`${stage} start mismatch`, {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    date: booking.date,
+    time: booking.time,
+    expectedUtc: expected === null ? null : new Date(expected).toISOString(),
+    eventStart: eventStartDateTime ?? null,
+  });
+  throw new BookingTimeMismatchError();
+}
+
+/**
  * Creates the confirmed calendar event. Timezone handling matches the previous
  * request-time logic: local wall-clock dateTimes are sent together with the
  * Europe/Bratislava timeZone, so Google resolves the correct instant.
+ *
+ * The customer is intentionally NOT added as an attendee and no Google
+ * notifications are sent (no sendUpdates): the Timea Skincare confirmation
+ * e-mail (with .ics + Google link) is the single source of truth for the
+ * customer. When the customer was an attendee, any later manual edit of the
+ * event in the owner's calendar made Google send the customer an official
+ * "event changed" e-mail — which is exactly how customers received a
+ * ~30-minute "your appointment moved" notification.
  */
 async function createConfirmedCalendarEvent(
   booking: BookingRequest,
   bookingKey: string,
 ): Promise<GoogleEvent> {
-  const accessToken = await getGoogleAccessToken();
-  const [hours, minutes] = booking.time.split(":").map(Number);
-  const start = `${booking.date}T${String(hours).padStart(2, "0")}:${String(
-    minutes,
-  ).padStart(2, "0")}:00`;
-  const endDate = new Date(
-    Date.UTC(2000, 0, 1, hours, minutes + booking.durationMinutes),
-  );
-  const end = `${booking.date}T${String(endDate.getUTCHours()).padStart(
-    2,
-    "0",
-  )}:${String(endDate.getUTCMinutes()).padStart(2, "0")}:00`;
+  const wallClock = getBookingWallClock(booking);
+  const dateTimes = buildConfirmedCalendarDateTimes(booking);
+  if (
+    !wallClock ||
+    !dateTimes ||
+    wallClock.start.time !== booking.time ||
+    wallClock.start.date !== booking.date
+  ) {
+    // The canonical helper must echo the selected start verbatim.
+    throw new BookingTimeMismatchError();
+  }
 
+  const { start, end } = dateTimes;
+
+  bookingTimeDebug("confirm insert payload", {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    date: booking.date,
+    time: booking.time,
+    durationMinutes: booking.durationMinutes,
+    locale: booking.locale === "en" ? "en" : "sk",
+    calendarStart: start,
+    calendarEnd: end,
+    timeZone: bookingConfig.timeZone,
+  });
+
+  const accessToken = await getGoogleAccessToken();
   const response = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
       googleConfig.calendarId!,
-    )}/events?sendUpdates=all`,
+    )}/events`,
     {
       method: "POST",
       headers: {
@@ -708,7 +805,6 @@ async function createConfirmedCalendarEvent(
         description: confirmedEventDescription(booking),
         start: { dateTime: start, timeZone: bookingConfig.timeZone },
         end: { dateTime: end, timeZone: bookingConfig.timeZone },
-        attendees: [{ email: booking.email, displayName: booking.name }],
         extendedProperties: {
           private: {
             source: "timeaskincare-web",
@@ -731,7 +827,14 @@ async function createConfirmedCalendarEvent(
     throw new Error("Nepodarilo sa vytvoriť termín v Google kalendári.");
   }
 
-  return (await response.json()) as GoogleEvent;
+  const event = (await response.json()) as GoogleEvent;
+  // Verify Google stored the exact instant we sent before any e-mail goes out.
+  assertEventStartMatchesBooking(booking, event.start?.dateTime, "insert", bookingKey);
+  bookingTimeDebug("confirm event inserted", {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    eventStart: event.start?.dateTime ?? null,
+  });
+  return event;
 }
 
 /**
@@ -739,6 +842,11 @@ async function createConfirmedCalendarEvent(
  * If one already exists (e.g. the confirm link was opened twice), no new event
  * is created. Any Google API error propagates so the caller aborts safely and
  * never sends a false confirmation e-mail.
+ *
+ * Time invariant: a reused event must still start at the exact token time. If
+ * the event was meanwhile moved in Google Calendar, confirmation aborts with
+ * BookingTimeMismatchError instead of re-sending a confirmation e-mail whose
+ * time no longer matches the calendar.
  */
 async function ensureConfirmedCalendarEvent(
   booking: BookingRequest,
@@ -746,6 +854,18 @@ async function ensureConfirmedCalendarEvent(
   const bookingKey = getBookingKey(booking);
   const existing = await findConfirmedEventByKey(bookingKey, booking.date);
   if (existing) {
+    assertEventStartMatchesBooking(
+      booking,
+      existing.start?.dateTime,
+      "reuse",
+      bookingKey,
+    );
+    bookingTimeDebug("confirm event reused", {
+      bookingKeyPrefix: bookingKey.slice(0, 12),
+      date: booking.date,
+      time: booking.time,
+      eventStart: existing.start?.dateTime ?? null,
+    });
     return existing;
   }
 
@@ -779,6 +899,18 @@ export async function submitReservation(input: unknown, origin?: string) {
 
   const booking = validateBookingRequest(input);
   const baseUrl = origin || getSiteUrl();
+  const wallClock = getBookingWallClock(booking);
+  const bookingKey = getBookingKey(booking);
+
+  bookingTimeDebug("request accepted", {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    date: booking.date,
+    time: booking.time,
+    durationMinutes: booking.durationMinutes,
+    locale: booking.locale === "en" ? "en" : "sk",
+    wallClockStart: wallClock?.start ?? null,
+    wallClockEnd: wallClock?.end ?? null,
+  });
 
   // Availability re-check only. Phase 1: a pending request no longer writes to
   // Google Calendar. The confirmed event is created later, when Timea confirms
@@ -795,6 +927,11 @@ export async function submitReservation(input: unknown, origin?: string) {
 
   // E-mails are best-effort and must never block the reservation request.
   await Promise.allSettled([sendReservationRequestEmails(booking, baseUrl)]);
+  bookingTimeDebug("request emails queued", {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    date: booking.date,
+    time: booking.time,
+  });
 
   // The owner notification is critical: if SMS is configured but the
   // owner message failed, surface a friendly error to the customer.
@@ -874,7 +1011,8 @@ function formatDateHuman(date: string, locale: BookingLocale = "sk") {
 }
 
 /** Slovak appointment lines. Used by owner (Slovak) e-mails and Slovak customers. */
-function appointmentSummaryLines(booking: BookingRequest) {
+/** Slovak appointment lines used by owner e-mails and Slovak customers. */
+export function appointmentSummaryLines(booking: BookingRequest) {
   return [
     `Služby: ${booking.services.join(", ")}`,
     `Dátum: ${formatDateHuman(booking.date)}`,
@@ -887,7 +1025,7 @@ function appointmentSummaryLines(booking: BookingRequest) {
  * Customer-facing appointment lines. English uses English service names and an
  * English date format; Slovak keeps the exact original wording.
  */
-function customerAppointmentLines(booking: BookingRequest) {
+export function customerAppointmentLines(booking: BookingRequest) {
   if (booking.locale === "en") {
     return [
       `Services: ${toEnglishServiceNames(booking.services).join(", ")}`,
@@ -898,6 +1036,31 @@ function customerAppointmentLines(booking: BookingRequest) {
   }
 
   return appointmentSummaryLines(booking);
+}
+
+/**
+ * Pure invariant used by confirmation: a Google event start (with offset)
+ * must resolve to the exact Europe/Bratislava instant of the token time.
+ */
+export function eventStartMatchesBooking(
+  booking: Pick<BookingRequest, "date" | "time">,
+  eventStartDateTime: string | undefined,
+): boolean {
+  if (!eventStartDateTime) {
+    return false;
+  }
+
+  const expected = zonedDateTimeToUtcMs(
+    booking.date,
+    booking.time,
+    bookingConfig.timeZone,
+  );
+  if (expected === null) {
+    return false;
+  }
+
+  const actual = Date.parse(eventStartDateTime);
+  return Number.isFinite(actual) && actual === expected;
 }
 
 /** English detail block for the "request received" customer e-mail. */
@@ -1080,6 +1243,34 @@ export async function confirmReservation(booking: BookingRequest) {
   // customer never receives a false "confirmed" e-mail. Idempotent: a repeated
   // confirm click reuses the existing event instead of creating a duplicate.
   // When Google is not configured, behavior is unchanged (e-mails only).
+  const wallClock = getBookingWallClock(booking);
+  if (!wallClock || wallClock.start.time !== booking.time) {
+    throw new BookingTimeMismatchError();
+  }
+
+  const bookingKey = getBookingKey(booking);
+  const ics = buildIcsFile(booking, {
+    includeLocation: true,
+    locale: booking.locale,
+  });
+  const googleLink = buildGoogleCalendarLink(booking, {
+    includeLocation: true,
+    locale: booking.locale,
+  });
+
+  bookingTimeDebug("confirm start", {
+    bookingKeyPrefix: bookingKey.slice(0, 12),
+    date: booking.date,
+    time: booking.time,
+    durationMinutes: booking.durationMinutes,
+    locale: booking.locale === "en" ? "en" : "sk",
+    wallClockStart: wallClock.start,
+    wallClockEnd: wallClock.end,
+    icsDtStart: ics?.match(/DTSTART;TZID=[^:]+:(\d{8}T\d{6})/)?.[1] ?? null,
+    icsDtEnd: ics?.match(/DTEND;TZID=[^:]+:(\d{8}T\d{6})/)?.[1] ?? null,
+    googleDates: googleLink?.match(/dates=([^&]+)/)?.[1] ?? null,
+  });
+
   if (hasGoogleCalendarConfig()) {
     await ensureConfirmedCalendarEvent(booking);
   }
@@ -1090,10 +1281,7 @@ export async function confirmReservation(booking: BookingRequest) {
     locale: booking.locale,
   });
   const ownerAttachments = icsAttachment(booking, { includeLocation: false });
-  const customerCalendarLink = buildGoogleCalendarLink(booking, {
-    includeLocation: true,
-    locale: booking.locale,
-  });
+  const customerCalendarLink = googleLink;
   const ownerCalendarLink = buildGoogleCalendarLink(booking, { includeLocation: false });
 
   const customerSubject = isEnglish

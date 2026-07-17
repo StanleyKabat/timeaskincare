@@ -33,12 +33,25 @@ function formatUtcStamp(ms: number) {
   );
 }
 
+export type BookingWallClock = {
+  /** Local Europe/Bratislava values; never converted to UTC here. */
+  start: { date: string; time: string };
+  end: { date: string; time: string };
+};
+
 /**
- * Local wall-clock stamps (no "Z") for the appointment. These are interpreted
- * as Europe/Bratislava time via TZID (.ics) and ctz (Google), so DST is handled
- * by the calendar client and there is no accidental UTC/server-timezone shift.
+ * THE single source of truth for a booking's appointment interval.
+ *
+ * Returns the selected start exactly as submitted (immutable local wall-clock
+ * `YYYY-MM-DD` + `HH:mm` in Europe/Bratislava) and an end derived ONLY by
+ * adding the service duration. Every output — Google Calendar event payload,
+ * .ics DTSTART/DTEND, the Google Calendar URL and e-mail display — must derive
+ * its times from this helper so the start can never be rounded, buffered or
+ * shifted after selection.
  */
-function getLocalStamps(booking: BookingRequest) {
+export function getBookingWallClock(
+  booking: Pick<BookingRequest, "date" | "time" | "durationMinutes">,
+): BookingWallClock | null {
   const duration =
     booking.durationMinutes > 0 ? booking.durationMinutes : FALLBACK_DURATION_MINUTES;
 
@@ -49,7 +62,9 @@ function getLocalStamps(booking: BookingRequest) {
     return null;
   }
 
-  const startStamp = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(minute)}00`;
+  // Start is immutable: never round, buffer or shift after selection.
+  const startDate = `${year}-${pad(month)}-${pad(day)}`;
+  const startTime = `${pad(hour)}:${pad(minute)}`;
 
   const endTotalMinutes = hour * 60 + minute + duration;
   const dayCarry = Math.floor(endTotalMinutes / 1440);
@@ -58,11 +73,57 @@ function getLocalStamps(booking: BookingRequest) {
   const endMinute = endMinutesOfDay % 60;
   // Only used to roll the date forward if an appointment crosses midnight.
   const endDate = new Date(Date.UTC(year, month - 1, day + dayCarry));
-  const endStamp =
-    `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}` +
-    `T${pad(endHour)}${pad(endMinute)}00`;
 
-  return { startStamp, endStamp };
+  return {
+    start: {
+      date: startDate,
+      time: startTime,
+    },
+    end: {
+      date: `${endDate.getUTCFullYear()}-${pad(endDate.getUTCMonth() + 1)}-${pad(
+        endDate.getUTCDate(),
+      )}`,
+      time: `${pad(endHour)}:${pad(endMinute)}`,
+    },
+  };
+}
+
+/**
+ * Google Calendar API local dateTime strings (no offset, no "Z") derived from
+ * the immutable wall-clock helper. Pair with timeZone: Europe/Bratislava.
+ */
+export function buildConfirmedCalendarDateTimes(
+  booking: Pick<BookingRequest, "date" | "time" | "durationMinutes">,
+): { start: string; end: string } | null {
+  const wallClock = getBookingWallClock(booking);
+  if (!wallClock) {
+    return null;
+  }
+
+  return {
+    start: `${wallClock.start.date}T${wallClock.start.time}:00`,
+    end: `${wallClock.end.date}T${wallClock.end.time}:00`,
+  };
+}
+
+/**
+ * Local wall-clock stamps (no "Z") for the appointment. These are interpreted
+ * as Europe/Bratislava time via TZID (.ics) and ctz (Google), so DST is handled
+ * by the calendar client and there is no accidental UTC/server-timezone shift.
+ */
+function getLocalStamps(booking: BookingRequest) {
+  const wallClock = getBookingWallClock(booking);
+  if (!wallClock) {
+    return null;
+  }
+
+  const toStamp = (value: { date: string; time: string }) =>
+    `${value.date.replace(/-/g, "")}T${value.time.replace(":", "")}00`;
+
+  return {
+    startStamp: toStamp(wallClock.start),
+    endStamp: toStamp(wallClock.end),
+  };
 }
 
 export function eventTitle(booking: BookingRequest, locale: "sk" | "en" = "sk") {

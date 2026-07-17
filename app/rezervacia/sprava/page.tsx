@@ -120,6 +120,30 @@ export default async function ReservationManagePage({
     );
   }
 
+  if (status === "time-mismatch") {
+    return (
+      <Shell>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-powder)]">
+          Rezervácia
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold text-[var(--color-charcoal)] sm:text-3xl">
+          Čas sa nezhoduje
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--color-stone)]">
+          Čas rezervácie sa nezhoduje s pôvodnou požiadavkou. Rezervácia nebola potvrdená.
+          Skontroluj údaje a kontaktuj zákazníčku.
+        </p>
+        {booking ? <SummaryCard booking={booking} /> : null}
+        <Link
+          href="/"
+          className="mt-6 inline-flex min-h-10 items-center justify-center rounded-full border border-[var(--color-line)] px-5 py-2 text-sm font-semibold text-[var(--color-charcoal)] transition hover:bg-[var(--color-blush)]"
+        >
+          Späť na úvod
+        </Link>
+      </Shell>
+    );
+  }
+
   if (!booking) {
     return (
       <Shell>
