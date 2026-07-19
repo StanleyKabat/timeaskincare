@@ -2,7 +2,11 @@ import crypto from "node:crypto";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { getBookingKey, type BookingRequest } from "@/lib/booking-integrations";
+import {
+  confirmedCalendarEventTitle,
+  getBookingKey,
+  type BookingRequest,
+} from "@/lib/booking-integrations";
 import { createBookingToken, verifyBookingToken } from "@/lib/booking-token";
 
 const SECRET = "test-signing-secret-value";
@@ -22,6 +26,38 @@ function makeBooking(overrides: Partial<BookingRequest> = {}): BookingRequest {
     ...overrides,
   };
 }
+
+describe("confirmedCalendarEventTitle", () => {
+  it("formats single-service titles as HH:mm • Name • Service", () => {
+    expect(
+      confirmedCalendarEventTitle({
+        time: "11:00",
+        name: "Anna Polcová",
+        services: ["Základné ošetrenie"],
+      }),
+    ).toBe("11:00 • Anna Polcová • Základné ošetrenie");
+  });
+
+  it("joins multiple services with ' + ' and does not truncate", () => {
+    expect(
+      confirmedCalendarEventTitle({
+        time: "13:00",
+        name: "Vanes Vozárová",
+        services: ["Kozmetické ošetrenie", "Laminácia obočia"],
+      }),
+    ).toBe("13:00 • Vanes Vozárová • Kozmetické ošetrenie + Laminácia obočia");
+  });
+
+  it("keeps non-:00 start times verbatim", () => {
+    expect(
+      confirmedCalendarEventTitle({
+        time: "15:15",
+        name: "Klaudia Bónová",
+        services: ["Laminácia obočia"],
+      }),
+    ).toBe("15:15 • Klaudia Bónová • Laminácia obočia");
+  });
+});
 
 describe("getBookingKey (confirmation idempotency)", () => {
   it("is deterministic for the same booking", () => {

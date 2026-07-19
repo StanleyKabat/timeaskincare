@@ -748,6 +748,17 @@ function assertEventStartMatchesBooking(
 }
 
 /**
+ * Owner-facing Google Calendar event title only.
+ * Format: "HH:mm • Customer Name • Service (+ Service…)" using the immutable
+ * Bratislava wall-clock start and the canonical Slovak service names.
+ */
+export function confirmedCalendarEventTitle(
+  booking: Pick<BookingRequest, "time" | "name" | "services">,
+) {
+  return `${booking.time} • ${booking.name} • ${booking.services.join(" + ")}`;
+}
+
+/**
  * Creates the confirmed calendar event. Timezone handling matches the previous
  * request-time logic: local wall-clock dateTimes are sent together with the
  * Europe/Bratislava timeZone, so Google resolves the correct instant.
@@ -801,7 +812,7 @@ async function createConfirmedCalendarEvent(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        summary: `POTVRDENÁ REZERVÁCIA - ${booking.name}`,
+        summary: confirmedCalendarEventTitle(booking),
         description: confirmedEventDescription(booking),
         start: { dateTime: start, timeZone: bookingConfig.timeZone },
         end: { dateTime: end, timeZone: bookingConfig.timeZone },
