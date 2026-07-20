@@ -19,6 +19,10 @@ import {
   buildIcsFile,
   getBookingWallClock,
 } from "@/lib/calendar";
+import {
+  sanitizeInternalCalendarEventPayload,
+  withGoogleSendUpdatesNone,
+} from "@/lib/google-calendar-internal";
 import { getSiteUrl } from "@/lib/site-url";
 
 export type BookingLocale = "sk" | "en";
@@ -759,22 +763,15 @@ export function confirmedCalendarEventTitle(
 }
 
 /**
- * Creates the confirmed calendar event. Timezone handling matches the previous
- * request-time logic: local wall-clock dateTimes are sent together with the
- * Europe/Bratislava timeZone, so Google resolves the correct instant.
- *
- * The customer is intentionally NOT added as an attendee and no Google
- * notifications are sent (no sendUpdates): the Timea Skincare confirmation
- * e-mail (with .ics + Google link) is the single source of truth for the
- * customer. When the customer was an attendee, any later manual edit of the
- * event in the owner's calendar made Google send the customer an official
- * "event changed" e-mail — which is exactly how customers received a
- * ~30-minute "your appointment moved" notification.
+ * Pure Google Calendar insert body for a confirmed booking.
+ * Never includes attendees / guest fields. Customer email may appear only in
+ * private extended properties and the owner-facing description (existing
+ * behavior) — never as an attendee or notification target.
  */
-async function createConfirmedCalendarEvent(
+export function buildConfirmedCalendarEventPayload(
   booking: BookingRequest,
   bookingKey: string,
-): Promise<GoogleEvent> {
+) {
   const wallClock = getBookingWallClock(booking);
   const dateTimes = buildConfirmedCalendarDateTimes(booking);
   if (
@@ -783,11 +780,80 @@ async function createConfirmedCalendarEvent(
     wallClock.start.time !== booking.time ||
     wallClock.start.date !== booking.date
   ) {
-    // The canonical helper must echo the selected start verbatim.
     throw new BookingTimeMismatchError();
   }
 
-  const { start, end } = dateTimes;
+  return sanitizeInternalCalendarEventPayload({
+    summary: confirmedCalendarEventTitle(booking),
+    description: confirmedEventDescription(booking),
+    start: {
+      dateTime: dateTimes.start,
+      timeZone: bookingConfig.timeZone,
+    },
+    end: {
+      dateTime: dateTimes.end,
+      timeZone: bookingConfig.timeZone,
+    },
+    extendedProperties: {
+      private: {
+        source: "timeaskincare-web",
+        bookingKey,
+        customerName: booking.name,
+        customerEmail: booking.email,
+        customerPhone: booking.phone,
+        services: booking.services.join(" | "),
+        durationMinutes: String(booking.durationMinutes),
+        locale: booking.locale === "en" ? "en" : "sk",
+        smsReminderSent: "false",
+      },
+    },
+    reminders: { useDefault: true },
+  });
+}
+
+/** Insert URL for confirmed booking events — always sendUpdates=none. */
+export function buildConfirmedCalendarInsertUrl(calendarId: string) {
+  return withGoogleSendUpdatesNone(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+      calendarId,
+    )}/events`,
+  );
+}
+
+/** Patch URL for app-managed booking events — always sendUpdates=none. */
+export function buildConfirmedCalendarPatchUrl(calendarId: string, eventId: string) {
+  return withGoogleSendUpdatesNone(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
+      calendarId,
+    )}/events/${encodeURIComponent(eventId)}`,
+  );
+}
+
+/**
+ * Creates the confirmed calendar event. Timezone handling matches the previous
+ * request-time logic: local wall-clock dateTimes are sent together with the
+ * Europe/Bratislava timeZone, so Google resolves the correct instant.
+ *
+ * The customer is intentionally NOT added as an attendee. Insert always uses
+ * sendUpdates=none so Google never emails the customer. The Timea Skincare
+ * confirmation e-mail (with .ics + Google link) is the single customer source
+ * of truth.
+ */
+async function createConfirmedCalendarEvent(
+  booking: BookingRequest,
+  bookingKey: string,
+): Promise<GoogleEvent> {
+  const payload = buildConfirmedCalendarEventPayload(booking, bookingKey);
+  const start =
+    typeof payload.start === "object" &&
+    payload.start &&
+    "dateTime" in payload.start
+      ? String((payload.start as { dateTime: string }).dateTime)
+      : "";
+  const end =
+    typeof payload.end === "object" && payload.end && "dateTime" in payload.end
+      ? String((payload.end as { dateTime: string }).dateTime)
+      : "";
 
   bookingTimeDebug("confirm insert payload", {
     bookingKeyPrefix: bookingKey.slice(0, 12),
@@ -798,39 +864,20 @@ async function createConfirmedCalendarEvent(
     calendarStart: start,
     calendarEnd: end,
     timeZone: bookingConfig.timeZone,
+    hasAttendees: Object.prototype.hasOwnProperty.call(payload, "attendees"),
+    sendUpdates: "none",
   });
 
   const accessToken = await getGoogleAccessToken();
   const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-      googleConfig.calendarId!,
-    )}/events`,
+    buildConfirmedCalendarInsertUrl(googleConfig.calendarId!),
     {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        summary: confirmedCalendarEventTitle(booking),
-        description: confirmedEventDescription(booking),
-        start: { dateTime: start, timeZone: bookingConfig.timeZone },
-        end: { dateTime: end, timeZone: bookingConfig.timeZone },
-        extendedProperties: {
-          private: {
-            source: "timeaskincare-web",
-            bookingKey,
-            customerName: booking.name,
-            customerEmail: booking.email,
-            customerPhone: booking.phone,
-            services: booking.services.join(" | "),
-            durationMinutes: String(booking.durationMinutes),
-            locale: booking.locale === "en" ? "en" : "sk",
-            smsReminderSent: "false",
-          },
-        },
-        reminders: { useDefault: true },
-      }),
+      body: JSON.stringify(payload),
     },
   );
 
@@ -1591,17 +1638,16 @@ export async function sendTomorrowSmsReminders() {
       `Timea Skincare: pripomíname termín zajtra o ${time}. Tešíme sa na vás. Zmena termínu: ${siteConfig.phone}`,
     );
 
-    await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-        googleConfig.calendarId!,
-      )}/events/${encodeURIComponent(event.id)}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+    await fetch(buildConfirmedCalendarPatchUrl(googleConfig.calendarId!, event.id), {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      // Only flip the SMS flag. Do not touch attendees (cleanup owns that) and
+      // never enable Google guest notifications.
+      body: JSON.stringify(
+        sanitizeInternalCalendarEventPayload({
           extendedProperties: {
             private: {
               ...privateData,
@@ -1609,8 +1655,8 @@ export async function sendTomorrowSmsReminders() {
             },
           },
         }),
-      },
-    );
+      ),
+    });
 
     sent += 1;
   }
